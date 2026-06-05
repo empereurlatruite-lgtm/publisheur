@@ -27,7 +27,7 @@ window.DAIHBI_PAPERS = {
     name: "L’Horizon Bleu",
     tagline: "Sous notre bannière nous écrivons l’Histoire",
     plate: "plate-anton",
-    ear: ["Front de l’Ouest", "501<sup>e</sup> Régiment", "Warden"],
+    ear: ["Front de l’Est", "501<sup>e</sup> Régiment", "Warden"],
     slogans: ["Vive les Wardens", "Vive la 501<sup>e</sup>", "Vive la France"],
     emblemRight: WARDEN_SHIELD,
   },
