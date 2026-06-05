@@ -58,11 +58,11 @@ const Auth = {
     const { error } = await db.auth.signInWithPassword({ email, password });
     if (error) throw error;
   },
-  async signUp(email, password) {
+  async signUp(email, password, meta) {
     if (!db) throw new Error("Supabase not configured (edit web/config.js).");
     const { data, error } = await db.auth.signUp({
       email, password,
-      options: { emailRedirectTo: location.href.split("#")[0] },
+      options: { emailRedirectTo: location.href.split("#")[0], data: meta || {} },
     });
     if (error) throw error;
     return data; // data.session is non-null when email auto-confirm is on
@@ -170,22 +170,45 @@ const Articles = {
   },
 };
 
-// ── Media: upload article photos to the public Supabase Storage bucket ──────
+// ── Media: upload images (article photos, avatars) to public Storage ────────
 const Media = {
-  /** Upload an image File, return its public URL. */
-  async upload(file) {
+  /** Upload an image File into <folder>/, return its public URL. */
+  async upload(file, folder) {
     if (!db) throw new Error("Supabase not configured (edit web/config.js).");
     if (!file.type || !file.type.startsWith("image/"))
       throw new Error("Ce fichier n'est pas une image.");
     if (file.size > 10 * 1024 * 1024)
       throw new Error("Image trop lourde (max 10 Mo).");
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = `${ISSUE}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const path = `${folder || ISSUE}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { error } = await db.storage.from("media").upload(path, file, {
       cacheControl: "31536000", upsert: false, contentType: file.type,
     });
     if (error) throw error;
     return db.storage.from("media").getPublicUrl(path).data.publicUrl;
+  },
+};
+
+// ── Profiles: role / régiment / avatar / display name ───────────────────────
+const Profiles = {
+  /** The current user's profile (or a reader default if none yet). */
+  async me() {
+    if (!db) return null;
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) return null;
+    const { data } = await db.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    return data || { id: user.id, role: "reader", display_name: "", clan: "", avatar_url: "" };
+  },
+  async update(fields) {
+    const { data: { user } } = await db.auth.getUser();
+    const { data, error } = await db.from("profiles").update(fields).eq("id", user.id).select().single();
+    if (error) throw error;
+    return data;
+  },
+  async get(id) {
+    if (!db || !id) return null;
+    const { data } = await db.from("profiles").select("*").eq("id", id).maybeSingle();
+    return data;
   },
 };
 
@@ -207,5 +230,5 @@ function md(text) {
     .join("");
 }
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, sortArticles, esc, md };
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, sortArticles, esc, md };
 })();

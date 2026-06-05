@@ -32,6 +32,8 @@
   .tag.lead{background:#7a1f1a;color:#fff;border-color:#7a1f1a}
   .tag.major{background:#b5532a;color:#fff;border-color:#b5532a}
   .tag.off{opacity:.5}
+  .tag.rev{background:#caa23a;color:#1a1714;border-color:#caa23a}
+  .tag.pub{background:#2f6b3f;color:#fff;border-color:#2f6b3f}
   .arrows{display:flex;flex-direction:column;gap:1px}
   .arrows button{border:1px solid var(--line);background:#fff;cursor:pointer;font-size:.6rem;line-height:1;padding:.1rem .25rem;border-radius:3px}
   .listtop{position:sticky;top:0;z-index:5;background:var(--panel)}
@@ -61,9 +63,14 @@
   .imgx{position:absolute;top:.3rem;right:.3rem;border:none;background:rgba(20,18,16,.8);color:#fff;border-radius:50%;width:1.5rem;height:1.5rem;cursor:pointer;line-height:1}
   .upstatus{font-size:.75rem;color:#6a6253;margin-top:.35rem;min-height:1em}
   .twocol{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
-  .formbar{display:flex;gap:.5rem;align-items:center;margin-top:.4rem}
+  .formbar{display:flex;gap:.5rem;align-items:center;margin-top:.4rem;flex-wrap:wrap}
   .formbar .grow{flex:1}
   .formbar button{font:inherit;border-radius:6px;padding:.55rem .9rem;cursor:pointer;border:1px solid #c9bda0;background:#fff}
+  .save.ghost{background:#fff;color:var(--ink)}
+  .statuslbl{font-size:.8rem;color:#7a7060;font-style:italic}
+  .imgwrap2{display:flex;justify-content:center;margin:.3rem 0}
+  .avatarprev{width:84px;height:84px;border-radius:50%;object-fit:cover;border:2px solid #5a534a}
+  .avatarph{width:84px;height:84px;border-radius:50%;border:2px dashed #5a534a;display:flex;align-items:center;justify-content:center;color:#7a7060}
   .formbar button.save{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
   .formbar button.del{color:#7a1f1a;border-color:#d8b6b2}
   .hint{font-size:.72rem;color:#8a8070;margin-top:.3rem}
@@ -87,6 +94,11 @@
   .gate .authtabs button{flex:1;width:auto;background:#1f1c18;color:#cdc4b2;border:1px solid #5a534a;padding:.5rem;border-radius:8px}
   .gate .authtabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   .gate a{color:#e8b9b2}
+  .gate select{width:100%;font:inherit;padding:.6rem .7rem;margin:.4rem 0;border-radius:8px;border:1px solid #5a534a;background:#1f1c18;color:#f3ead6}
+  .rolepick{display:flex;gap:.3rem;margin:.4rem 0}
+  .rolepick label{flex:1;font-size:.8rem;background:#1f1c18;border:1px solid #5a534a;border-radius:8px;padding:.4rem .3rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;justify-content:center}
+  .rolepick input{width:auto;margin:0}
+  .rolebadge{font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;background:#3a3631;color:#f3ead6;border:1px solid #5a534a;border-radius:4px;padding:.1rem .4rem;margin-left:.4rem}
   .gate .err{color:#ff9b8e;font-size:.82rem;margin-top:.6rem;min-height:1em}
   .gate code{background:#1f1c18;padding:.1rem .3rem;border-radius:4px}
 </style>
@@ -106,8 +118,9 @@
       style="font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:5px;padding:.25rem .4rem"></select>
   </label>
   <span class="grow"></span>
-  <span class="who" id="who"></span>
-  <button onclick="newArticle()">+ New article</button>
+  <span class="who" id="who"></span><span class="rolebadge" id="rolebadge" style="display:none"></span>
+  <button onclick="openProfile()">Mon profil</button>
+  <button id="newBtn" onclick="newArticle()">+ Article</button>
   <a id="openPaper" href="paper.html" target="_blank">Open full paper ↗</a>
   <button onclick="doSignOut()">Sign out</button>
 </header>
@@ -163,12 +176,7 @@
       <textarea id="f_body" placeholder="Write the article. Blank line = new paragraph. **bold**, *italic*."></textarea>
       <div class="hint">Blank line = new paragraph · <code>**bold**</code> · <code>*italic*</code></div>
     </div>
-    <div class="formbar">
-      <label class="chk"><input type="checkbox" id="f_published" checked> Published</label>
-      <span class="grow"></span>
-      <button class="del" id="delBtn" onclick="delArticle()" style="display:none">Delete</button>
-      <button class="save" onclick="saveArticle()">Save</button>
-    </div>
+    <div class="formbar" id="formbar"></div>
     <div class="hint" id="savedAt"></div>
   </div>
 
@@ -186,15 +194,18 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Articles, Media, configured } = window.Daihbi;
+const { Auth, Articles, Media, Profiles, configured } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 const PAPERS = window.DAIHBI_PAPERS || {};
 let current = null;
+let MYROLE = "reader", MYPROFILE = null;
+const ROLE_LABELS = { reader:"Lecteur", writer:"Rédacteur", illustrator:"Illustrateur", editor:"Éditeur", annonceur:"Annonceur" };
+const roleLabel = r => ROLE_LABELS[r] || r;
 
 const F = {
   kicker:$("#f_kicker"), headline:$("#f_headline"), subhead:$("#f_subhead"),
   byline:$("#f_byline"), weight:$("#f_weight"), image:$("#f_image"),
-  body:$("#f_body"), published:$("#f_published"),
+  body:$("#f_body"),
 };
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
 function escapeHtml(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -218,6 +229,16 @@ function loginScreen(msg, mode){
     </div>
     <input id="email" type="email" placeholder="vous@exemple.com" autocomplete="username" autofocus>
     <input id="password" type="password" placeholder="${up?"choisir un mot de passe (6+ caractères)":"mot de passe"}" autocomplete="${up?"new-password":"current-password"}">
+    ${up ? `
+      <input id="display_name" type="text" placeholder="Nom de plume (affiché)" autocomplete="name">
+      <div class="rolepick">
+        <label><input type="radio" name="role" value="reader"> Lecteur</label>
+        <label><input type="radio" name="role" value="writer" checked> Rédacteur</label>
+        <label><input type="radio" name="role" value="illustrator"> Illustrateur</label>
+        <label><input type="radio" name="role" value="annonceur"> Annonceur</label>
+      </div>
+      <select id="clan">${(window.DAIHBI_CLANS||["Indépendant"]).map(c=>`<option>${c}</option>`).join("")}</select>
+    ` : ""}
     <button onclick="${up?"doSignUp()":"doPasswordLogin()"}">${up?"Créer le compte":"Se connecter"}</button>
     <div class="err" id="loginErr">${msg||""}</div>
     ${up
@@ -237,8 +258,11 @@ async function doSignUp(){
   const email=$("#email").value.trim(), password=$("#password").value;
   if(!email||!password){ $("#loginErr").textContent="Entrez un e-mail et un mot de passe."; return; }
   if(password.length<6){ $("#loginErr").textContent="Mot de passe : 6 caractères minimum."; return; }
+  const role=(document.querySelector('input[name="role"]:checked')||{}).value||"reader";
+  const clan=($("#clan")||{}).value||"";
+  const display_name=($("#display_name")||{}).value.trim()||"";
   try{
-    const data = await Auth.signUp(email,password);
+    const data = await Auth.signUp(email,password,{role,clan,display_name});
     if(data && data.session){ /* auto-confirmé → onChange recharge l'app */ }
     else { $("#gateCard").innerHTML=`<h2>Compte créé ✓</h2>
       <p>Un e-mail de confirmation a été envoyé à <b>${escapeHtml(email)}</b>.</p>
@@ -260,7 +284,7 @@ function formData(){
     kicker:F.kicker.value.trim(), headline:F.headline.value.trim()||"Untitled",
     subhead:F.subhead.value.trim(), byline:F.byline.value.trim(),
     weight:F.weight.value, image_url:F.image.value.trim(),
-    body:F.body.value, published:F.published.checked,
+    body:F.body.value,
   };
 }
 function fill(a){
@@ -268,9 +292,11 @@ function fill(a){
   F.kicker.value=a?.kicker||""; F.headline.value=a?.headline||"";
   F.subhead.value=a?.subhead||""; F.byline.value=a?.byline||"";
   F.weight.value=a?.weight||"minor"; F.image.value=a?.image_url||"";
-  F.body.value=a?.body||""; F.published.checked=a?a.published:true;
+  F.body.value=a?.body||"";
+  const pub=$("#f_published"); if(pub) pub.checked = a ? !!a.published : false;
+  const sl=$("#statusLbl"); if(sl) sl.textContent = a ? statusLabel(a) : "Nouveau brouillon";
   $("#delBtn").style.display=a?"":"none";
-  $("#savedAt").textContent=a?.updated_at?"Last saved "+new Date(a.updated_at).toLocaleString():"";
+  $("#savedAt").textContent=a?.updated_at?"Modifié le "+new Date(a.updated_at).toLocaleString("fr-FR"):"";
   showPreview(a?.image_url||""); $("#upstatus").textContent="";
   highlight();
 }
@@ -335,7 +361,7 @@ function itemHTML(a){
     <div style="flex:1">
       <div class="h">${escapeHtml(a.headline)}</div>
       <div class="meta"><span class="tag ${a.weight}">${a.weight}</span>
-        ${a.published?"":'<span class="tag off">draft</span>'}
+        <span class="tag ${a.published?'pub':(((a.status||'')==='review')?'rev':'off')}">${statusLabel(a)}</span>
         ${mine?'<span class="mine">vous</span>':""}${a.byline?escapeHtml(a.byline):""}</div>
     </div>
     <div class="arrows" onclick="event.stopPropagation()">
@@ -346,19 +372,93 @@ function itemHTML(a){
 }
 async function edit(id){ try{ fill(await Articles.get(id)); }catch(e){ toast(e.message); } }
 
-async function saveArticle(){
+function statusLabel(a){
+  const s = a.status || (a.published ? "published" : "draft");
+  return { draft:"Brouillon", review:"En relecture", published:"Publié" }[s] || s;
+}
+async function saveArticle(action){
   const data=formData();
+  if(MYROLE==="editor"){
+    const pub = $("#f_published") ? $("#f_published").checked : false;
+    data.published = pub; data.status = pub ? "published" : "draft";
+  } else if(action==="review"){ data.published=false; data.status="review"; }
+  else { data.published=false; data.status="draft"; }
   try{
     const saved = current==null ? await Articles.create(data) : await Articles.update(current,data);
-    current=saved.id; toast("Saved");
+    current=saved.id;
+    toast(saved.published ? "Publié ✓" : (saved.status==="review" ? "Soumis en relecture ✓" : "Brouillon enregistré ✓"));
     await loadList(); fill(saved); reloadPreview();
-  }catch(e){ toast("Error: "+e.message); }
+  }catch(e){ toast("Erreur : "+e.message); }
 }
 async function delArticle(){
   if(current==null) return;
-  if(!confirm("Delete this article?")) return;
-  try{ await Articles.remove(current); toast("Deleted"); newArticle(); await loadList(); reloadPreview(); }
+  if(!confirm("Supprimer cet article ?")) return;
+  try{ await Articles.remove(current); toast("Supprimé"); newArticle(); await loadList(); reloadPreview(); }
   catch(e){ toast(e.message); }
+}
+function renderFormBar(){
+  const bar=$("#formbar"); if(!bar) return;
+  if(MYROLE==="editor"){
+    bar.innerHTML = `<label class="chk"><input type="checkbox" id="f_published"> Publié (visible des lecteurs)</label>
+      <span class="grow"></span>
+      <button class="del" id="delBtn" onclick="delArticle()" style="display:none">Supprimer</button>
+      <button class="save" onclick="saveArticle()">Enregistrer</button>`;
+  } else {
+    bar.innerHTML = `<span class="statuslbl" id="statusLbl"></span>
+      <span class="grow"></span>
+      <button class="del" id="delBtn" onclick="delArticle()" style="display:none">Supprimer</button>
+      <button class="save ghost" onclick="saveArticle('draft')">Brouillon</button>
+      <button class="save" onclick="saveArticle('review')">Soumettre en relecture</button>`;
+  }
+}
+
+// ── Profile ─────────────────────────────────────────────────────────────────
+function openProfile(){
+  const p=MYPROFILE||{};
+  showGate(`<h2>Mon profil</h2>
+    <div class="rolebadge" style="display:inline-block;margin:.2rem 0 .6rem">${roleLabel(MYROLE)}</div>
+    <div class="imgwrap2" id="av_wrap">${p.avatar_url?`<img class="avatarprev" src="${escapeHtml(p.avatar_url)}">`:`<div class="avatarph">—</div>`}</div>
+    <button onclick="document.querySelector('#p_avatar').click()">📷 Changer l’avatar</button>
+    <input id="p_avatar" type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this.files[0])">
+    <input id="p_name" placeholder="Nom de plume" value="${escapeHtml(p.display_name||"")}">
+    <select id="p_clan">${(window.DAIHBI_CLANS||[]).map(c=>`<option ${c===p.clan?"selected":""}>${escapeHtml(c)}</option>`).join("")}</select>
+    <div class="err" id="profErr"></div>
+    <button onclick="saveProfile()">Enregistrer</button>
+    <p style="margin-top:.7rem;font-size:.85rem"><a href="#" onclick="hideGate();return false">Fermer</a></p>`);
+}
+async function uploadAvatar(file){
+  if(!file) return;
+  $("#profErr").textContent="Envoi…";
+  try{
+    const url=await Media.upload(file,"avatars");
+    await Profiles.update({avatar_url:url}); MYPROFILE.avatar_url=url;
+    $("#av_wrap").innerHTML=`<img class="avatarprev" src="${escapeHtml(url)}">`;
+    $("#profErr").textContent="";
+  }catch(e){ $("#profErr").textContent="Erreur : "+e.message; }
+}
+async function saveProfile(){
+  try{
+    const upd=await Profiles.update({ display_name:$("#p_name").value.trim(), clan:$("#p_clan").value });
+    MYPROFILE=upd; $("#who").textContent=upd.display_name||MYPROFILE.display_name||"";
+    hideGate(); toast("Profil enregistré");
+  }catch(e){ $("#profErr").textContent="Erreur : "+e.message; }
+}
+function readerGate(){
+  showGate(`<h2>Espace lecteur</h2>
+    <p>Votre compte est en <b>Lecteur</b>. La rédaction est réservée aux rédacteurs, illustrateurs et éditeurs.</p>
+    <a class="authlink" href="index.html" style="display:block;margin:.6rem 0;color:#e8b9b2">📰 Aller au kiosque →</a>
+    <button onclick="becomeWriter()">Devenir rédacteur</button>
+    <p style="margin-top:.6rem;font-size:.85rem"><a href="#" onclick="doSignOut();return false">Se déconnecter</a></p>`);
+}
+async function becomeWriter(){
+  try{ await Profiles.update({role:"writer"}); location.reload(); }
+  catch(e){ alert(e.message); }
+}
+function advertiserGate(){
+  showGate(`<h2>Espace annonceur</h2>
+    <p>Bienvenue ! Le studio publicitaire (créer une réclame, la faire valider par un éditeur, l’afficher dans le journal) arrive bientôt.</p>
+    <a class="authlink" href="index.html" style="display:block;margin:.6rem 0;color:#e8b9b2">📰 Voir le kiosque →</a>
+    <p style="margin-top:.6rem;font-size:.85rem"><a href="#" onclick="doSignOut();return false">Se déconnecter</a></p>`);
 }
 async function move(id,dir){ try{ await Articles.move(id,dir); await loadList(); reloadPreview(); }catch(e){ toast(e.message); } }
 function previewURL(){ return `paper.html?issue=${encodeURIComponent(ISSUE)}&_=${Date.now()}`; }
@@ -377,18 +477,25 @@ function initEditions(){
   $("#openPaper").href = `paper.html?issue=${encodeURIComponent(ISSUE)}`;
 }
 
-document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s"){ e.preventDefault(); saveArticle(); } });
+document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s"){ e.preventDefault(); saveArticle(MYROLE==="editor"?undefined:"draft"); } });
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 async function boot(){
   if(!configured){ setupNotice(); return; }
   const session = await Auth.session();
   if(!session){ loginScreen(); Auth.onChange(s=>{ if(s) location.reload(); }); return; }
-  // signed in
+  // load profile + role
+  MYPROFILE = await Profiles.me();
+  MYROLE = (MYPROFILE && MYPROFILE.role) || "reader";
+  if(MYROLE === "annonceur"){ advertiserGate(); return; }   // ad studio coming soon
+  if(!["writer","illustrator","editor"].includes(MYROLE)){ readerGate(); return; }  // readers → kiosque
+  // signed in as a contributor
   hideGate();
   $("#hdr").style.display=""; $("#app").style.display="";
-  $("#who").textContent = session.user.email || "";
+  $("#who").textContent = MYPROFILE.display_name || session.user.email || "";
+  $("#rolebadge").textContent = roleLabel(MYROLE); $("#rolebadge").style.display="";
   ME = session.user.id;
+  renderFormBar();
   initEditions();
   wireDropzone();
   Articles.subscribe(loadList);

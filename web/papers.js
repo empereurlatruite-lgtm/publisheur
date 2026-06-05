@@ -13,6 +13,9 @@
 // To give a paper its own crest: upload a transparent PNG to the Storage
 // "media" bucket (or via the editor), then paste its public URL into
 // emblemLeft / emblemRight here. The shared Warden shield is below.
+// Régiments / clans offered at signup (free list — add yours here).
+window.DAIHBI_CLANS = ["2e REI","501e","8e","79e","30e","La Bleusaille","les Frogz","1re armée Jeunesse Warden","Indépendant","Autre"];
+
 const WARDEN_SHIELD = "https://atnmzlaiglmkykzryjar.supabase.co/storage/v1/object/public/media/emblems/warden-shield.png";
 window.DAIHBI_PAPERS = {
   "current": {
