@@ -51,6 +51,15 @@
     text-transform:uppercase;font-size:5.6rem;letter-spacing:.015em}
   .plate-anton .sub{font-family:"Oswald",sans-serif;font-style:normal;font-weight:700;
     text-transform:none;color:var(--ink);letter-spacing:.02em;font-size:1.05rem}
+  /* L'Écho du Front — navy independent-journal identity */
+  .plate-echo{--accent:#1f3a5f}
+  .plate-echo h1{font-family:"Oswald",Impact,sans-serif;font-weight:700;
+    text-transform:uppercase;font-size:5rem;letter-spacing:.02em;color:#1f3a5f}
+  .plate-echo .nameplate .sub{font-family:"Oswald",sans-serif;font-style:normal;
+    font-weight:500;text-transform:uppercase;color:#1f3a5f;letter-spacing:.04em;font-size:.95rem}
+  .plate-echo .dateline-bar,.plate-echo .ear{color:#1f3a5f;border-color:#1f3a5f}
+  .plate-echo .slogans{background:#1f3a5f;color:#fff;border:none;border-radius:2px;
+    font-family:"Oswald",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
   /* footer slogan bar (e.g. Vive les Wardens · Vive la 501e · Vive la France) */
   .slogans{display:flex;justify-content:space-between;align-items:center;gap:1rem;
     border-top:3px double var(--rule);border-bottom:3px double var(--rule);
@@ -153,6 +162,13 @@ const PAPERS = {
     ear: ["Front de l’Ouest", "501<sup>e</sup> Régiment", "Warden"],
     slogans: ["Vive les Wardens", "Vive la 501<sup>e</sup>", "Vive la France"],
   },
+  "echo-du-front": {
+    name: "L’Écho du Front",
+    tagline: "Journal indépendant Warden — Témoigner, informer, tenir",
+    plate: "plate-echo",
+    ear: ["Numéro 002", "Édition du 4 juin 2026", "Distribution aux forces & citoyens"],
+    slogans: ["Tenir la ligne", "Protéger nos foyers", "Pour Callahan !"],
+  },
 };
 const ISSUE = window.Daihbi.ISSUE;
 const PAPER = PAPERS[ISSUE] || {
@@ -165,6 +181,7 @@ const PAPER = PAPERS[ISSUE] || {
 document.title = PAPER.name;
 $(".toolbar b").innerHTML = PAPER.name;
 $(".toolbar a.btn").href = "editor.html?issue=" + encodeURIComponent(ISSUE);
+$("#sheet").className = "sheet " + (PAPER.plate || "");
 
 function imgTag(url){ return url ? `<img src="${esc(url)}" alt="">` : ""; }
 function kicker(a){ return a.kicker ? `<div class="kicker">${esc(a.kicker)}</div>` : ""; }
