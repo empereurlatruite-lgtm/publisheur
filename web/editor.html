@@ -154,11 +154,20 @@ function setupNotice(){
 }
 function loginScreen(msg){
   showGate(`<h2>Publisheur</h2>
-    <p>Sign in to the newsroom. We'll email you a one-tap login link.</p>
-    <input id="email" type="email" placeholder="you@example.com" autofocus>
-    <button onclick="sendLink()">Send login link</button>
-    <div class="err" id="loginErr">${msg||""}</div>`);
-  const inp=$("#email"); if(inp) inp.addEventListener("keydown",e=>{if(e.key==="Enter")sendLink();});
+    <p>Sign in to the newsroom.</p>
+    <input id="email" type="email" placeholder="you@example.com" autocomplete="username" autofocus>
+    <input id="password" type="password" placeholder="password" autocomplete="current-password">
+    <button onclick="doPasswordLogin()">Sign in</button>
+    <div class="err" id="loginErr">${msg||""}</div>
+    <p style="margin-top:1rem;font-size:.85rem;opacity:.7">No password? <a href="#" onclick="sendLink();return false">Email me a login link instead</a>.</p>`);
+  const pw=$("#password"); if(pw) pw.addEventListener("keydown",e=>{if(e.key==="Enter")doPasswordLogin();});
+  const inp=$("#email"); if(inp) inp.addEventListener("keydown",e=>{if(e.key==="Enter")$("#password").focus();});
+}
+async function doPasswordLogin(){
+  const email=$("#email").value.trim(), password=$("#password").value;
+  if(!email||!password){ $("#loginErr").textContent="Enter your email and password."; return; }
+  try{ await Auth.signInPassword(email,password); /* onChange handler reloads the app */ }
+  catch(e){ $("#loginErr").textContent=e.message; }
 }
 async function sendLink(){
   const email=$("#email").value.trim();
