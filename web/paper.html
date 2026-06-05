@@ -108,6 +108,17 @@
   @media(max-width:640px){.lead-flow .lead-photo{float:none;width:100%;margin:.4rem 0}}
 
   .well{column-count:3;column-gap:var(--col-gap);column-rule:1px solid #cbbfa3;text-align:justify;hyphens:auto}
+  /* transparency split: human stories (2-col) on the left, AI (1-col) on the right */
+  .front{display:grid;grid-template-columns:2fr 1fr;gap:1.6rem;align-items:start}
+  .front .zone-human{min-width:0}
+  .front .zone-ai{min-width:0;border-left:2px dashed #9a7f55;padding-left:1.2rem}
+  .front .zone-ai .ai-head{font-family:"Playfair Display",serif;font-weight:700;text-transform:uppercase;
+    letter-spacing:.09em;font-size:.74rem;color:#7a5a2a;border-bottom:2px dashed #9a7f55;padding-bottom:.35rem;margin-bottom:.8rem}
+  .front .zone-ai .story h3{font-size:1.3rem;font-weight:800}
+  .front .zone-ai .story .body{font-size:.9rem}
+  .well2{column-count:2}
+  @media(max-width:760px){.front{grid-template-columns:1fr}
+    .front .zone-ai{border-left:none;border-top:2px dashed #9a7f55;padding-left:0;padding-top:.8rem}}
   .story{break-inside:avoid;margin:0 0 1.3rem;padding-bottom:1rem;border-bottom:1px solid #cbbfa3}
   .story:last-child{border-bottom:none}
   .story .kicker{text-align:left;margin-bottom:.15rem}
@@ -180,6 +191,7 @@
 <div class="toolbar">
   <b>Le Petit Daihbi</b>
   <span class="grow"></span>
+  <a class="btn" href="index.html">📰 Kiosque</a>
   <button onclick="load()">↻ Refresh</button>
   <a class="btn" href="editor.html">✎ Edit articles</a>
   <button onclick="savePNG()">🖼 PNG</button>
@@ -303,9 +315,36 @@ async function load(){
   let ads = [];
   try{ ads = await Ads.listApproved(ISSUE); }catch(e){ /* ads table may be absent */ }
 
-  const leads = arts.filter(a=>a.weight==="lead");
-  const lead = leads[0] || null;
-  const rest = arts.filter(a=>a!==lead).map(a=> a.weight==="lead" ? {...a,weight:"major"} : a);
+  // transparency: AI-written chronicles go in a 1-column sidebar on the right,
+  // human chronicles fill a 2-column well on the left.
+  const isAI = a => ["ia","ai"].includes(String(a.source||"").trim().toLowerCase());
+  const leadAndRest = list => {
+    const ld = list.find(a=>a.weight==="lead") || list[0] || null;
+    const rst = list.filter(a=>a!==ld).map(a=> a.weight==="lead" ? {...a,weight:"major"} : a);
+    return [ld, rst];
+  };
+  const aiArts = arts.filter(isAI);
+  const humanArts = arts.filter(a=>!isAI(a));
+  let bodyHTML;
+  if(arts.length===0){
+    bodyHTML = `<div class="empty">Aucun article publié.<br><a href="editor.html?issue=${encodeURIComponent(ISSUE)}">En écrire un →</a></div>`;
+  } else if(aiArts.length===0){
+    const [lead,rest] = leadAndRest(arts);   // classic full-width layout, no AI
+    bodyHTML = (lead?renderLead(lead):"") +
+      ((rest.length||ads.length)?`<div class="well">${rest.map(renderStory).join("")}${ads.map(renderAd).join("")}</div>`:"");
+  } else {
+    const [hLead,hRest] = leadAndRest(humanArts);
+    bodyHTML = `<div class="front">
+      <div class="zone-human">
+        ${hLead?renderLead(hLead):""}
+        ${(hRest.length||ads.length)?`<div class="well well2">${hRest.map(renderStory).join("")}${ads.map(renderAd).join("")}</div>`:""}
+      </div>
+      <aside class="zone-ai">
+        <div class="ai-head">✦ Rédigé par l'IA</div>
+        ${aiArts.map(renderStory).join("")}
+      </aside>
+    </div>`;
+  }
 
   const footer = PAPER.slogans && PAPER.slogans.length
     ? `<div class="slogans">${PAPER.slogans.map(s=>`<span>${s}</span>`).join("")}</div>`
@@ -328,11 +367,8 @@ async function load(){
       <span class="mid">ÉDITION « ${esc(ISSUE).toUpperCase()} »</span>
       <span>${PAPER.ear[2]||""}</span>
     </div>
-    ${arts.length===0
-      ? `<div class="empty">Aucun article publié.<br><a href="editor.html?issue=${encodeURIComponent(ISSUE)}">En écrire un →</a></div>`
-      : (lead?renderLead(lead):"") +
-        ((rest.length||ads.length)?`<div class="well">${rest.map(renderStory).join("")}${ads.map(renderAd).join("")}</div>`:"") +
-        footer}
+    ${bodyHTML}
+    ${arts.length ? footer : ""}
   `;
 }
 
