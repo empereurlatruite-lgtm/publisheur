@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publisheur — Studio publicitaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:#211f1c;color:#f3ead6;display:flex;align-items:center;gap:.7rem;padding:.7rem 1.1rem}
+  header h1{font-family:"Playfair Display",serif;font-size:1.25rem;margin:0}
+  header .grow{flex:1}
+  header a,header button{font:inherit;font-size:.85rem;color:#f3ead6;background:#2c2924;border:1px solid #555;border-radius:6px;padding:.4rem .7rem;text-decoration:none;cursor:pointer}
+  .rolebadge{font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;background:#3a3631;border:1px solid #5a534a;border-radius:4px;padding:.1rem .4rem}
+  main{max-width:1000px;margin:1.4rem auto;padding:0 1rem;display:grid;grid-template-columns:1fr 1fr;gap:1.4rem}
+  @media(max-width:760px){main{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem 1.1rem}
+  .card h2{font-family:"Playfair Display",serif;margin:.1rem 0 .8rem;font-size:1.2rem}
+  label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;margin:.6rem 0 .25rem;font-weight:600}
+  input,select,textarea{width:100%;font:inherit;padding:.5rem .6rem;border:1px solid #c9bda0;border-radius:6px;background:#fff;color:var(--ink)}
+  textarea{min-height:80px;resize:vertical}
+  .dz{border:1px dashed #c9bda0;border-radius:8px;padding:.6rem;background:#fffdf7;margin-top:.25rem}
+  .dz img{max-width:100%;max-height:150px;border:1px solid #b9ad90;border-radius:4px;display:block;margin-top:.5rem}
+  .bar{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.9rem}
+  .bar .grow{flex:1}
+  button.go{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:.55rem .9rem;font:inherit;cursor:pointer;font-weight:600}
+  button.ghost{background:#fff;border:1px solid #c9bda0;border-radius:6px;padding:.55rem .9rem;font:inherit;cursor:pointer}
+  .ad{border:1px solid var(--line);border-radius:8px;padding:.6rem .7rem;margin-bottom:.6rem;background:#fff;display:flex;gap:.6rem}
+  .ad img{width:84px;height:64px;object-fit:cover;border:1px solid #b9ad90;border-radius:4px;flex:none}
+  .ad .info{flex:1;min-width:0}
+  .ad .t{font-weight:700}
+  .ad .m{font-size:.78rem;color:#6a6253}
+  .ad .acts{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem}
+  .ad .acts button{font:inherit;font-size:.74rem;border:1px solid #c9bda0;background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer}
+  .ad .acts .ok{background:#2f6b3f;color:#fff;border-color:#2f6b3f}
+  .ad .acts .no{color:#b33}
+  .st{font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;border-radius:4px;padding:.05rem .35rem;border:1px solid #c9bda0;background:#efe7d4}
+  .st.review{background:#caa23a;color:#1a1714;border-color:#caa23a}
+  .st.approved{background:#2f6b3f;color:#fff;border-color:#2f6b3f}
+  .st.rejected{background:#9a3b32;color:#fff;border-color:#9a3b32}
+  .err{color:#b33;font-size:.82rem;min-height:1em;margin-top:.3rem}
+  /* gate */
+  .gate{position:fixed;inset:0;background:#211f1c;color:#f3ead6;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .gate .gc{background:#2c2924;border:1px solid #4a443c;border-radius:12px;padding:2rem;max-width:420px;width:92%;text-align:center}
+  .gate h2{font-family:"Playfair Display",serif;font-size:1.8rem;margin:.2rem 0 .4rem}
+  .gate input{background:#1f1c18;color:#f3ead6;border:1px solid #5a534a;margin:.4rem 0}
+  .gate .authtabs{display:flex;gap:.4rem;margin-bottom:.5rem}
+  .gate .authtabs button{flex:1;font:inherit;background:#1f1c18;color:#cdc4b2;border:1px solid #5a534a;border-radius:8px;padding:.5rem;cursor:pointer}
+  .gate .authtabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .gate button.full{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:.65rem;font:inherit;font-weight:600;cursor:pointer;margin-top:.3rem}
+  .gate a{color:#e8b9b2}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate"><div class="gc" id="gc">Chargement…</div></div>
+
+<header id="hdr" style="display:none">
+  <h1>Publisheur <span style="opacity:.6;font-size:.8rem">· Studio publicitaire</span></h1>
+  <span class="rolebadge" id="rolebadge"></span>
+  <span class="grow"></span>
+  <span id="who" style="font-size:.85rem;opacity:.85"></span>
+  <a href="index.html">📰 Kiosque</a>
+  <button onclick="signOut()">Se déconnecter</button>
+</header>
+
+<main id="app" style="display:none">
+  <div class="card" id="formCard">
+    <h2 id="formTitle">Nouvelle réclame</h2>
+    <label>Type de réclame</label><select id="f_category"></select>
+    <label>Titre</label><input id="f_title" placeholder="Ex. Aciéries de la Bleusaille">
+    <label>Fabricant / sponsor / chaîne</label><input id="f_maker" placeholder="Fabricant, régiment, chaîne…">
+    <label>Texte</label><textarea id="f_body" placeholder="Votre message publicitaire…"></textarea>
+    <label>Lien (optionnel)</label><input id="f_link" placeholder="https://… (Discord, boutique…)">
+    <label>Édition ciblée</label><select id="f_issue"></select>
+    <label>Visuel</label>
+    <div class="dz" id="dz">
+      <div class="bar"><input id="f_image" placeholder="https://… ou téléversez" oninput="prev(this.value)" style="flex:1">
+        <button class="ghost" onclick="document.querySelector('#file').click()">📷</button>
+        <input id="file" type="file" accept="image/*" style="display:none" onchange="pick(this.files[0])"></div>
+      <img id="preview" style="display:none">
+      <div class="err" id="imgErr"></div>
+    </div>
+    <div class="bar">
+      <span class="grow"></span>
+      <button class="ghost" id="delBtn" style="display:none" onclick="delAd()">Supprimer</button>
+      <button class="ghost" onclick="save('draft')">Brouillon</button>
+      <button class="go" onclick="save('review')">Soumettre à un éditeur</button>
+    </div>
+    <div class="err" id="formErr"></div>
+    <div class="bar"><button class="ghost" onclick="newAd()">+ Nouvelle réclame</button></div>
+  </div>
+
+  <div class="card">
+    <h2 id="listTitle">Mes réclames</h2>
+    <div id="list"></div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="papers.js"></script>
+<script src="daihbi.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const { Auth, Profiles, Ads, Media, configured, esc } = window.Daihbi;
+const PAPERS = window.DAIHBI_PAPERS || {};
+let MYROLE="reader", MYPROFILE=null, ME=null, current=null, pendingImg="";
+
+const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function showGate(h){ $("#gate").style.display="flex"; $("#gc").innerHTML=h; }
+function hideGate(){ $("#gate").style.display="none"; }
+
+function loginScreen(mode){
+  const up = mode==="signup";
+  showGate(`<h2>Studio publicitaire</h2>
+    <div class="authtabs"><button class="${up?"":"on"}" onclick="loginScreen('signin')">Se connecter</button>
+      <button class="${up?"on":""}" onclick="loginScreen('signup')">Créer un compte annonceur</button></div>
+    <input id="g_email" type="email" placeholder="vous@exemple.com">
+    <input id="g_pass" type="password" placeholder="mot de passe">
+    <button class="full" onclick="${up?"doSignUp()":"doSignIn()"}">${up?"Créer le compte":"Se connecter"}</button>
+    <div class="err" id="gErr"></div>
+    <p style="margin-top:.7rem;font-size:.85rem"><a href="index.html">← Retour au kiosque</a></p>`);
+}
+async function doSignIn(){ try{ await Auth.signInPassword($("#g_email").value.trim(),$("#g_pass").value); boot(); }catch(e){ $("#gErr").textContent=e.message; } }
+async function doSignUp(){
+  const em=$("#g_email").value.trim(), pw=$("#g_pass").value;
+  if(!em||pw.length<6){ $("#gErr").textContent="E-mail + mot de passe (6+)."; return; }
+  try{ const d=await Auth.signUp(em,pw,{role:"annonceur"});
+    if(d&&d.session){ boot(); } else { $("#gc").innerHTML=`<h2>Compte créé ✓</h2><p>Confirmez le lien dans votre e-mail (ignorez une page d'erreur), puis <a href="#" onclick="loginScreen('signin');return false">connectez-vous</a>.</p>`; }
+  }catch(e){ $("#gErr").textContent=e.message; }
+}
+async function signOut(){ await Auth.signOut(); location.reload(); }
+
+// ── studio ──
+function fillIssues(){
+  $("#f_issue").innerHTML = `<option value="all">Toutes les éditions</option>` +
+    Object.keys(PAPERS).map(k=>`<option value="${k}">${esc2(PAPERS[k].name||k)}</option>`).join("");
+}
+function fillCategories(){
+  $("#f_category").innerHTML = (window.DAIHBI_AD_CATEGORIES||[]).map(c=>`<option value="${c.key}">${esc2(c.label)}</option>`).join("");
+}
+const catLabel = k => (window.DAIHBI_AD_CAT_LABEL ? window.DAIHBI_AD_CAT_LABEL(k) : k);
+function prev(url){ const p=$("#preview"); if(url){p.src=url;p.style.display="";}else p.style.display="none"; }
+async function pick(file){ if(!file)return; $("#imgErr").textContent="Envoi…"; try{ pendingImg=await Media.upload(file,"ads"); $("#f_image").value=pendingImg; prev(pendingImg); $("#imgErr").textContent=""; }catch(e){ $("#imgErr").textContent=e.message; } }
+function newAd(){ current=null; $("#formTitle").textContent="Nouvelle réclame";
+  ["f_title","f_maker","f_body","f_link","f_image"].forEach(i=>$("#"+i).value=""); $("#f_issue").value="all"; $("#f_category").value="fabricant"; prev(""); $("#delBtn").style.display="none"; $("#formErr").textContent=""; }
+function editAd(a){ current=a.id; $("#formTitle").textContent="Modifier la réclame";
+  $("#f_title").value=a.title||""; $("#f_maker").value=a.maker||""; $("#f_body").value=a.body||"";
+  $("#f_link").value=a.link||""; $("#f_image").value=a.image_url||""; $("#f_issue").value=a.issue||"all";
+  $("#f_category").value=a.category||"fabricant";
+  prev(a.image_url||""); $("#delBtn").style.display=""; $("#formErr").textContent=""; window.scrollTo(0,0); }
+function adData(){ return { title:$("#f_title").value.trim(), maker:$("#f_maker").value.trim(),
+  body:$("#f_body").value.trim(), link:$("#f_link").value.trim(), image_url:$("#f_image").value.trim(),
+  category:$("#f_category").value, issue:$("#f_issue").value, advertiser_name:(MYPROFILE&&MYPROFILE.display_name)||"" }; }
+async function save(action){
+  const data=adData();
+  if(!data.title){ $("#formErr").textContent="Donnez un titre."; return; }
+  if(MYROLE==="editor"){ data.status = action==="review"?"approved":"draft"; data.approved = action==="review"; }
+  else { data.status = action==="review"?"review":"draft"; data.approved=false; }
+  try{ const saved = current==null ? await Ads.create(data) : await Ads.update(current,data);
+    current=saved.id; $("#delBtn").style.display=""; $("#formErr").textContent="";
+    $("#formTitle").textContent="Modifier la réclame"; await loadList();
+  }catch(e){ $("#formErr").textContent=e.message; }
+}
+async function delAd(){ if(current==null)return; if(!confirm("Supprimer cette réclame ?"))return;
+  try{ await Ads.remove(current); newAd(); await loadList(); }catch(e){ $("#formErr").textContent=e.message; } }
+async function approve(id,ok){ try{ await Ads.update(id,{approved:ok, status: ok?"approved":"rejected"}); await loadList(); }catch(e){ alert(e.message); } }
+
+function statusBadge(a){ const s=a.approved?"approved":(a.status||"draft");
+  const lbl={draft:"Brouillon",review:"En attente",approved:"Approuvée",rejected:"Refusée"}[s]||s;
+  return `<span class="st ${s}">${lbl}</span>`; }
+
+async function loadList(){
+  let ads=[]; try{ ads = MYROLE==="editor" ? await Ads.listAll() : await Ads.listMine(); }
+  catch(e){ $("#list").innerHTML=`<div class="err">${esc2(e.message)}</div>`; return; }
+  $("#listTitle").textContent = MYROLE==="editor" ? "Toutes les réclames" : "Mes réclames";
+  $("#list").innerHTML = ads.length ? ads.map(a=>`
+    <div class="ad">
+      ${a.image_url?`<img src="${esc2(a.image_url)}" alt="">`:""}
+      <div class="info">
+        <div class="t">${esc2(a.title||"(sans titre)")} ${statusBadge(a)}</div>
+        <div class="m">${esc2(catLabel(a.category))}${a.maker?" · "+esc2(a.maker):""} · ${a.issue==="all"?"Toutes éditions":esc2((PAPERS[a.issue]&&PAPERS[a.issue].name)||a.issue)}${MYROLE==="editor"&&a.advertiser_name?" · "+esc2(a.advertiser_name):""}</div>
+        <div class="acts">
+          <button onclick='editAd(${JSON.stringify(a).replace(/'/g,"&#39;")})'>Modifier</button>
+          ${MYROLE==="editor" && !a.approved ? `<button class="ok" onclick="approve('${a.id}',true)">Approuver</button>`:""}
+          ${MYROLE==="editor" && a.approved ? `<button class="no" onclick="approve('${a.id}',false)">Retirer</button>`:""}
+        </div>
+      </div>
+    </div>`).join("") : `<div class="m">Aucune réclame pour l’instant.</div>`;
+}
+
+async function boot(){
+  if(!configured){ showGate("<h2>Non connecté</h2><p>Ajoutez vos clés Supabase dans config.js.</p>"); return; }
+  const s = await Auth.session();
+  if(!s){ loginScreen("signin"); Auth.onChange(x=>{ if(x) boot(); }); return; }
+  MYPROFILE = await Profiles.me(); MYROLE=(MYPROFILE&&MYPROFILE.role)||"reader"; ME=s.user.id;
+  if(!["annonceur","editor"].includes(MYROLE)){
+    showGate(`<h2>Réservé aux annonceurs</h2><p>Votre compte est « ${esc2(MYROLE)} ». Le studio publicitaire est réservé aux annonceurs et aux éditeurs.</p>
+      <p style="margin-top:.6rem"><a href="index.html">← Kiosque</a> · <a href="#" onclick="signOut();return false">Se déconnecter</a></p>`); return;
+  }
+  hideGate(); $("#hdr").style.display=""; $("#app").style.display="";
+  $("#who").textContent = MYPROFILE.display_name || s.user.email || "";
+  $("#rolebadge").textContent = MYROLE==="editor" ? "Éditeur" : "Annonceur";
+  fillIssues(); fillCategories(); newAd(); await loadList();
+}
+boot();
+</script>
+</body>
+</html>

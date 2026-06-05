@@ -16,6 +16,16 @@
 // Régiments / clans offered at signup (free list — add yours here).
 window.DAIHBI_CLANS = ["2e REI","501e","8e","79e","30e","La Bleusaille","les Frogz","1re armée Jeunesse Warden","Indépendant","Autre"];
 
+// Réclame categories (advertiser ad types).
+window.DAIHBI_AD_CATEGORIES = [
+  { key:"recrutement", label:"Recrutement" },
+  { key:"troc",        label:"Troc de composants" },
+  { key:"parodie",     label:"Parodie" },
+  { key:"createur",    label:"Créateur (YouTube/Stream)" },
+  { key:"fabricant",   label:"Fabricant / autre" },
+];
+window.DAIHBI_AD_CAT_LABEL = k => (window.DAIHBI_AD_CATEGORIES.find(c=>c.key===k)||{label:k}).label;
+
 const WARDEN_SHIELD = "https://atnmzlaiglmkykzryjar.supabase.co/storage/v1/object/public/media/emblems/warden-shield.png";
 window.DAIHBI_PAPERS = {
   "current": {

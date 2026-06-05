@@ -139,6 +139,7 @@
   <span class="grow"></span>
   <span class="who" id="who"></span><span class="rolebadge" id="rolebadge" style="display:none"></span>
   <button onclick="openPortfolio()">🖼 Portfolio</button>
+  <a id="adsLink" href="ads.html" style="display:none">📣 Réclames</a>
   <button onclick="openProfile()">Mon profil</button>
   <button id="newBtn" onclick="newArticle()">+ Article</button>
   <a id="openPaper" href="paper.html" target="_blank">Open full paper ↗</a>
@@ -486,8 +487,9 @@ async function becomeWriter(){
 }
 function advertiserGate(){
   showGate(`<h2>Espace annonceur</h2>
-    <p>Bienvenue ! Le studio publicitaire (créer une réclame, la faire valider par un éditeur, l’afficher dans le journal) arrive bientôt.</p>
-    <a class="authlink" href="index.html" style="display:block;margin:.6rem 0;color:#e8b9b2">📰 Voir le kiosque →</a>
+    <p>Bienvenue ! Créez vos réclames dans le studio publicitaire ; un éditeur les validera puis elles paraîtront dans le journal.</p>
+    <a class="authlink" href="ads.html" style="display:block;margin:.6rem 0;font-weight:600;color:#e8b9b2">📣 Ouvrir le studio publicitaire →</a>
+    <a class="authlink" href="index.html" style="display:block;margin:.4rem 0;color:#e8b9b2">📰 Voir le kiosque</a>
     <p style="margin-top:.6rem;font-size:.85rem"><a href="#" onclick="doSignOut();return false">Se déconnecter</a></p>`);
 }
 
@@ -569,6 +571,7 @@ async function boot(){
   $("#hdr").style.display=""; $("#app").style.display="";
   $("#who").textContent = MYPROFILE.display_name || session.user.email || "";
   $("#rolebadge").textContent = roleLabel(MYROLE); $("#rolebadge").style.display="";
+  if(MYROLE==="editor") $("#adsLink").style.display="";   // editors moderate réclames
   ME = session.user.id;
   renderFormBar();
   initEditions();

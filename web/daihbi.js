@@ -265,6 +265,50 @@ const Portfolio = {
   },
 };
 
+// ── Ads: réclames (annonceur creates → editor approves → shown in paper) ─────
+const Ads = {
+  /** Approved ads targeting this edition (or 'all') — public. */
+  async listApproved(issue) {
+    if (!db) return [];
+    const { data, error } = await db.from("ads").select("*")
+      .eq("approved", true).in("issue", [issue, "all"]);
+    if (error) throw error;
+    return data || [];
+  },
+  /** The current advertiser's own ads. */
+  async listMine() {
+    if (!db) return [];
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) return [];
+    const { data, error } = await db.from("ads").select("*")
+      .eq("advertiser_id", user.id).order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+  /** All ads (editor moderation). */
+  async listAll() {
+    const { data, error } = await db.from("ads").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+  async create(fields) {
+    const { data: { user } } = await db.auth.getUser();
+    const row = { advertiser_id: user.id, issue: "all", status: "draft", approved: false, ...fields };
+    const { data, error } = await db.from("ads").insert(row).select().single();
+    if (error) throw error;
+    return data;
+  },
+  async update(id, fields) {
+    const { data, error } = await db.from("ads").update(fields).eq("id", id).select().single();
+    if (error) throw error;
+    return data;
+  },
+  async remove(id) {
+    const { error } = await db.from("ads").delete().eq("id", id);
+    if (error) throw error;
+  },
+};
+
 // ── Render helpers (shared by the paper page) ─────────────────────────────
 const esc = (s) =>
   (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -283,5 +327,5 @@ function md(text) {
     .join("");
 }
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, Comments, Portfolio, sortArticles, esc, md };
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, Comments, Portfolio, Ads, sortArticles, esc, md };
 })();

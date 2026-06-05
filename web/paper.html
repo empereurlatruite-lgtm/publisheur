@@ -124,6 +124,16 @@
   .story.major{-webkit-column-span:all;column-span:all;border-bottom:2px solid var(--rule);padding-bottom:.9rem;margin-bottom:1.1rem}
   .story.major .body{column-count:2;column-gap:var(--col-gap)}
 
+  /* sponsor réclame box in the well */
+  .adbox{break-inside:avoid;border:2px solid var(--rule);padding:.5rem .6rem;margin:0 0 1.3rem;
+    background:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(120,100,70,.05) 6px,rgba(120,100,70,.05) 12px)}
+  .adbox .ad-label{text-align:center;font-family:"Old Standard TT",serif;text-transform:uppercase;
+    letter-spacing:.3em;font-size:.6rem;color:var(--muted);border-bottom:1px solid var(--rule);padding-bottom:.25rem;margin-bottom:.4rem}
+  .adbox .ad-title{font-family:"Playfair Display",serif;font-weight:900;text-align:center;font-size:1.3rem;line-height:1.05;margin:.1rem 0}
+  .adbox .ad-maker{text-align:center;font-variant:small-caps;letter-spacing:.06em;color:var(--accent);font-size:.85rem;margin-bottom:.3rem}
+  .adbox .ad-link{text-align:center;font-size:.72rem;color:var(--muted);word-break:break-all;margin-top:.3rem}
+  .adbox .body{font-size:.92rem;line-height:1.4;text-align:center}
+
   .colophon{margin-top:1.4rem;border-top:3px double var(--rule);padding-top:.5rem;text-align:center;
     font-family:"Old Standard TT",serif;font-size:.72rem;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
   .empty{padding:4rem 2rem;text-align:center;color:var(--muted);font-style:italic}
@@ -186,7 +196,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = (s,r=document)=>r.querySelector(s);
-const { Articles, Auth, Profiles, Comments, esc, md, configured } = window.Daihbi;
+const { Articles, Auth, Profiles, Comments, Ads, esc, md, configured } = window.Daihbi;
 
 // Paper registry now lives in papers.js (shared with the editor).
 const PAPERS = window.DAIHBI_PAPERS || {};
@@ -242,6 +252,17 @@ function renderStory(a){
 function fmtDate(d){
   return d.toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
 }
+function renderAd(ad){
+  const cat = (window.DAIHBI_AD_CAT_LABEL && ad.category) ? window.DAIHBI_AD_CAT_LABEL(ad.category) : "Réclame";
+  return `<aside class="story adbox cat-${esc(ad.category||"fabricant")}">
+    <div class="ad-label">${esc(cat)}</div>
+    ${ad.image_url?`<img src="${esc(ad.image_url)}" alt="">`:""}
+    <h3 class="ad-title">${esc(ad.title)}</h3>
+    ${ad.maker?`<div class="ad-maker">${esc(ad.maker)}</div>`:""}
+    ${ad.body?`<div class="body"><p>${esc(ad.body)}</p></div>`:""}
+    ${ad.link?`<div class="ad-link">${esc(ad.link)}</div>`:""}
+  </aside>`;
+}
 
 async function load(){
   if(!configured){
@@ -252,6 +273,8 @@ async function load(){
   let arts;
   try{ arts = await Articles.listPublished(); }
   catch(e){ $("#sheet").innerHTML = `<div class="empty">Could not load articles.<br>${esc(e.message)}</div>`; return; }
+  let ads = [];
+  try{ ads = await Ads.listApproved(ISSUE); }catch(e){ /* ads table may be absent */ }
 
   const leads = arts.filter(a=>a.weight==="lead");
   const lead = leads[0] || null;
@@ -281,7 +304,7 @@ async function load(){
     ${arts.length===0
       ? `<div class="empty">Aucun article publié.<br><a href="editor.html?issue=${encodeURIComponent(ISSUE)}">En écrire un →</a></div>`
       : (lead?renderLead(lead):"") +
-        (rest.length?`<div class="well">${rest.map(renderStory).join("")}</div>`:"") +
+        ((rest.length||ads.length)?`<div class="well">${rest.map(renderStory).join("")}${ads.map(renderAd).join("")}</div>`:"") +
         footer}
   `;
 }
