@@ -52,9 +52,22 @@
   #preview .pvhead{padding:.5rem .8rem;border-bottom:1px solid var(--line);background:var(--panel);font-size:.8rem;color:#6a6253;display:flex;gap:.5rem;align-items:center}
   #preview iframe{flex:1;border:none;width:100%;background:#6b6357}
   /* gate */
-  .gate{position:fixed;inset:0;background:#211f1c;color:#f3ead6;display:flex;align-items:center;justify-content:center;padding:1rem;z-index:50}
-  .gate .gc{background:#2c2924;border:1px solid #4a443c;border-radius:12px;padding:2rem;max-width:440px;text-align:center}
-  .gate a{color:#e8b9b2}
+  .gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:1.2rem;z-index:50;
+    background:radial-gradient(62% 52% at 50% 26%, #38332c 0%, #1b1916 72%)}
+  .gate .gc{background:#f7f2e6;color:#26231f;border:1px solid #c9bda0;border-radius:16px;padding:2.3rem 2.3rem 1.9rem;
+    max-width:480px;width:100%;text-align:center;box-shadow:0 24px 72px rgba(0,0,0,.55)}
+  .gate .gc .brand{font-family:"Playfair Display",serif;font-weight:900;text-transform:uppercase;letter-spacing:.14em;
+    font-size:.76rem;color:#7a1f1a;padding-bottom:.7rem;margin-bottom:1.1rem;border-bottom:2px solid #26231f}
+  .gate .gc h2{font-family:"Playfair Display",serif;font-size:1.5rem;line-height:1.15;margin:.2rem 0 .5rem}
+  .gate .gc p{color:#6a6253;font-size:.95rem;line-height:1.5;margin:.35rem 0}
+  .gate .gc .acts{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:1.3rem}
+  .gate .gc .acts a,.gate .gc .acts button{font:inherit;font-size:.88rem;text-decoration:none;border:1px solid #c9bda0;
+    background:#fff;color:#26231f;border-radius:8px;padding:.55rem .95rem;cursor:pointer;transition:background .15s}
+  .gate .gc .acts a:hover,.gate .gc .acts button:hover{background:#efe7d5}
+  .gate .gc .acts .primary{background:#7a1f1a;border-color:#7a1f1a;color:#fff;font-weight:600}
+  .gate .gc .acts .primary:hover{background:#8f2620}
+  .gate .gc .hint{font-size:.8rem;color:#9a907c;margin-top:1.15rem}
+  .gate .gc .hint a{color:#7a1f1a}
   /* photo picker modal */
   .pmodal{position:fixed;inset:0;background:rgba(20,18,16,.75);z-index:60;display:none;align-items:center;justify-content:center;padding:1.2rem}
   .pmodal .card{background:#fbf8ef;border-radius:12px;max-width:760px;width:96vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
@@ -69,7 +82,7 @@
 </style>
 </head>
 <body>
-<div class="gate" id="gate"><div class="gc" id="gc">Chargement…</div></div>
+<div class="gate" id="gate"><div class="gc" id="gc"><div class="brand">📰 Publisheur · Mise en page</div><p>Chargement…</p></div></div>
 
 <header id="hdr" style="display:none">
   <h1>Mise en page · <span id="paperName"></span></h1>
@@ -121,7 +134,7 @@ function srcTag(a){
   return ` <span class="bsrc ${ai?'ai':''}">${ai?'✦ IA':esc2(a.source)}</span>`;
 }
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1800); }
-function showGate(h){ $("#gate").style.display="flex"; $("#gc").innerHTML=h; }
+function showGate(h){ $("#gate").style.display="flex"; $("#gc").innerHTML=`<div class="brand">📰 Publisheur · Mise en page</div>`+h; }
 function previewURL(){ return `paper.html?issue=${encodeURIComponent(ISSUE)}&_=${Date.now()}`; }
 function reloadPreview(){ $("#pv").src=previewURL(); }
 async function signOut(){ await Auth.signOut(); location.href="editor.html"; }
@@ -223,14 +236,22 @@ async function runExport(){
 async function boot(){
   if(!configured){ showGate("<h2>Non connecté</h2>"); return; }
   const s=await Auth.session();
-  if(!s){ showGate(`<h2>Connexion requise</h2><p>La mise en page est réservée à l’éditeur du journal.</p><p style="margin-top:.6rem"><a href="editor.html?role=writer">Se connecter / Rejoindre →</a></p>`); return; }
+  try{ const pm=await Papers.map(); PAPER=pm[ISSUE]||{name:ISSUE}; }catch(e){ PAPER={name:ISSUE}; }
+  const titre = esc(PAPER.name||ISSUE);
+  if(!s){ showGate(`<h2>Connexion requise</h2>
+    <p>La mise en page de <b>« ${titre} »</b> est réservée à son éditeur en chef.</p>
+    <div class="acts"><a class="primary" href="editor.html?role=writer">Se connecter · Rejoindre</a><a href="index.html">📰 Kiosque</a></div>`); return; }
   const prof=await Profiles.me(); const role=(prof&&prof.role)||"reader";
   let managed=[]; try{ managed=await Papers.myManaged(); }catch(e){}
   if(role!=="editor" || !managed.includes(ISSUE)){
-    showGate(`<h2>Réservé à l’éditeur</h2><p>Seul l’éditeur en chef de ce journal peut le mettre en page.</p>
-      <p style="margin-top:.6rem"><a href="paper.html?issue=${encodeURIComponent(ISSUE)}">📰 Lire le journal</a> · <a href="editor.html">✍️ Mes chroniques</a></p>`); return;
+    showGate(`<h2>Réservé à l’éditeur en chef</h2>
+      <p>Seul l’éditeur en chef de <b>« ${titre} »</b> peut en faire la mise en page.</p>
+      <div class="acts">
+        <a class="primary" href="paper.html?issue=${encodeURIComponent(ISSUE)}">📰 Lire le journal</a>
+        <a href="editor.html">✍️ Mes chroniques</a>
+      </div>
+      <p class="hint">Vous venez d’être nommé éditeur ? <a href="#" onclick="location.reload();return false">Actualisez la page</a>.</p>`); return;
   }
-  try{ const pm=await Papers.map(); PAPER=pm[ISSUE]||{name:ISSUE}; }catch(e){ PAPER={name:ISSUE}; }
   $("#gate").style.display="none"; $("#hdr").style.display=""; $("#app").style.display="grid";
   $("#paperName").textContent=PAPER.name||ISSUE;
   $("#openPaper").href=`paper.html?issue=${encodeURIComponent(ISSUE)}`;
