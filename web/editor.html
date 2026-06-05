@@ -268,8 +268,10 @@ let PAPERS = window.DAIHBI_PAPERS || {};
 let MY_MANAGED = [];   // issues this editor owns/co-edits
 let current = null;
 let MYROLE = "reader", MYPROFILE = null;
+let PROFMAP = {};   // user id → display name (for "édité par …")
 const ROLE_LABELS = { reader:"Lecteur", writer:"Rédacteur", illustrator:"Illustrateur", editor:"Éditeur", annonceur:"Annonceur" };
 const roleLabel = r => ROLE_LABELS[r] || r;
+const nameOf = id => (id && PROFMAP[id]) || (id ? "—" : "");
 
 const F = {
   kicker:$("#f_kicker"), headline:$("#f_headline"), subhead:$("#f_subhead"),
@@ -361,10 +363,15 @@ function fill(a){
   F.subhead.value=a?.subhead||""; F.byline.value=a?.byline||"";
   F.weight.value=a?.weight||"minor"; F.image.value=a?.image_url||"";
   F.body.value=a?.body||"";
-  const pub=$("#f_published"); if(pub) pub.checked = a ? !!a.published : false;
   const sl=$("#statusLbl"); if(sl) sl.textContent = a ? statusLabel(a) : "Nouveau brouillon";
+  const isPub = !!(a && a.published);
+  const pb=$("#pubBtn"), ub=$("#unpubBtn");
+  if(pb) pb.style.display = isPub ? "none" : "";
+  if(ub) ub.style.display = isPub ? "" : "none";
   $("#delBtn").style.display=a?"":"none";
-  $("#savedAt").textContent=a?.updated_at?"Modifié le "+new Date(a.updated_at).toLocaleString("fr-FR"):"";
+  $("#savedAt").textContent=a?.updated_at
+    ? "Modifié le "+new Date(a.updated_at).toLocaleString("fr-FR")+(a.last_edited_by?" par "+nameOf(a.last_edited_by):"")
+    : "";
   $("#histLink").style.display = a ? "" : "none";
   showPreview(a?.image_url||""); $("#upstatus").textContent="";
   highlight();
@@ -447,15 +454,15 @@ function statusLabel(a){
 }
 async function saveArticle(action){
   const data=formData();
-  if(MYROLE==="editor"){
-    const pub = $("#f_published") ? $("#f_published").checked : false;
-    data.published = pub; data.status = pub ? "published" : "draft";
-  } else if(action==="review"){ data.published=false; data.status="review"; }
-  else { data.published=false; data.status="draft"; }
+  if(action==="draft"){ data.published=false; data.status="draft"; }
+  else if(action==="review"){ data.published=false; data.status="review"; }
+  else if(action==="publish"){ data.published=true; data.status="published"; }
+  else if(action==="unpublish"){ data.published=false; data.status="draft"; }
+  // else: generic save — leave published/status untouched (content-only)
   try{
     const saved = current==null ? await Articles.create(data) : await Articles.update(current,data);
     current=saved.id;
-    toast(saved.published ? "Publié ✓" : (saved.status==="review" ? "Soumis en relecture ✓" : "Brouillon enregistré ✓"));
+    toast(saved.published ? "Publié ✓" : (saved.status==="review" ? "Soumis en relecture ✓" : "Enregistré ✓"));
     await loadList(); fill(saved); reloadPreview();
   }catch(e){ toast("Erreur : "+e.message); }
 }
@@ -467,17 +474,18 @@ async function delArticle(){
 }
 function renderFormBar(){
   const bar=$("#formbar"); if(!bar) return;
+  const head = `<span class="statuslbl" id="statusLbl"></span><span class="grow"></span>
+    <button class="del" id="delBtn" onclick="delArticle()" style="display:none">Supprimer</button>`;
   if(MYROLE==="editor"){
-    bar.innerHTML = `<label class="chk"><input type="checkbox" id="f_published"> Publié (visible des lecteurs)</label>
-      <span class="grow"></span>
-      <button class="del" id="delBtn" onclick="delArticle()" style="display:none">Supprimer</button>
-      <button class="save" onclick="saveArticle()">Enregistrer</button>`;
+    bar.innerHTML = head +
+      `<button class="save ghost" onclick="saveArticle('draft')">Brouillon</button>
+       <button class="save ghost" onclick="saveArticle('review')">Soumettre en relecture</button>
+       <button class="save" id="pubBtn" onclick="saveArticle('publish')">Publier</button>
+       <button class="save ghost" id="unpubBtn" style="display:none" onclick="saveArticle('unpublish')">Dépublier</button>`;
   } else {
-    bar.innerHTML = `<span class="statuslbl" id="statusLbl"></span>
-      <span class="grow"></span>
-      <button class="del" id="delBtn" onclick="delArticle()" style="display:none">Supprimer</button>
-      <button class="save ghost" onclick="saveArticle('draft')">Brouillon</button>
-      <button class="save" onclick="saveArticle('review')">Soumettre en relecture</button>`;
+    bar.innerHTML = head +
+      `<button class="save ghost" onclick="saveArticle('draft')">Brouillon</button>
+       <button class="save" onclick="saveArticle('review')">Soumettre en relecture</button>`;
   }
 }
 
@@ -659,9 +667,8 @@ async function openHistory(){
   $("#hmodal").style.display="flex"; $("#hList").innerHTML="<div style='padding:1rem;color:#7a7060'>Chargement…</div>";
   try{
     const revs = await Revisions.list(current);
-    const profs = await Profiles.all(); const byId=Object.fromEntries(profs.map(p=>[p.id,p]));
     $("#hList").innerHTML = revs.length ? revs.map(r=>{
-      const who=(byId[r.author_id]&&byId[r.author_id].display_name)||"?";
+      const who=nameOf(r.edited_by||r.author_id)||"?";
       const body=(r.body||""); const ex=body.slice(0,160)+(body.length>160?"…":"");
       return `<div class="revrow">
         <div class="revmeta"><b>${escapeHtml(r.headline||"(sans titre)")}</b>
@@ -701,7 +708,7 @@ async function initEditions(){
   $("#openPaper").href = `paper.html?issue=${encodeURIComponent(ISSUE)}`;
 }
 
-document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s"){ e.preventDefault(); saveArticle(MYROLE==="editor"?undefined:"draft"); } });
+document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s"){ e.preventDefault(); saveArticle(); } });
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 async function boot(){
@@ -724,6 +731,7 @@ async function boot(){
   $("#rolebadge").textContent = roleLabel(MYROLE); $("#rolebadge").style.display="";
   if(MYROLE==="editor") $("#adsLink").style.display="";   // editors moderate réclames
   ME = session.user.id;
+  try{ const ps=await Profiles.all(); PROFMAP=Object.fromEntries(ps.map(p=>[p.id, p.display_name||""])); }catch(e){}
   try{ PAPERS = await Papers.map(); }catch(e){}
   if(MYROLE==="editor"){ try{ MY_MANAGED = await Papers.myManaged(); }catch(e){} }
   if(MYROLE==="editor" && MY_MANAGED.includes(ISSUE)) $("#manageLink").style.display="";

@@ -112,7 +112,7 @@ const Articles = {
     const row = {
       issue: ISSUE,
       kicker: "", headline: "Untitled", subhead: "", byline: "",
-      body: "", weight: "minor", image_url: "", published: true,
+      body: "", weight: "minor", image_url: "", published: false, status: "draft",
       position: max + 1,
       author_id: user?.id || null,
       ...fields,
