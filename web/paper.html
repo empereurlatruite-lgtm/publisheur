@@ -84,12 +84,17 @@
     font-size:1.15rem;color:var(--muted);margin-bottom:.5rem;
     border-bottom:1px solid #cbbfa3;padding-bottom:.7rem;max-width:46rem;margin:0 auto .5rem}
   .lead .byline{text-align:center;font-variant:small-caps;letter-spacing:.08em;font-size:.85rem;color:var(--muted);margin-bottom:.6rem}
-  .lead .body{column-count:3;column-gap:var(--col-gap);column-rule:1px solid #cbbfa3;
-    text-align:justify;hyphens:auto;font-size:1.02rem;line-height:1.5}
-  .lead .body p:first-of-type::first-letter{font-family:"Playfair Display",serif;float:left;
-    font-size:4.4rem;line-height:.72;padding:.1rem .5rem .1rem 0;color:var(--accent);font-weight:900}
+  /* lead: drop-capped opening paragraph spans full width (clean drop cap),
+     remaining paragraphs flow into balanced columns below */
+  .lead .lead-open{font-size:1.06rem;line-height:1.55;text-align:justify;hyphens:auto;max-width:52rem;margin:0 auto}
+  .lead .lead-open p{margin:0 0 .55rem}
+  .lead .lead-open p:first-of-type::first-letter{font-family:"Playfair Display",serif;float:left;
+    font-size:3.6rem;line-height:.66;padding:.12rem .5rem 0 0;color:var(--accent);font-weight:900}
+  .lead .lead-cols{column-count:3;column-gap:var(--col-gap);column-rule:1px solid #cbbfa3;
+    text-align:justify;hyphens:auto;font-size:1rem;line-height:1.5;margin-top:.7rem}
+  .lead .lead-cols p{margin:0 0 .55rem;break-inside:avoid-column}
 
-  .well{column-count:4;column-gap:var(--col-gap);column-rule:1px solid #cbbfa3;text-align:justify;hyphens:auto}
+  .well{column-count:3;column-gap:var(--col-gap);column-rule:1px solid #cbbfa3;text-align:justify;hyphens:auto}
   .story{break-inside:avoid;margin:0 0 1.3rem;padding-bottom:1rem;border-bottom:1px solid #cbbfa3}
   .story:last-child{border-bottom:none}
   .story .kicker{text-align:left;margin-bottom:.15rem}
@@ -164,11 +169,19 @@ function kicker(a){ return a.kicker ? `<div class="kicker">${esc(a.kicker)}</div
 function byline(a){ return a.byline ? `<div class="byline">par ${esc(a.byline)}</div>` : ""; }
 
 function renderLead(a){
+  // split the rendered body into the opening paragraph (drop-capped, full width)
+  // and the remaining paragraphs (flowed into columns) — avoids the drop-cap
+  // landing in the wrong column inside a multicol block.
+  const html = md(a.body) || "<p></p>";
+  const m = html.match(/^(\s*<p>[\s\S]*?<\/p>)([\s\S]*)$/);
+  const open = m ? m[1] : html;
+  const rest = (m ? m[2] : "").trim();
   return `<section class="lead">
     ${kicker(a)}<h2>${esc(a.headline)}</h2>
     ${a.subhead ? `<div class="deck">${esc(a.subhead)}</div>` : ""}
     ${byline(a)}${imgTag(a.image_url)}
-    <div class="body">${md(a.body) || "<p></p>"}</div>
+    <div class="lead-open">${open}</div>
+    ${rest ? `<div class="lead-cols">${rest}</div>` : ""}
   </section>`;
 }
 function renderStory(a){

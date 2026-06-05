@@ -34,6 +34,14 @@
   .tag.off{opacity:.5}
   .arrows{display:flex;flex-direction:column;gap:1px}
   .arrows button{border:1px solid var(--line);background:#fff;cursor:pointer;font-size:.6rem;line-height:1;padding:.1rem .25rem;border-radius:3px}
+  .listtop{position:sticky;top:0;z-index:5;background:var(--panel)}
+  .listfilter{display:flex;flex-direction:column;gap:.4rem;padding:.5rem .9rem;border-bottom:1px solid var(--line)}
+  .listfilter input{font:inherit;border:1px solid var(--line);border-radius:6px;padding:.35rem .5rem;background:#fff}
+  .whochips{display:flex;gap:.3rem}
+  .wchip{font:inherit;font-size:.73rem;border:1px solid var(--line);background:#fff;border-radius:999px;padding:.2rem .65rem;cursor:pointer}
+  .wchip:hover{background:#fff}
+  .wchip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .item .mine{font-size:.6rem;color:#2a7;border:1px solid #b9d9c4;background:#eaf6ee;border-radius:3px;padding:.02rem .3rem;text-transform:uppercase;letter-spacing:.04em}
 
   #form{background:#fbf8ef;padding:1rem 1.1rem}
   #form .row{margin-bottom:.8rem}
@@ -91,7 +99,17 @@
 
 <main style="display:none" id="app">
   <div class="col" id="list">
-    <div class="listhead"><span class="grow">Articles</span></div>
+    <div class="listtop">
+      <div class="listhead"><span class="grow">Articles</span><span id="listcount" style="font-weight:400;color:#7a7060;font-size:.78rem"></span></div>
+      <div class="listfilter">
+        <input type="search" id="listq" placeholder="Filtrer par titre ou auteur…" oninput="setQuery(this.value)">
+        <div class="whochips">
+          <button class="wchip on" data-who="all"    onclick="setWho('all')">Tous</button>
+          <button class="wchip"    data-who="mine"   onclick="setWho('mine')">Moi</button>
+          <button class="wchip"    data-who="others" onclick="setWho('others')">Autres</button>
+        </div>
+      </div>
+    </div>
     <div id="items"></div>
   </div>
 
@@ -207,19 +225,43 @@ function fill(a){
 function newArticle(){ fill(null); F.headline.focus(); }
 function highlight(){ document.querySelectorAll(".item").forEach(el=>el.classList.toggle("sel",String(el.dataset.id)===String(current))); }
 
+let ALL = [];                       // every article in this edition (cache)
+let ME = null;                      // current user's id (set in boot)
+const listFilter = { q:"", who:"all" };   // who: all | mine | others
+
 async function loadList(){
-  let arts;
-  try{ arts=await Articles.listAll(); }catch(e){ toast("Load error: "+e.message); return; }
+  try{ ALL = await Articles.listAll(); }catch(e){ toast("Load error: "+e.message); return; }
+  renderList();
+}
+function setQuery(v){ listFilter.q=v; renderList(); }
+function setWho(w){
+  listFilter.who=w;
+  document.querySelectorAll(".wchip").forEach(c=>c.classList.toggle("on", c.dataset.who===w));
+  renderList();
+}
+function matchFilter(a){
+  if(listFilter.who==="mine"   && a.author_id!==ME) return false;
+  if(listFilter.who==="others" && (!a.author_id || a.author_id===ME)) return false;
+  const q=listFilter.q.trim().toLowerCase();
+  if(q && !((a.headline||"")+" "+(a.byline||"")).toLowerCase().includes(q)) return false;
+  return true;
+}
+function renderList(){
+  const arts = ALL.filter(matchFilter);
+  const total = ALL.length, others = ALL.filter(a=>a.author_id&&a.author_id!==ME).length;
+  $("#listcount").textContent = `${arts.length}/${total}` + (others?` · ${others} d’autres`:"");
   $("#items").innerHTML = arts.length ? arts.map(itemHTML).join("")
-    : `<div style="padding:1.4rem;color:#8a8070;font-style:italic">No articles yet. Click “+ New article”.</div>`;
+    : `<div style="padding:1.4rem;color:#8a8070;font-style:italic">Aucun article pour ce filtre.</div>`;
   highlight();
 }
 function itemHTML(a){
+  const mine = a.author_id && a.author_id===ME;
   return `<div class="item" data-id="${a.id}" onclick="edit('${a.id}')">
     <div style="flex:1">
       <div class="h">${escapeHtml(a.headline)}</div>
       <div class="meta"><span class="tag ${a.weight}">${a.weight}</span>
-        ${a.published?"":'<span class="tag off">draft</span>'}${a.byline?escapeHtml(a.byline):""}</div>
+        ${a.published?"":'<span class="tag off">draft</span>'}
+        ${mine?'<span class="mine">vous</span>':""}${a.byline?escapeHtml(a.byline):""}</div>
     </div>
     <div class="arrows" onclick="event.stopPropagation()">
       <button title="Up" onclick="move('${a.id}','up')">▲</button>
@@ -271,6 +313,7 @@ async function boot(){
   hideGate();
   $("#hdr").style.display=""; $("#app").style.display="";
   $("#who").textContent = session.user.email || "";
+  ME = session.user.id;
   initEditions();
   Articles.subscribe(loadList);
   await loadList(); newArticle();
