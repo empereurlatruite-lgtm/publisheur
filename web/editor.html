@@ -115,6 +115,27 @@
   .hint{font-size:.72rem;color:#8a8070;margin-top:.3rem}
   .chk{display:flex;align-items:center;gap:.4rem;font-size:.85rem;text-transform:none;letter-spacing:0;color:var(--ink)}
 
+  /* editions dashboard */
+  #dash{display:block;background:var(--bg);overflow:auto}
+  .dashwrap{max-width:1100px;margin:0 auto;padding:1.6rem 1.2rem 3rem}
+  .dashhead{margin-bottom:1.2rem}
+  .dashtitle{font-family:"Playfair Display",serif;font-size:1.9rem;margin:.2rem 0}
+  .dashsub{color:#7a7060;margin:0;font-size:.9rem}
+  .dashgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.1rem}
+  .dcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1.1rem 1.1rem .9rem;box-shadow:0 3px 12px rgba(0,0,0,.08);display:flex;flex-direction:column;min-height:150px}
+  .dcard .dmast{font-family:"UnifrakturCook",serif;font-size:1.8rem;line-height:1.05;text-align:center;margin:.2rem 0}
+  .dcard.anton .dmast{font-family:"Anton",Impact,sans-serif;text-transform:uppercase;font-size:1.7rem}
+  .dcard.echo  .dmast{font-family:"Oswald",sans-serif;font-weight:700;text-transform:uppercase;color:#1f3a5f;font-size:1.6rem}
+  .dcard .dtag{text-align:center;font-style:italic;color:#7a7060;font-size:.8rem;margin-bottom:.6rem}
+  .dcard .dmeta{text-align:center;font-size:.74rem;color:#9a907c;margin-top:auto}
+  .dcard .dacts{display:flex;gap:.5rem;margin-top:.7rem}
+  .dcard .dacts .open{flex:1;font:inherit;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:.5rem;cursor:pointer;font-weight:600}
+  .dcard .dacts .del{font:inherit;border:1px solid #d8b6b2;background:#fff;color:#7a1f1a;border-radius:6px;padding:.5rem .6rem;cursor:pointer}
+  .dcard.dnew{align-items:center;justify-content:center;text-align:center;border:2px dashed #c9bda0;background:#fffdf7;cursor:pointer;color:#6a6253}
+  .dcard.dnew:hover{border-color:var(--accent);color:var(--accent)}
+  .dcard.dnew .dnew-plus{font-size:2.4rem;line-height:1}
+  .dempty{grid-column:1/-1;color:#8a8070;font-style:italic;text-align:center;padding:2rem}
+
   #preview{display:flex;flex-direction:column;border-right:none}
   #preview .pvhead{padding:.5rem .9rem;border-bottom:1px solid var(--line);background:var(--panel);font-size:.8rem;color:#6a6253;display:flex;align-items:center;gap:.5rem}
   #preview iframe{flex:1;border:none;width:100%;background:#6b6357}
@@ -151,14 +172,15 @@
 
 <header style="display:none" id="hdr">
   <h1>Publisheur <span style="opacity:.6;font-size:.8rem;font-family:system-ui">· Newsroom</span></h1>
-  <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;opacity:.85">
+  <button id="homeLink" style="display:none" onclick="goDashboard()">🏠 Mes journaux</button>
+  <label id="editionWrap" style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;opacity:.85">
     Édition
     <select id="editionSel" onchange="switchEdition(this.value)"
       style="font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:5px;padding:.25rem .4rem"></select>
   </label>
   <span class="grow"></span>
   <span class="who" id="who"></span><span class="rolebadge" id="rolebadge" style="display:none"></span>
-  <button onclick="openPortfolio()">🖼 Portfolio</button>
+  <button id="portfolioLink" onclick="openPortfolio()">🖼 Portfolio</button>
   <a id="adsLink" href="ads.html" style="display:none">📣 Réclames</a>
   <button id="manageLink" style="display:none" onclick="openManageJournal()">⚙ Gérer le journal</button>
   <button id="printLink" style="display:none" onclick="runExport()">🖨 PDF imprimable</button>
@@ -167,6 +189,15 @@
   <a id="openPaper" href="paper.html" target="_blank">Open full paper ↗</a>
   <button onclick="doSignOut()">Sign out</button>
 </header>
+
+<!-- Editions dashboard (the landing for contributors) -->
+<main style="display:none" id="dash">
+  <div class="dashwrap">
+    <div class="dashhead"><h2 class="dashtitle" id="dashTitle">Mes journaux</h2>
+      <p class="dashsub" id="dashSub"></p></div>
+    <div class="dashgrid" id="dashGrid"></div>
+  </div>
+</main>
 
 <main style="display:none" id="app">
   <div class="col" id="list">
@@ -268,7 +299,7 @@ const ISSUE = window.Daihbi.ISSUE;
 let PAPERS = window.DAIHBI_PAPERS || {};
 let MY_MANAGED = [];   // issues this editor owns/co-edits
 let current = null;
-let MYROLE = "reader", MYPROFILE = null;
+let MYROLE = "reader", MYPROFILE = null, MY_EMAIL = "";
 let PROFMAP = {};   // user id → display name (for "édité par …")
 const ROLE_LABELS = { reader:"Lecteur", writer:"Rédacteur", illustrator:"Illustrateur", editor:"Éditeur", annonceur:"Annonceur" };
 const roleLabel = r => ROLE_LABELS[r] || r;
@@ -618,8 +649,11 @@ function readJournal(isNew){
     emblemLeft:$("#j_eleft").value.trim(), emblemRight:$("#j_eright").value.trim() };
 }
 function openCreateJournal(){
+  // a ready-made template so the editor isn't starting from a blank page
+  const tmpl = { plate:"plate-fraktur", ear:["Édition du Front", "", "Warden"],
+    slogans:["Vive les Wardens"], clan:(MYPROFILE&&MYPROFILE.clan)||"" };
   $("#jTitle").textContent="Créer un journal";
-  $("#jBody").innerHTML = journalForm({},true) + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">Créer le journal</button></div>`;
+  $("#jBody").innerHTML = journalForm(tmpl,true) + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">Créer le journal</button></div>`;
   $("#jmodal").style.display="flex";
 }
 async function createJournal(){
@@ -627,8 +661,20 @@ async function createJournal(){
   if(!p.name){ $("#jErr").textContent="Donnez un nom."; return; }
   if(!p.issue){ $("#jErr").textContent="Donnez un identifiant (lettres/chiffres/tirets)."; return; }
   if(PAPERS[p.issue]){ $("#jErr").textContent="Cet identifiant existe déjà."; return; }
-  try{ await Papers.create(p); location.href=`editor.html?issue=${encodeURIComponent(p.issue)}`; }
-  catch(e){ $("#jErr").textContent=e.message; }
+  try{
+    await Papers.create(p);
+    // seed a starter article so the new edition has a template to edit
+    try{
+      await window.Daihbi.db.from("articles").insert({
+        issue:p.issue, weight:"lead", status:"draft", published:false, position:0,
+        kicker:"À LA UNE", headline:"Votre titre de une", subhead:"Modèle — cliquez pour l’éditer",
+        byline:(MYPROFILE&&MYPROFILE.display_name)||"",
+        body:"Bienvenue dans votre nouveau journal.\n\nÉcrivez votre premier article ici — laissez une ligne vide entre les paragraphes. **Gras**, *italique*.",
+        author_id:ME,
+      });
+    }catch(_){}
+    location.href=`editor.html?issue=${encodeURIComponent(p.issue)}`;
+  }catch(e){ $("#jErr").textContent=e.message; }
 }
 function openManageJournal(){
   const p = Object.assign({issue:ISSUE}, PAPERS[ISSUE]||{});
@@ -753,20 +799,61 @@ async function boot(){
   if(!["writer","illustrator","editor"].includes(MYROLE)){ readerGate(); return; }  // readers → kiosque
   // signed in as a contributor
   hideGate();
-  $("#hdr").style.display=""; $("#app").style.display="";
-  $("#who").textContent = MYPROFILE.display_name || session.user.email || "";
+  ME = session.user.id; MY_EMAIL = session.user.email || "";
+  $("#hdr").style.display="";
+  $("#who").textContent = MYPROFILE.display_name || MY_EMAIL;
   $("#rolebadge").textContent = roleLabel(MYROLE); $("#rolebadge").style.display="";
   if(MYROLE==="editor") $("#adsLink").style.display="";   // editors moderate réclames
-  ME = session.user.id;
   try{ const ps=await Profiles.all(); PROFMAP=Object.fromEntries(ps.map(p=>[p.id, p.display_name||""])); }catch(e){}
   try{ PAPERS = await Papers.map(); }catch(e){}
   if(MYROLE==="editor"){ try{ MY_MANAGED = await Papers.myManaged(); }catch(e){} }
+
+  // No edition chosen → land on the editions dashboard (don't jump into editing)
+  if(!new URLSearchParams(location.search).has("issue")){ renderDashboard(); return; }
+
+  // An edition is chosen → the article editor for ISSUE
+  $("#dash").style.display="none"; $("#app").style.display="";
+  $("#homeLink").style.display="";
   if(MYROLE==="editor" && MY_MANAGED.includes(ISSUE)){ $("#manageLink").style.display=""; $("#printLink").style.display=""; }
   renderFormBar();
   await initEditions();
   wireDropzone();
   Articles.subscribe(loadList);
   await loadList(); newArticle();
+}
+function goDashboard(){ location.href = "editor.html"; }
+function renderDashboard(){
+  $("#app").style.display="none"; $("#dash").style.display="";
+  // hide article-context header controls on the dashboard
+  ["homeLink","editionWrap","manageLink","printLink","newBtn","openPaper"].forEach(id=>{const e=$("#"+id); if(e) e.style.display="none";});
+  const isEd = MYROLE==="editor";
+  $("#dashTitle").textContent = isEd ? "Mes journaux" : "Choisir un journal";
+  $("#dashSub").textContent = isEd
+    ? "Ouvrez une édition pour écrire et publier, ou créez-en une nouvelle."
+    : "Ouvrez le journal pour lequel vous voulez contribuer.";
+  const issues = isEd ? MY_MANAGED.slice() : Object.keys(PAPERS);
+  const cards = issues.map(is => dashCard(is, PAPERS[is] || {name:is}));
+  if(isEd) cards.push(`<div class="dcard dnew" onclick="openCreateJournal()"><div class="dnew-plus">＋</div><div>Créer un journal</div></div>`);
+  $("#dashGrid").innerHTML = cards.length ? cards.join("")
+    : `<div class="dempty">${isEd?"Vous ne gérez encore aucun journal. Cliquez « Créer un journal ».":"Aucun journal disponible pour l’instant."}</div>`;
+}
+function dashCard(issue, p){
+  const cls = ({"plate-anton":"anton","plate-echo":"echo"}[p.plate]||"fraktur");
+  return `<div class="dcard ${cls}">
+    <div class="dmast">${escapeHtml(p.name||issue)}</div>
+    ${p.tagline?`<div class="dtag">${escapeHtml(p.tagline)}</div>`:""}
+    <div class="dmeta">${escapeHtml(p.clan||"")}</div>
+    <div class="dacts">
+      <button class="open" onclick="openEdition('${issue}')">${MYROLE==="editor"?"Éditer":"Écrire"} →</button>
+      ${MYROLE==="editor"?`<button class="del" title="Supprimer le journal" onclick="deleteEdition('${issue}')">🗑</button>`:""}
+    </div></div>`;
+}
+function openEdition(issue){ location.href = "editor.html?issue="+encodeURIComponent(issue); }
+async function deleteEdition(issue){
+  const nm = (PAPERS[issue]&&PAPERS[issue].name)||issue;
+  if(!confirm(`Supprimer le journal « ${nm} » ?\nLe titre disparaît du kiosque ; les articles déjà écrits restent en base.`)) return;
+  try{ await Papers.remove(issue); MY_MANAGED = await Papers.myManaged(); PAPERS = await Papers.map(); renderDashboard(); toast("Journal supprimé"); }
+  catch(e){ alert("Suppression refusée (seul le propriétaire peut supprimer) : "+e.message); }
 }
 boot();
 </script>
