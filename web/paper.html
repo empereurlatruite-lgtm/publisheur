@@ -42,6 +42,12 @@
        font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
        border-bottom:1px solid var(--rule);padding-bottom:.4rem}
   .nameplate{text-align:center;padding:.5rem 0 .2rem}
+  /* regiment crests flanking the masthead (full colour, not toned) */
+  .plate-row{display:flex;align-items:center;justify-content:center;gap:1.6rem}
+  .plate-row .plate-name{flex:0 1 auto;min-width:0}
+  .emblem{height:92px;width:auto;flex:0 0 auto;object-fit:contain}
+  .emblem-spacer{flex:0 0 92px}
+  @media(max-width:640px){.emblem,.emblem-spacer{height:54px;flex-basis:54px}}
   .nameplate h1{font-family:"UnifrakturCook","Playfair Display",serif;font-weight:700;
     font-size:5.2rem;line-height:.95;margin:.2rem 0;letter-spacing:.01em}
   .nameplate .sub{font-family:"Old Standard TT",serif;font-style:italic;color:var(--muted);
@@ -217,8 +223,14 @@ async function load(){
   $("#sheet").innerHTML = `
     <div class="ear"><span>${PAPER.ear[0]||""}</span><span>${PAPER.ear[1]||""}</span><span>${PAPER.ear[2]||""}</span></div>
     <div class="nameplate ${PAPER.plate}">
-      <h1>${esc(PAPER.name)}</h1>
-      ${PAPER.tagline ? `<div class="sub">${PAPER.tagline}</div>` : ""}
+      <div class="plate-row">
+        ${PAPER.emblemLeft ? `<img class="emblem" src="${esc(PAPER.emblemLeft)}" alt="">` : (PAPER.emblemRight?`<span class="emblem-spacer"></span>`:"")}
+        <div class="plate-name">
+          <h1>${esc(PAPER.name)}</h1>
+          ${PAPER.tagline ? `<div class="sub">${PAPER.tagline}</div>` : ""}
+        </div>
+        ${PAPER.emblemRight ? `<img class="emblem" src="${esc(PAPER.emblemRight)}" alt="">` : (PAPER.emblemLeft?`<span class="emblem-spacer"></span>`:"")}
+      </div>
     </div>
     <div class="dateline-bar">
       <span>${fmtDate(new Date())}</span>
