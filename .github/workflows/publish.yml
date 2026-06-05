@@ -2,8 +2,13 @@
 # Run manually (Actions tab → "Publish issue" → Run workflow), or on a schedule.
 # Outputs are uploaded as a downloadable artifact.
 #
-# Requires two repo secrets (Settings → Secrets and variables → Actions):
-#   SUPABASE_URL, SUPABASE_KEY  (the anon key is fine for published articles)
+# Requires repo secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL, SUPABASE_KEY          (anon key — reads published articles)
+#   SUPABASE_SERVICE_KEY                (service-role — uploads the PDF to Storage)
+#
+# The finished PDF is uploaded to the public 'media' bucket at
+#   <SUPABASE_URL>/storage/v1/object/public/media/exports/<issue>.pdf
+# so the app can offer a download link (and also kept as a CI artifact).
 #
 # Note: the Foxhole war-wire needs the local foxhole_war.db, which is not in
 # the repo — so CI publishes the human-written articles from Supabase only.
@@ -37,7 +42,22 @@ jobs:
           chmod +x publish/publish.sh
           ./publish/publish.sh "${{ github.event.inputs.issue || 'current' }}"
 
-      - name: Upload issue
+      - name: Upload PDF to Supabase Storage
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          ISSUE="${{ github.event.inputs.issue || 'current' }}"
+          curl -sS -X POST \
+            "${SUPABASE_URL%/}/storage/v1/object/media/exports/${ISSUE}.pdf" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/pdf" \
+            -H "x-upsert: true" \
+            --data-binary @publish/out/issue.pdf
+          echo "→ ${SUPABASE_URL%/}/storage/v1/object/public/media/exports/${ISSUE}.pdf"
+
+      - name: Upload issue (CI artifact)
         uses: actions/upload-artifact@v4
         with:
           name: publisheur-issue

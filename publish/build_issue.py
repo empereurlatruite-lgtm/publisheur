@@ -66,6 +66,21 @@ def fetch_supabase(url, key, issue):
     return rows
 
 
+def fetch_paper(url, key, issue):
+    """The edition's masthead row from the `papers` table (None if absent)."""
+    endpoint = f"{url.rstrip('/')}/rest/v1/papers?issue=eq.{issue}&select=*"
+    req = urllib.request.Request(endpoint, headers={
+        "apikey": key, "Authorization": f"Bearer {key}", "Accept": "application/json",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            rows = json.loads(r.read())
+        return rows[0] if rows else None
+    except Exception as e:
+        print(f"  (papers lookup failed: {e})", file=sys.stderr)
+        return None
+
+
 # ── Local DB + war-wire (via the legacy modules) ────────────────────────
 def fetch_local(issue, include_wire):
     items = []
@@ -128,10 +143,12 @@ def main():
     if not (url and key):
         url, key = _creds_from_config()
 
+    paper = None
     if url and key:
         print(f"• Fetching from Supabase ({url}) …")
         try:
             items = fetch_supabase(url, key, args.issue)
+            paper = fetch_paper(url, key, args.issue)
             if include_wire:
                 items += war_wire()
         except Exception as e:
@@ -148,9 +165,17 @@ def main():
     edition = (f"WAR No. {war['war_number']} · DAY {war['day_of_war']}"
                if war.get("war_number") is not None else f"ÉDITION « {args.issue} »")
 
+    # masthead from the papers table (falls back to the historic default)
+    p = paper or {}
+    ear = p.get("ear") or []
     issue = {
-        "masthead": "Le Petit Daihbi",
-        "tagline": "Journal Quotidien du Front — « Tout pour le Régiment »",
+        "masthead": p.get("name") or "Le Petit Daihbi",
+        "tagline": p.get("tagline") or "Journal Quotidien du Front — « Tout pour le Régiment »",
+        "plate": p.get("plate") or "plate-fraktur",
+        "ear": ear if isinstance(ear, list) else [],
+        "slogans": p.get("slogans") if isinstance(p.get("slogans"), list) else [],
+        "emblem_left": p.get("emblem_left") or "",
+        "emblem_right": p.get("emblem_right") or "",
         "issue": args.issue,
         "date": datetime.now(timezone.utc).date().isoformat(),
         "date_fr": _fr_date(),

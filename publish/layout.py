@@ -14,7 +14,14 @@ articles into a vintage A3 front page using linked, multi-column text frames
 import json
 import math
 import os
+import re
+import tempfile
+import urllib.request
 import scribus
+
+
+def strip_html(s):
+    return re.sub(r"<[^>]+>", "", s or "")
 
 ISSUE = os.environ.get("DAIHBI_ISSUE", "out/issue.json")
 OUTPDF = os.environ.get("DAIHBI_OUTPDF", "out/issue.pdf")
@@ -91,6 +98,32 @@ def paras(body):
     return [p.strip() for p in body.replace("\r", "").split("\n\n") if p.strip()]
 
 
+def fetch_image(url):
+    """Download an emblem URL to a temp file; return its path (or None)."""
+    if not url:
+        return None
+    try:
+        fd, path = tempfile.mkstemp(suffix=".png")
+        os.close(fd)
+        urllib.request.urlretrieve(url, path)
+        return path
+    except Exception as e:
+        print("  (emblem fetch failed: %s)" % e)
+        return None
+
+
+def place_emblem(path, x, y, size):
+    if not path:
+        return
+    try:
+        fr = scribus.createImage(x, y, size, size)
+        scribus.loadImage(path, fr)
+        scribus.setScaleImageToFrame(1, 1, fr)   # scale to frame, proportional
+        scribus.setLineColor("None", fr)
+    except Exception as e:
+        print("  (emblem place failed: %s)" % e)
+
+
 # ════════════════════════════════════════════════════════════════════════
 def main():
     with open(ISSUE, encoding="utf-8") as f:
@@ -130,6 +163,13 @@ def main():
     mkstyle("BodyDrop", F_BODY, 9.5, ALIGN_BLOCK, dropcap=1)
     mkstyle("LeadBody", F_BODY, 10.5, ALIGN_BLOCK, firstindent=11.0)
     mkstyle("LeadBodyDrop", F_BODY, 10.5, ALIGN_BLOCK, dropcap=1)
+    mkstyle("SloganL", F_HEAD, 11, ALIGN_L)
+    mkstyle("SloganC", F_HEAD, 11, ALIGN_C)
+    mkstyle("SloganR", F_HEAD, 11, ALIGN_R)
+
+    ear = data.get("ear") or []
+    slogans = [strip_html(s) for s in (data.get("slogans") or [])]
+    regiment = strip_html(ear[2]) if len(ear) > 2 and ear[2] else "Warden"
 
     y = M
 
@@ -139,6 +179,10 @@ def main():
     add(name_f, data.get("masthead", "Le Petit Daihbi"), "Nameplate")
     tag_f = scribus.createText(CX, y + 26, CW, 7)
     add(tag_f, data.get("tagline", ""), "Tagline")
+    # regiment crests flanking the nameplate (full colour)
+    EM = 22
+    place_emblem(fetch_image(data.get("emblem_left")), CX, y + 4, EM)
+    place_emblem(fetch_image(data.get("emblem_right")), CX + CW - EM, y + 4, EM)
 
     yb = y + 34
     double_rule(CX, yb, CX + CW)
@@ -148,7 +192,7 @@ def main():
     bc = scribus.createText(CX + CW * 0.3, yb + 1.5, CW * 0.4, bar_h)
     add(bc, data.get("edition", "").upper(), "BarC")
     br = scribus.createText(CX + CW * 0.6, yb + 1.5, CW * 0.4, bar_h)
-    add(br, "2e REI · DAIHBI", "BarR")
+    add(br, regiment.upper(), "BarR")
     double_rule(CX, yb + bar_h + 2, CX + CW)
 
     y = yb + bar_h + 5     # content starts here
@@ -178,7 +222,7 @@ def main():
             y += dh
         if lead["byline"]:
             bf = scribus.createText(CX, y, CW, 5)
-            add(bf, ("By " + lead["byline"]).upper(), "BylineC")
+            add(bf, ("par " + lead["byline"]).upper(), "BylineC")
             y += 5
         y += 1
         rule(CX, y, CX + CW, 0.4, "Hair")
@@ -195,8 +239,9 @@ def main():
         y += 4
 
     # ── The well: everything else, 5-column auto-flow ────────────────────
+    footer_h = 9 if slogans else 0          # reserve room for the slogan bar
     well_top = y
-    well_h = (PH - M) - well_top
+    well_h = (PH - M) - well_top - footer_h
     well = scribus.createText(CX, well_top, CW, well_h)
     scribus.setColumns(COLS, well)
     scribus.setColumnGap(CGAP, well)
@@ -208,7 +253,7 @@ def main():
         add(well, (a["kicker"] or a["weight"]).upper(), "KickerL")
         add(well, a["headline"], hstyle)
         if a["byline"]:
-            add(well, ("By " + a["byline"]).upper(), "BylineL")
+            add(well, ("par " + a["byline"]).upper(), "BylineL")
         if a["subhead"]:
             add(well, a["subhead"], "Body")
         body_ps = paras(a["body"])
@@ -228,6 +273,19 @@ def main():
         scribus.setColumnGap(CGAP, nf)
         scribus.linkTextFrames(prev, nf)
         prev = nf
+
+    # ── Slogan footer bar (page 1) ───────────────────────────────────────
+    if slogans:
+        scribus.gotoPage(1)
+        sy = PH - M - footer_h + 1
+        double_rule(CX, sy, CX + CW)
+        n = len(slogans)
+        cellw = CW / float(n)
+        for i, s in enumerate(slogans):
+            style = "SloganL" if i == 0 else ("SloganR" if i == n - 1 else "SloganC")
+            sf = scribus.createText(CX + i * cellw, sy + 1.5, cellw, 7)
+            add(sf, s, style)
+        double_rule(CX, PH - M, CX + CW)
 
     # ── Export ───────────────────────────────────────────────────────────
     scribus.saveDocAs(OUTSLA)

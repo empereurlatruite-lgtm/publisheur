@@ -8,6 +8,9 @@
 .env
 .env.*
 
+# Local-only dev login helper (has test creds) — never publish
+web/_devlogin.html
+
 # Python
 __pycache__/
 *.pyc
@@ -26,3 +29,7 @@ publish/out/
 # NOTE: web/config.js IS committed on purpose — the Supabase anon key is
 # public by design, and Row-Level Security (supabase/schema.sql) is what
 # protects your data. Do NOT put the service_role key in config.js.
+
+# Cloudflare wrangler local state
+.wrangler/
+*.code-workspace
