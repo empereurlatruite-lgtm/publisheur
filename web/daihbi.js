@@ -170,6 +170,25 @@ const Articles = {
   },
 };
 
+// ── Media: upload article photos to the public Supabase Storage bucket ──────
+const Media = {
+  /** Upload an image File, return its public URL. */
+  async upload(file) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    if (!file.type || !file.type.startsWith("image/"))
+      throw new Error("Ce fichier n'est pas une image.");
+    if (file.size > 10 * 1024 * 1024)
+      throw new Error("Image trop lourde (max 10 Mo).");
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${ISSUE}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await db.storage.from("media").upload(path, file, {
+      cacheControl: "31536000", upsert: false, contentType: file.type,
+    });
+    if (error) throw error;
+    return db.storage.from("media").getPublicUrl(path).data.publicUrl;
+  },
+};
+
 // ── Render helpers (shared by the paper page) ─────────────────────────────
 const esc = (s) =>
   (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -188,5 +207,5 @@ function md(text) {
     .join("");
 }
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, sortArticles, esc, md };
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, sortArticles, esc, md };
 })();

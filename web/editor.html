@@ -49,6 +49,17 @@
   #form input,#form select,#form textarea{width:100%;font:inherit;padding:.5rem .6rem;border:1px solid #c9bda0;border-radius:6px;background:#fff;color:var(--ink)}
   #form textarea{min-height:240px;font-family:"PT Serif",Georgia,serif;line-height:1.5;resize:vertical}
   #form input.head{font-family:"Playfair Display",serif;font-weight:700;font-size:1.15rem}
+  .dropzone{border:1px dashed #c9bda0;border-radius:8px;padding:.6rem;background:#fffdf7}
+  .dropzone.drag{border-color:var(--accent);background:#fbeee9}
+  .dzrow{display:flex;gap:.5rem}
+  .dzrow input{flex:1}
+  .dzbtn{font:inherit;white-space:nowrap;border:1px solid #c9bda0;background:#fff;border-radius:6px;padding:.5rem .7rem;cursor:pointer}
+  .dzbtn:hover{background:#f3ecdd}
+  .dzhint{font-size:.72rem;color:#9a907c;margin-top:.35rem}
+  .imgwrap{position:relative;margin-top:.5rem;display:inline-block}
+  .imgwrap img{max-width:100%;max-height:180px;border:1px solid #b9ad90;border-radius:4px;display:block;filter:grayscale(.6) sepia(.2) contrast(1.03)}
+  .imgx{position:absolute;top:.3rem;right:.3rem;border:none;background:rgba(20,18,16,.8);color:#fff;border-radius:50%;width:1.5rem;height:1.5rem;cursor:pointer;line-height:1}
+  .upstatus{font-size:.75rem;color:#6a6253;margin-top:.35rem;min-height:1em}
   .twocol{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
   .formbar{display:flex;gap:.5rem;align-items:center;margin-top:.4rem}
   .formbar .grow{flex:1}
@@ -132,7 +143,22 @@
         </select>
       </div>
     </div>
-    <div class="row"><label>Image URL (optional)</label><input id="f_image" placeholder="https://…"></div>
+    <div class="row">
+      <label>Image (optionnel)</label>
+      <div id="dropzone" class="dropzone">
+        <div class="dzrow">
+          <input id="f_image" placeholder="https://…  ou glissez/téléversez une photo" oninput="showPreview(this.value)">
+          <button type="button" class="dzbtn" onclick="document.querySelector('#f_file').click()">📷 Téléverser</button>
+          <input id="f_file" type="file" accept="image/*" style="display:none" onchange="onPickFile(this.files[0])">
+        </div>
+        <div class="dzhint">Glissez une image ici, ou collez une URL.</div>
+        <div class="imgwrap" id="imgwrap" style="display:none">
+          <img id="f_preview" alt="">
+          <button type="button" class="imgx" title="Retirer l’image" onclick="clearImage()">✕</button>
+        </div>
+        <div class="upstatus" id="upstatus"></div>
+      </div>
+    </div>
     <div class="row"><label>Body</label>
       <textarea id="f_body" placeholder="Write the article. Blank line = new paragraph. **bold**, *italic*."></textarea>
       <div class="hint">Blank line = new paragraph · <code>**bold**</code> · <code>*italic*</code></div>
@@ -160,7 +186,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Articles, configured } = window.Daihbi;
+const { Auth, Articles, Media, configured } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 const PAPERS = window.DAIHBI_PAPERS || {};
 let current = null;
@@ -245,9 +271,33 @@ function fill(a){
   F.body.value=a?.body||""; F.published.checked=a?a.published:true;
   $("#delBtn").style.display=a?"":"none";
   $("#savedAt").textContent=a?.updated_at?"Last saved "+new Date(a.updated_at).toLocaleString():"";
+  showPreview(a?.image_url||""); $("#upstatus").textContent="";
   highlight();
 }
 function newArticle(){ fill(null); F.headline.focus(); }
+
+// ── Image upload ──────────────────────────────────────────────────────────
+function showPreview(url){
+  const wrap=$("#imgwrap"), img=$("#f_preview");
+  if(url){ img.src=url; wrap.style.display=""; } else { wrap.style.display="none"; img.removeAttribute("src"); }
+}
+function clearImage(){ F.image.value=""; showPreview(""); $("#upstatus").textContent=""; }
+function onPickFile(file){ if(file) uploadImage(file); }
+async function uploadImage(file){
+  if(!file) return;
+  $("#upstatus").textContent="Envoi de l’image…";
+  try{
+    const url=await Media.upload(file);
+    F.image.value=url; showPreview(url);
+    $("#upstatus").textContent="✓ Image ajoutée. N’oubliez pas d’enregistrer.";
+  }catch(e){ $("#upstatus").textContent="Erreur : "+e.message; }
+}
+function wireDropzone(){
+  const dz=$("#dropzone"); if(!dz) return;
+  ["dragenter","dragover"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add("drag");}));
+  ["dragleave","dragend"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove("drag");}));
+  dz.addEventListener("drop",e=>{e.preventDefault();dz.classList.remove("drag");const f=e.dataTransfer?.files?.[0];if(f)uploadImage(f);});
+}
 function highlight(){ document.querySelectorAll(".item").forEach(el=>el.classList.toggle("sel",String(el.dataset.id)===String(current))); }
 
 let ALL = [];                       // every article in this edition (cache)
@@ -340,6 +390,7 @@ async function boot(){
   $("#who").textContent = session.user.email || "";
   ME = session.user.id;
   initEditions();
+  wireDropzone();
   Articles.subscribe(loadList);
   await loadList(); newArticle();
 }
