@@ -3,15 +3,15 @@
 > *« Le 120 est bon marché, le moral est précieux. »*
 
 **Publisheur** est une plateforme de presse collaborative pour la **presse Warden
-francophone** de *Foxhole* — une rédaction partagée où les joueurs de plusieurs
-régiments écrivent des articles ensemble pendant que la **mise en page se fait
-toute seule**.
+francophone** de *Foxhole* — une rédaction partagée où les rédacteurs de plusieurs
+régiments **écrivent le texte** pendant que le **rédacteur en chef décide de la mise
+en page**, et où le moteur fait **couler le texte tout seul** sur une vraie une.
 
-On écrit dans le navigateur → les articles sont stockés dans **Supabase** →
-Publisheur les met en page sur une vraie une et exporte un **PDF prêt à
-imprimer, des images de pages et une édition web** via **Scribus**. Pas de Canva,
-pas de bagarre avec les zones de texte, pas de mise en page cassée après
-compression.
+On écrit dans le navigateur → les chroniques vont dans un **pool commun** sur
+**Supabase** → chaque rédacteur en chef pioche dedans, compose son journal, et
+Publisheur exporte une **édition web, un PDF prêt à imprimer et des images de
+pages** via **Scribus**. Pas de Canva, pas de bagarre avec les zones de texte, pas
+de mise en page cassée après compression.
 
 ## Pourquoi ce projet
 
@@ -28,20 +28,28 @@ ne s'épuise sur la mise en page. Plus de contributeurs, de plus de régiments,
 c'est de meilleures informations, la reconnaissance de la part de chacun dans la
 guerre, et un vrai gain de moral pour tout le front.
 
-## Comment ça marche — la rédaction
+## Comment ça marche — l'écriture ≠ la mise en page
 
-Deux types de contributeurs partagent une seule plateforme :
+Publisheur sépare les deux métiers d'une vraie rédaction :
 
-- **Journalistes** — écrivent, éditent et sélectionnent les articles, règlent
-  l'importance de chaque sujet et publient l'édition.
-- **Reporters** — des membres d'un régiment qui envoient des reportages de
-  terrain depuis leur propre unité : une opération, un soldat héroïque, un combat
-  marquant. Les journalistes reprennent ces dépêches pour remplir le journal.
+- **Rédacteur (chroniqueur)** — écrit une **chronique** : un texte (surtitre, titre,
+  chapô, signature, corps) + une **photo suggérée** facultative. Il la **soumet au
+  pool** commun. Il ne s'occupe **pas** de la mise en page.
+- **Rédacteur en chef (éditeur)** — pioche dans le pool, **place** les chroniques
+  qu'il veut dans son édition, et décide la **mise en page** sur un pupitre : la
+  **une**, l'importance de chaque sujet (`une` · `majeur` · `mineur` · `brève`),
+  l'ordre, la photo — puis **publie**.
+- **Illustrateur** — alimente un **portfolio** d'images que les rédacteurs en chef
+  placent dans leurs articles.
+- **Lecteur** — lit **sans compte** ; commente avec un compte (Courrier des lecteurs).
+- **Annonceur** — crée des **réclames** (recrutement, troc, parodie, créateur,
+  fabricant) qu'un éditeur valide avant parution.
 
-Chaque régiment peut garder **son propre titre** (son édition) *et* alimenter un
-**journal Warden commun** — les mêmes articles peuvent servir au journal d'un
-régiment comme au journal partagé. *Le Petit Daihbi* (Journal du Front · 2ᵉ REI)
-est l'édition de référence livrée dans ce dépôt.
+Le point clé : une **même chronique peut paraître dans plusieurs journaux**, mise
+en page différemment dans chacun. On écrit une fois ; chaque rédaction choisit ce
+qu'elle reprend et comment. Chaque régiment garde **son propre titre** (bandeau,
+emblèmes, slogans) tout en puisant dans le **pool Warden commun**. *Le Petit
+Daihbi* (Journal du Front · 2ᵉ REI) est l'édition de référence livrée dans ce dépôt.
 
 ## Charte éditoriale
 
@@ -56,107 +64,117 @@ règles de base :
 
 ## Ce qui fonctionne aujourd'hui
 
-- **Rédaction dans le navigateur** (`web/editor.html`) — connexion par lien magique
-  par e-mail, écriture/édition d'articles, réordonnancement, aperçu en direct,
-  synchronisation en temps réel entre collaborateurs.
-- **Mise en page automatique** — l'**importance** d'un sujet (`lead` · `major` ·
-  `minor` · `brief`) commande la typographie : `lead` est une une pleine largeur,
-  sur 3 colonnes avec lettrine ; le reste s'écoule automatiquement dans un bloc
-  sur 5 colonnes, sur autant de pages A3 que nécessaire.
+- **Rédaction dans le navigateur** (`web/editor.html`, « Mes chroniques ») —
+  connexion par e-mail/mot de passe, brouillon → **Soumettre au pool**, photo
+  suggérée, **historique des révisions** avec restauration, synchro temps réel.
+- **Pupitre de mise en page** (`web/board.html`) — le **pool** à gauche → *Ajouter
+  à la une* ; au centre les chroniques placées, groupées **LA UNE · MAJEURS ·
+  MINEURS · BRÈVES** (régler l'importance, réordonner, choisir la photo, publier,
+  retirer) ; **aperçu en direct** de la une à droite.
+- **Mise en page automatique** — une fois l'importance fixée par l'éditeur, le
+  moteur compose la page : la `une` est un bandeau pleine largeur sur 3 colonnes
+  avec lettrine ; le reste s'écoule dans un bloc sur 5 colonnes, sur autant de
+  pages A3 que nécessaire.
+- **Plusieurs éditions** — chaque journal a son **titre, bandeau, emblèmes et
+  slogans** (table `papers`), créés et gérés dans l'app (**Mes journaux**).
+- **Rôles & social** — 5 rôles (lecteur / rédacteur / illustrateur / éditeur /
+  annonceur), **Courrier des lecteurs** (lecture anonyme, commentaire connecté),
+  **portfolio** des illustrateurs, **studio des réclames** validé par les éditeurs.
 - **Trois sorties** — édition web (`paper.html`), PDF/PNG rapide via le navigateur,
-  et un **PDF prêt à imprimer + images de pages** depuis le publieur Scribus.
-- **Plusieurs éditions** — changez la valeur `ISSUE` pour produire des journaux /
-  titres distincts depuis la même rédaction.
+  et un **PDF prêt à imprimer** depuis Scribus (bouton **🖨 PDF imprimable** →
+  GitHub Action → déposé dans le stockage Supabase).
 - **War-wire Foxhole** — des sujets de guerre générés automatiquement (hex le plus
-  sanglant, dépêches de secteur, titres de pertes) fusionnés au moment de la
-  publication.
+  sanglant, dépêches de secteur, titres de pertes) fusionnés à la publication Scribus.
 
-## Feuille de route — la vision plus large
+## Feuille de route
 
-Idées des régiments fondateurs, pas encore réalisées :
+Déjà réalisé : rôles & permissions, éditions multiples par régiment, pool de
+chroniques + pupitre de mise en page, studio des réclames, export Scribus déclenché
+depuis l'app. Reste à faire (idées des régiments fondateurs) :
 
-- **Rôles & salons des reporters** — des permissions distinctes journaliste/reporter,
-  chaque régiment avec son propre flux d'arrivée (aujourd'hui, tout utilisateur
-  connecté est un collaborateur à part égale).
 - **Reporters assignés à des OP** — couvrir une opération précise en direct.
-- **Publicités de fabricants** — des emplacements sponsorisés/payants dans la mise
-  en page pour les fabricants en jeu.
+- **Glisser-déposer** dans le pupitre de mise en page (aujourd'hui : boutons ▲▼).
+- **Réclames de fabricants** — emplacements sponsorisés/payants dans la mise en page.
 - **Classement F1** — collecter les captures de stats `F1` de chacun et compiler un
-  classement automatiquement (piste : un modèle **Qwen3** local qui fait la
-  lecture + le décompte).
+  classement automatiquement (piste : un modèle **Qwen3** local pour la lecture +
+  le décompte).
 
 ---
 
 ## Installation
 
 ```
-web/        Site statique (GitHub Pages) : éditeur + journal + accueil
-  index.html    Page d'accueil
-  editor.html   Rédaction — écrire/gérer les articles (connexion e-mail)
-  paper.html    Le journal mis en page (vue web, impression PDF, PNG)
-  daihbi.js     Couche partagée de données + auth Supabase
+web/        Site statique (GitHub Pages / Cloudflare Pages)
+  index.html    Kiosque — feuilleter et filtrer les éditions
+  editor.html   Rédaction — « Mes chroniques » (écrire) + « Mes journaux » (éditeurs)
+  board.html    Mise en page — le pupitre du rédacteur en chef (pool → une)
+  paper.html    Le journal mis en page (web, impression PDF, PNG)
+  ads.html      Studio des réclames (annonceurs + validation éditeur)
+  daihbi.js     Couche partagée Supabase (auth, Chronicles, Placements, Papers…)
+  papers.js     Éditions de repli (fallback)
   config.js     ← votre URL Supabase + clé anon vont ici
-supabase/
-  schema.sql    À exécuter une fois dans l'éditeur SQL de Supabase (tables, RLS, stockage)
-publish/        Publieur Scribus (PDF/PNG prêt à imprimer)
-.github/workflows/pages.yml      Déploie automatiquement web/ sur GitHub Pages
-.github/workflows/publish.yml    Lance le publieur Scribus dans la CI
+  functions/api/export.js   Cloudflare Pages Function — déclenche l'export Scribus
+supabase/     Migrations SQL — à coller dans l'éditeur SQL de Supabase, dans l'ordre :
+  schema.sql · roles.sql · comments.sql · portfolio.sql · ads.sql ·
+  papers.sql · revisions.sql · edited_by.sql · pool.sql
+publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements)
+.github/workflows/  pages.yml (déploie web/ sur GitHub Pages) · publish.yml (Scribus en CI)
 ```
 
 ### 1. Configurer Supabase (backend)
 
 1. Créez un projet sur [supabase.com](https://supabase.com).
-2. **SQL Editor → New query →** collez `supabase/schema.sql` → **Run**.
-3. **Authentication → Providers →** activez **Email** (le lien magique est le plus
-   simple).
-4. **Authentication → URL Configuration →** ajoutez votre URL GitHub Pages
-   (ex. `https://USER.github.io/publisheur/`) comme URL de redirection.
+2. **SQL Editor → New query →** collez chaque fichier de `supabase/` **dans
+   l'ordre** ci-dessus (`schema.sql` d'abord, `pool.sql` en dernier) → **Run**.
+3. **Authentication → Providers →** activez **Email** (mot de passe ou lien magique).
+4. **Authentication → URL Configuration →** réglez **Site URL** sur l'URL publique
+   et ajoutez-la en redirection (sinon les liens magiques retombent sur localhost).
 5. **Settings → API →** copiez l'**URL du projet** et la **clé publique anon** dans
    `web/config.js`.
 
 > La clé anon peut être committée sans risque — elle est publique par conception.
-> C'est le Row-Level Security (dans `schema.sql`) qui protège les données. Ne
+> C'est le Row-Level Security (dans les migrations) qui protège les données. Ne
 > mettez jamais la clé `service_role` dans `config.js`.
 
 ### 2. Déployer le site (frontend)
 
-Poussez sur GitHub, puis **Settings → Pages → Source : GitHub Actions**. Le
-workflow `pages.yml` publie `web/` à chaque push sur `main`. Les collaborateurs
-n'ont qu'à visiter l'URL et se connecter avec leur e-mail.
+**GitHub Pages :** poussez sur GitHub, puis **Settings → Pages → Source : GitHub
+Actions**. Le workflow `pages.yml` publie `web/` à chaque push sur `main`.
 
-**Pour lancer en local à la place :**
+**Cloudflare Pages** (pour les Pages Functions comme `/api/export`) :
+```bash
+rsync -a --exclude _devlogin.html web/ /tmp/deploy   # n'expose jamais le devlogin
+cd /tmp/deploy && npx wrangler pages deploy . --project-name publisheur --branch main
+```
+> Déployez **depuis l'intérieur** du dossier (`wrangler pages deploy .`), sinon
+> `functions/` est servi comme fichiers statiques et `/api/export` renvoie 405.
+
+**En local :**
 ```bash
 cd web && python3 -m http.server 8200   # → http://127.0.0.1:8200
 ```
 
-### 3. Écrire & publier
+### 3. Écrire, mettre en page & publier
 
-- **Écrire :** ouvrez `/editor.html`, connectez-vous, ajoutez des articles.
-  Choisissez une **importance** par article — `lead` (bandeau de une) · `major`
-  (large) · `minor` (colonne) · `brief` (brève) — qui pilote la mise en page
-  automatique. Les changements se synchronisent en direct entre collaborateurs.
+- **Écrire (rédacteur) :** `/editor.html` → **Mes chroniques** → écrivez le texte
+  + une photo suggérée → **Soumettre au pool**. Vous ne choisissez pas la mise en
+  page : c'est le rôle de l'éditeur.
+- **Mettre en page (éditeur) :** `/editor.html` → **Mes journaux** → *Mettre en
+  page* → le pupitre `board.html` : tirez des chroniques du pool, réglez
+  l'importance et l'ordre, ajoutez les photos, puis **Publier**.
 - **Lire / PDF rapide :** `/paper.html` → **Imprimer / PDF** (navigateur) ou **PNG**.
-- **Publication prête à imprimer :** le publieur Scribus fait couler tout le contenu
-  dans une vraie mise en page Scribus et exporte un PDF prêt à imprimer + des
-  images de pages.
+- **Publication prête à imprimer :** le bouton **🖨 PDF imprimable** lance le
+  publieur Scribus via une GitHub Action et dépose le PDF dans le stockage Supabase.
+  En local :
 
   ```bash
   cd publish && ./publish.sh            # → out/issue.pdf + out/page-*.png
-  ./publish.sh special-1                # un numéro nommé
+  ./publish.sh horizon-bleu             # un numéro nommé
   ```
-  Nécessite `scribus`, `poppler-utils`, `xvfb`. Trois étapes :
-  `build_issue.py` (rassemble les articles → `out/issue.json`) → `layout.py`
-  (Scribus Scripter, lancé sans interface via `xvfb-run scribus -g -ns -py`) →
-  `pdftoppm` (PNG).
-
-  **Source :** définissez `SUPABASE_URL` + `SUPABASE_KEY` pour tirer du cloud ;
-  sinon il bascule sur le `articles.db` local. Le **war-wire** Foxhole
-  (`../../data-collection/foxhole_war.db`) est fusionné sauf avec `--no-wire`.
-
-  **En CI :** `.github/workflows/publish.yml` lance le même publieur à la demande
-  (Actions → « Publish issue ») et téléverse le PDF/PNG comme artefact. Ajoutez
-  `SUPABASE_URL` / `SUPABASE_KEY` comme secrets du dépôt. (La CI n'a pas de
-  `foxhole_war.db`, elle publie donc uniquement les articles Supabase.)
+  Nécessite `scribus`, `poppler-utils`, `xvfb`. Trois étapes : `build_issue.py`
+  (rassemble les **placements publiés + chroniques** → `out/issue.json`) →
+  `layout.py` (Scribus headless via `xvfb-run scribus -g -ns -py`) → `pdftoppm` (PNG).
+  Définissez `SUPABASE_URL` + `SUPABASE_KEY` pour tirer du cloud.
 
 ---
 ---
@@ -167,13 +185,14 @@ cd web && python3 -m http.server 8200   # → http://127.0.0.1:8200
 > **120mm is cheap, morale is expensive.**
 
 **Publisheur** is a collaborative newspaper platform for the **francophone Warden
-press** of *Foxhole* — a shared newsroom where players from many regiments write
-articles together and the layout happens **automatically**.
+press** of *Foxhole* — a shared newsroom where writers from many regiments **write
+the text** while the **editor-in-chief decides the layout**, and the engine
+**flows the text automatically** onto a real front page.
 
-Write in the browser → articles are stored in **Supabase** → Publisheur lays them
-out on a real front page and exports a **print-grade PDF, page images, and a web
-edition** via **Scribus**. No Canva, no fighting with text boxes, no broken
-mise en page after compression.
+Write in the browser → chronicles land in a shared **pool** on **Supabase** → each
+editor-in-chief draws from it, composes their paper, and Publisheur exports a **web
+edition, a print-grade PDF, and page images** via **Scribus**. No Canva, no fighting
+with text boxes, no broken mise en page after compression.
 
 ## Why it exists
 
@@ -188,20 +207,27 @@ soldiers, operations, the bloodiest hexes — without anyone burning out on layo
 More contributors from more regiments means better information, recognition for
 everyone's part in the war, and a real morale boost for the whole front.
 
-## How it works — the newsroom
+## How it works — writing ≠ layout
 
-Two kinds of contributors share one platform:
+Publisheur splits the two jobs of a real newsroom:
 
-- **Journalists** — write, edit, and curate the articles, set each story's
-  prominence, and publish the edition.
-- **Reporters** — members of a regiment who send field reports from their own
-  unit: an operation, a heroic soldier, a notable fight. Journalists pick up those
-  dispatches to fill the paper.
+- **Writer (chronicler)** — writes a **chronicle**: the text (kicker, headline,
+  deck, byline, body) + an optional **suggested photo**, then **submits it to the
+  shared pool**. They do **not** do layout.
+- **Editor-in-chief** — browses the pool, **places** the chronicles they want into
+  their edition, and decides the **layout** on a board: the **front page**, each
+  story's prominence (`lead` · `major` · `minor` · `brief`), order, and photo —
+  then **publishes**.
+- **Illustrator** — feeds a **portfolio** of images that editors place in stories.
+- **Reader** — reads **without an account**; comments with one (letters page).
+- **Advertiser** — creates **ads** (recruiting, trading, parody, content-creator,
+  manufacturer) that an editor approves before they run.
 
-Every regiment can keep **its own title** (its edition) *and* feed a **common
-Warden journal** — the same articles can serve a regiment's paper and the shared
-one. *Le Petit Daihbi* (Journal du Front · 2ᵉ REI) is the reference edition
-shipped in this repo.
+The key idea: **one chronicle can run in several papers**, laid out differently in
+each. Write it once; each newsroom chooses what to pick up and how. Every regiment
+keeps **its own title** (banner, emblems, slogans) while drawing from the **common
+Warden pool**. *Le Petit Daihbi* (Journal du Front · 2ᵉ REI) is the reference
+edition shipped in this repo.
 
 ## Editorial charter
 
@@ -214,98 +240,110 @@ A shared paper only works if everyone trusts the tone. The ground rules:
 
 ## What works today
 
-- **Browser newsroom** (`web/editor.html`) — email magic-link login, write/edit
-  articles, reorder them, live preview, real-time sync between collaborators.
-- **Auto-layout** — a story's **prominence** (`lead` · `major` · `minor` ·
-  `brief`) drives the typography: `lead` is a full-width, drop-capped 3-column
-  hero; the rest auto-flow through a 5-column well across as many A3 pages as
-  needed.
+- **Browser newsroom** (`web/editor.html`, "Mes chroniques") — email/password login,
+  draft → **submit to the pool**, suggested photo, **revision history** with restore,
+  real-time sync.
+- **Mise-en-page board** (`web/board.html`) — the **pool** on the left → *add to the
+  front page*; placed chronicles in the centre, grouped **LA UNE · MAJEURS · MINEURS
+  · BRÈVES** (set prominence, reorder, pick the photo, publish, remove); **live
+  preview** on the right.
+- **Auto-layout** — once the editor sets prominence, the engine composes the page:
+  `lead` is a full-width, drop-capped 3-column hero; the rest auto-flows through a
+  5-column well across as many A3 pages as needed.
+- **Multiple editions** — every paper has its own **title, banner, emblems and
+  slogans** (`papers` table), created and managed in-app ("Mes journaux").
+- **Roles & social** — 5 roles (reader / writer / illustrator / editor / advertiser),
+  **letters page** (anon read, signed-in comment), illustrator **portfolio**,
+  **ad studio** approved by editors.
 - **Three outputs** — web edition (`paper.html`), quick browser PDF/PNG, and a
-  **print-grade PDF + page images** from the Scribus publisher.
-- **Multiple editions** — switch the `ISSUE` value to run separate papers /
-  titles from the same newsroom.
+  **print-grade PDF** from Scribus (the **🖨 PDF imprimable** button → GitHub Action
+  → dropped in Supabase Storage).
 - **Foxhole war-wire** — auto-generated war stories (bloodiest hex, sector
-  dispatches, casualty headlines) merged in at publish time.
+  dispatches, casualty headlines) merged in at Scribus publish time.
 
-## Roadmap — the bigger vision
+## Roadmap
 
-Ideas from the founding regiments, not built yet:
+Already built: roles & permissions, per-regiment multiple editions, the chronicle
+pool + mise-en-page board, the ad studio, Scribus export triggered from the app.
+Still to do (ideas from the founding regiments):
 
-- **Reporter roles & channels** — distinct journalist/reporter permissions, each
-  regiment with its own intake feed (today every signed-in user is an equal
-  collaborator).
 - **Reporters assigned to OPs** — cover a specific operation as it happens.
+- **Drag-and-drop** in the layout board (today: ▲▼ buttons).
 - **Manufacturer ads** — paid/sponsor slots in the layout for in-game makers.
 - **F1 leaderboard** — collect everyone's `F1` stat screenshots and compile a
-  ranking automatically (candidate: a local **Qwen3** model doing the read +
-  tally).
+  ranking automatically (candidate: a local **Qwen3** model doing the read + tally).
 
 ---
 
 ## Setup
 
 ```
-web/        Static site (GitHub Pages): editor + paper + landing
-  index.html    Landing page
-  editor.html   Newsroom — write/manage articles (email login)
+web/        Static site (GitHub Pages / Cloudflare Pages)
+  index.html    Kiosque — browse & filter editions
+  editor.html   Newsroom — "Mes chroniques" (write) + "Mes journaux" (editors)
+  board.html    Mise-en-page — the editor-in-chief's board (pool → front page)
   paper.html    The laid-out paper (web view, print-to-PDF, PNG)
-  daihbi.js     Shared Supabase data + auth layer
+  ads.html      Ad studio (advertisers + editor approval)
+  daihbi.js     Shared Supabase layer (auth, Chronicles, Placements, Papers…)
+  papers.js     Fallback editions
   config.js     ← your Supabase URL + anon key go here
-supabase/
-  schema.sql    Run once in the Supabase SQL editor (tables, RLS, storage)
-publish/        Scribus publisher (print-grade PDF/PNG)
-.github/workflows/pages.yml      Auto-deploy web/ to GitHub Pages
-.github/workflows/publish.yml    Run the Scribus publisher in CI
+  functions/api/export.js   Cloudflare Pages Function — triggers the Scribus export
+supabase/     SQL migrations — paste into the Supabase SQL editor, in order:
+  schema.sql · roles.sql · comments.sql · portfolio.sql · ads.sql ·
+  papers.sql · revisions.sql · edited_by.sql · pool.sql
+publish/      Scribus publisher (print-grade PDF/PNG, from placements)
+.github/workflows/  pages.yml (deploy web/ to GitHub Pages) · publish.yml (Scribus in CI)
 ```
 
 ### 1. Set up Supabase (backend)
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. **SQL Editor → New query →** paste `supabase/schema.sql` → **Run**.
-3. **Authentication → Providers →** enable **Email** (magic-link is simplest).
-4. **Authentication → URL Configuration →** add your GitHub Pages URL
-   (e.g. `https://USER.github.io/publisheur/`) as a redirect URL.
+2. **SQL Editor → New query →** paste each file in `supabase/` **in the order**
+   above (`schema.sql` first, `pool.sql` last) → **Run**.
+3. **Authentication → Providers →** enable **Email** (password or magic-link).
+4. **Authentication → URL Configuration →** set **Site URL** to your public URL and
+   add it as a redirect (otherwise magic links bounce to localhost).
 5. **Settings → API →** copy the **Project URL** and **anon public key** into
    `web/config.js`.
 
-> The anon key is safe to commit — it's public by design. Row-Level Security
-> (in `schema.sql`) is what protects the data. Never put the `service_role` key
-> in `config.js`.
+> The anon key is safe to commit — it's public by design. Row-Level Security (in the
+> migrations) protects the data. Never put the `service_role` key in `config.js`.
 
 ### 2. Deploy the site (frontend)
 
-Push to GitHub, then **Settings → Pages → Source: GitHub Actions**. The
-`pages.yml` workflow publishes `web/` on every push to `main`. Collaborators
-just visit the URL and sign in with their email.
+**GitHub Pages:** push to GitHub, then **Settings → Pages → Source: GitHub
+Actions**. The `pages.yml` workflow publishes `web/` on every push to `main`.
 
-**Run locally instead:**
+**Cloudflare Pages** (for Pages Functions like `/api/export`):
+```bash
+rsync -a --exclude _devlogin.html web/ /tmp/deploy   # never publish the devlogin
+cd /tmp/deploy && npx wrangler pages deploy . --project-name publisheur --branch main
+```
+> Deploy from **inside** the folder (`wrangler pages deploy .`), or `functions/`
+> ships as static files and `/api/export` returns 405.
+
+**Run locally:**
 ```bash
 cd web && python3 -m http.server 8200   # → http://127.0.0.1:8200
 ```
 
-### 3. Write & publish
+### 3. Write, lay out & publish
 
-- **Write:** open `/editor.html`, sign in, add articles. Pick a **prominence**
-  per article — `lead` (front banner) · `major` (wide) · `minor` (column) ·
-  `brief` (short item) — which drives the auto-layout. Changes sync live
-  between collaborators.
+- **Write (writer):** `/editor.html` → **Mes chroniques** → write the text + a
+  suggested photo → **submit to the pool**. You don't choose the layout — that's the
+  editor's job.
+- **Lay out (editor):** `/editor.html` → **Mes journaux** → *Mettre en page* → the
+  `board.html` board: pull chronicles from the pool, set prominence and order, add
+  photos, then **Publish**.
 - **Read / quick PDF:** `/paper.html` → **Print / PDF** (browser) or **PNG**.
-- **Print-grade publish:** the Scribus publisher auto-flows everything into a
-  real Scribus layout and exports a print-ready PDF + page images.
+- **Print-grade publish:** the **🖨 PDF imprimable** button runs the Scribus
+  publisher via a GitHub Action and drops the PDF in Supabase Storage. Locally:
 
   ```bash
   cd publish && ./publish.sh            # → out/issue.pdf + out/page-*.png
-  ./publish.sh special-1                # a named issue
+  ./publish.sh horizon-bleu             # a named issue
   ```
-  Needs `scribus`, `poppler-utils`, `xvfb`. It runs three steps:
-  `build_issue.py` (gather articles → `out/issue.json`) → `layout.py` (Scribus
-  Scripter, run headless via `xvfb-run scribus -g -ns -py`) → `pdftoppm` (PNG).
-
-  **Source:** set `SUPABASE_URL` + `SUPABASE_KEY` to pull from the cloud;
-  otherwise it falls back to the local `articles.db`. The Foxhole **war-wire**
-  (`../../data-collection/foxhole_war.db`) is merged in unless `--no-wire`.
-
-  **In CI:** `.github/workflows/publish.yml` runs the same publisher on demand
-  (Actions → "Publish issue") and uploads the PDF/PNG as an artifact. Add
-  `SUPABASE_URL` / `SUPABASE_KEY` as repo secrets. (CI has no `foxhole_war.db`,
-  so it publishes Supabase articles only.)
+  Needs `scribus`, `poppler-utils`, `xvfb`. Three steps: `build_issue.py` (gather
+  **published placements + chronicles** → `out/issue.json`) → `layout.py` (Scribus
+  headless via `xvfb-run scribus -g -ns -py`) → `pdftoppm` (PNG). Set `SUPABASE_URL`
+  + `SUPABASE_KEY` to pull from the cloud.
