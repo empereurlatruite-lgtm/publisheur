@@ -210,6 +210,71 @@ const Profiles = {
     const { data } = await db.from("profiles").select("*").eq("id", id).maybeSingle();
     return data;
   },
+  /** All profiles (for editor pickers). */
+  async all() {
+    if (!db) return [];
+    const { data } = await db.from("profiles").select("id,display_name,role,clan");
+    return data || [];
+  },
+};
+
+// ── Papers: editions in the DB (creator owns it, scoped editors) ────────────
+function _rowToPaper(r) {
+  return {
+    issue: r.issue, name: r.name, tagline: r.tagline, plate: r.plate || "plate-fraktur",
+    ear: Array.isArray(r.ear) ? r.ear : ["", "", ""],
+    slogans: Array.isArray(r.slogans) ? r.slogans : [],
+    emblemLeft: r.emblem_left || "", emblemRight: r.emblem_right || "",
+    clan: r.clan || "", owner_id: r.owner_id,
+  };
+}
+const Papers = {
+  /** Merged edition map: papers.js defaults overlaid by DB rows (DB wins). */
+  async map() {
+    const base = Object.assign({}, window.DAIHBI_PAPERS || {});
+    if (!db) return base;
+    try {
+      const { data } = await db.from("papers").select("*");
+      (data || []).forEach((r) => { base[r.issue] = _rowToPaper(r); });
+    } catch (e) { /* fall back to papers.js */ }
+    return base;
+  },
+  async list() {
+    const { data, error } = await db.from("papers").select("*").order("created_at");
+    if (error) throw error;
+    return (data || []).map(_rowToPaper);
+  },
+  /** Issues the current user manages (owner or co-éditeur). */
+  async myManaged() {
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) return [];
+    const { data } = await db.from("paper_editors").select("issue").eq("editor_id", user.id);
+    return (data || []).map((x) => x.issue);
+  },
+  async create(p) {
+    const { data: { user } } = await db.auth.getUser();
+    const row = { issue: p.issue, name: p.name || "", tagline: p.tagline || "", plate: p.plate || "plate-fraktur",
+      ear: p.ear || ["", "", ""], slogans: p.slogans || [], emblem_left: p.emblemLeft || "",
+      emblem_right: p.emblemRight || "", clan: p.clan || "", owner_id: user.id };
+    const { data, error } = await db.from("papers").insert(row).select().single();
+    if (error) throw error;
+    return _rowToPaper(data);
+  },
+  async update(issue, f) {
+    const m = { name:"name", tagline:"tagline", plate:"plate", ear:"ear", slogans:"slogans",
+      emblemLeft:"emblem_left", emblemRight:"emblem_right", clan:"clan" };
+    const row = {}; Object.keys(f).forEach((k) => { if (m[k]) row[m[k]] = f[k]; });
+    const { data, error } = await db.from("papers").update(row).eq("issue", issue).select().single();
+    if (error) throw error;
+    return _rowToPaper(data);
+  },
+  async remove(issue) { const { error } = await db.from("papers").delete().eq("issue", issue); if (error) throw error; },
+  async editors(issue) {
+    const { data } = await db.from("paper_editors").select("editor_id").eq("issue", issue);
+    return (data || []).map((x) => x.editor_id);
+  },
+  async addEditor(issue, editorId) { const { error } = await db.from("paper_editors").insert({ issue, editor_id: editorId }); if (error) throw error; },
+  async removeEditor(issue, editorId) { const { error } = await db.from("paper_editors").delete().eq("issue", issue).eq("editor_id", editorId); if (error) throw error; },
 };
 
 // ── Comments: reader "Courrier des lecteurs" (read anon, post = logged in) ───
@@ -327,5 +392,5 @@ function md(text) {
     .join("");
 }
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, Comments, Portfolio, Ads, sortArticles, esc, md };
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, Comments, Portfolio, Ads, Papers, sortArticles, esc, md };
 })();

@@ -87,8 +87,8 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { db, esc, configured } = window.Daihbi;
-const PAPERS = window.DAIHBI_PAPERS || {};
+const { db, esc, configured, Papers } = window.Daihbi;
+let PAPERS = window.DAIHBI_PAPERS || {};
 const plateClass = p => ({"plate-anton":"anton","plate-echo":"echo"}[p] || "fraktur");
 const WRANK = {lead:0,major:1,minor:2,brief:3};
 
@@ -184,6 +184,7 @@ function wireFilters(){
 (async function boot(){
   if(!configured){ $("#grid").innerHTML = `<div class="state">Pas encore connecté.<br>Ajoutez vos clés Supabase dans <code>config.js</code>.</div>`; return; }
   wireFilters();
+  try{ PAPERS = await Papers.map(); }catch(e){ /* keep papers.js */ }
   try{ EDITIONS = await fetchEditions(); render(); }
   catch(e){ $("#grid").innerHTML = `<div class="state">Impossible de charger le kiosque.<br>${esc(e.message)}</div>`; }
 })();

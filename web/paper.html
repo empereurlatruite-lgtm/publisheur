@@ -196,22 +196,22 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = (s,r=document)=>r.querySelector(s);
-const { Articles, Auth, Profiles, Comments, Ads, esc, md, configured } = window.Daihbi;
+const { Articles, Auth, Profiles, Comments, Ads, Papers, esc, md, configured } = window.Daihbi;
 
-// Paper registry now lives in papers.js (shared with the editor).
-const PAPERS = window.DAIHBI_PAPERS || {};
+// Editions come from the DB (Papers.map), with papers.js as the fallback.
 const ISSUE = window.Daihbi.ISSUE;
-const PAPER = PAPERS[ISSUE] || {
+function fallbackPaper(){ return {
   name: ISSUE.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()),
-  tagline: "", plate: "plate-fraktur",
-  ear: ["Édition", "", "Warden"], slogans: [],
-};
-
-// reflect the chosen paper in the chrome
-document.title = PAPER.name;
-$(".toolbar b").innerHTML = PAPER.name;
-$(".toolbar a.btn").href = "editor.html?issue=" + encodeURIComponent(ISSUE);
-$("#sheet").className = "sheet " + (PAPER.plate || "");
+  tagline: "", plate: "plate-fraktur", ear: ["Édition", "", "Warden"], slogans: [] }; }
+let PAPERS = window.DAIHBI_PAPERS || {};
+let PAPER = PAPERS[ISSUE] || fallbackPaper();
+function applyPaper(){
+  document.title = PAPER.name;
+  $(".toolbar b").innerHTML = PAPER.name;
+  $(".toolbar a.btn").href = "editor.html?issue=" + encodeURIComponent(ISSUE);
+  $("#sheet").className = "sheet " + (PAPER.plate || "");
+}
+applyPaper();
 
 function imgTag(url){ return url ? `<img src="${esc(url)}" alt="">` : ""; }
 function kicker(a){ return a.kicker ? `<div class="kicker">${esc(a.kicker)}</div>` : ""; }
@@ -270,6 +270,8 @@ async function load(){
       Add your Supabase URL + anon key to <code>web/config.js</code>.</div>`;
     return;
   }
+  try{ PAPERS = await Papers.map(); }catch(e){ /* keep papers.js */ }
+  PAPER = PAPERS[ISSUE] || fallbackPaper(); applyPaper();
   let arts;
   try{ arts = await Articles.listPublished(); }
   catch(e){ $("#sheet").innerHTML = `<div class="empty">Could not load articles.<br>${esc(e.message)}</div>`; return; }

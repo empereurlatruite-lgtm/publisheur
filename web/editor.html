@@ -81,6 +81,19 @@
   .pcell .pacts .use{background:var(--accent);color:#fff;border-color:var(--accent)}
   .pcell .pacts .rm{flex:0 0 auto;color:#b33}
   .pempty{grid-column:1/-1;color:#8a8070;font-style:italic;text-align:center;padding:2rem}
+  /* Journal create/manage */
+  .jbody{padding:1rem;overflow:auto}
+  .jbody label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;margin:.6rem 0 .2rem;font-weight:600}
+  .jbody input,.jbody select{width:100%;font:inherit;padding:.5rem .6rem;border:1px solid #c9bda0;border-radius:6px;background:#fff}
+  .jbody .two{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+  .jbody .jbar{display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap;align-items:center}
+  .jbody .jbar .grow{flex:1}
+  .jbody .jbar button{font:inherit;border-radius:6px;padding:.55rem .9rem;cursor:pointer;border:1px solid #c9bda0;background:#fff}
+  .jbody .jbar button.go{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .coed{display:flex;align-items:center;gap:.5rem;padding:.35rem 0;border-bottom:1px solid var(--line);font-size:.88rem}
+  .coed .grow{flex:1}
+  .coed button{font:inherit;font-size:.74rem;border:1px solid #c9bda0;background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer}
+  .jerr{font-size:.82rem;min-height:1em;margin-top:.4rem;color:#b33}
   .twocol{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
   .formbar{display:flex;gap:.5rem;align-items:center;margin-top:.4rem;flex-wrap:wrap}
   .formbar .grow{flex:1}
@@ -140,6 +153,7 @@
   <span class="who" id="who"></span><span class="rolebadge" id="rolebadge" style="display:none"></span>
   <button onclick="openPortfolio()">🖼 Portfolio</button>
   <a id="adsLink" href="ads.html" style="display:none">📣 Réclames</a>
+  <button id="manageLink" style="display:none" onclick="openManageJournal()">⚙ Gérer le journal</button>
   <button onclick="openProfile()">Mon profil</button>
   <button id="newBtn" onclick="newArticle()">+ Article</button>
   <a id="openPaper" href="paper.html" target="_blank">Open full paper ↗</a>
@@ -219,15 +233,24 @@
   </div>
 </div>
 
+<!-- Journal (edition) create/manage modal -->
+<div class="pmodal" id="jmodal" style="display:none">
+  <div class="pcard" style="max-width:620px">
+    <div class="phead"><b id="jTitle">Journal</b><span class="grow"></span><button class="px" onclick="closeJournal()">✕</button></div>
+    <div class="jbody" id="jBody"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="papers.js"></script>
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Articles, Media, Profiles, Portfolio, configured } = window.Daihbi;
+const { Auth, Articles, Media, Profiles, Portfolio, Papers, configured } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
-const PAPERS = window.DAIHBI_PAPERS || {};
+let PAPERS = window.DAIHBI_PAPERS || {};
+let MY_MANAGED = [];   // issues this editor owns/co-edits
 let current = null;
 let MYROLE = "reader", MYPROFILE = null;
 const ROLE_LABELS = { reader:"Lecteur", writer:"Rédacteur", illustrator:"Illustrateur", editor:"Éditeur", annonceur:"Annonceur" };
@@ -537,19 +560,99 @@ async function loadPGrid(){
 }
 function usePortfolioImage(url){ F.image.value=url; showPreview(url); closePortfolio(); toast("Image ajoutée à l’article — enregistrez."); }
 async function removePortfolioImage(id){ if(!confirm("Retirer cette image du portfolio ?"))return; try{ await Portfolio.remove(id); await loadPGrid(); }catch(e){ alert(e.message); } }
+
+// ── Journaux : créer / gérer une édition ────────────────────────────────────
+function journalForm(p, isNew){
+  const plates=[["plate-fraktur","Gothique (fraktur)"],["plate-anton","Condensé (Anton)"],["plate-echo","Sobre (navy/Oswald)"]];
+  return `
+    <label>Nom du journal</label><input id="j_name" value="${escapeHtml(p.name||"")}" placeholder="L’Étendard du 8e">
+    ${isNew?`<label>Identifiant (URL, sans espaces)</label><input id="j_issue" value="" placeholder="etendard-8e">`:""}
+    <label>Sous-titre</label><input id="j_tagline" value="${escapeHtml(p.tagline||"")}" placeholder="Devise du journal">
+    <div class="two">
+      <div><label>Style du titre</label><select id="j_plate">${plates.map(([v,l])=>`<option value="${v}" ${((p.plate||"plate-fraktur")===v)?"selected":""}>${l}</option>`).join("")}</select></div>
+      <div><label>Régiment</label><select id="j_clan">${(window.DAIHBI_CLANS||[]).map(c=>`<option ${c===p.clan?"selected":""}>${escapeHtml(c)}</option>`).join("")}</select></div>
+    </div>
+    <label>Bandeau (gauche · centre · droite)</label>
+    <div class="two" style="grid-template-columns:1fr 1fr 1fr">
+      <input id="j_ear0" value="${escapeHtml((p.ear&&p.ear[0])||"")}" placeholder="gauche">
+      <input id="j_ear1" value="${escapeHtml((p.ear&&p.ear[1])||"")}" placeholder="centre">
+      <input id="j_ear2" value="${escapeHtml((p.ear&&p.ear[2])||"")}" placeholder="droite">
+    </div>
+    <label>Slogans de pied (séparés par « | »)</label>
+    <input id="j_slogans" value="${escapeHtml((p.slogans||[]).join(" | "))}" placeholder="Vive les Wardens | …">
+    <div class="two">
+      <div><label>Emblème gauche (URL)</label><input id="j_eleft" value="${escapeHtml(p.emblemLeft||"")}" placeholder="https://…"></div>
+      <div><label>Emblème droit (URL)</label><input id="j_eright" value="${escapeHtml(p.emblemRight||"")}" placeholder="https://…"></div>
+    </div>
+    <div class="jerr" id="jErr"></div>`;
+}
+function readJournal(isNew){
+  return { issue: isNew ? $("#j_issue").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") : ISSUE,
+    name:$("#j_name").value.trim(), tagline:$("#j_tagline").value.trim(), plate:$("#j_plate").value, clan:$("#j_clan").value,
+    ear:[$("#j_ear0").value.trim(),$("#j_ear1").value.trim(),$("#j_ear2").value.trim()],
+    slogans:$("#j_slogans").value.split("|").map(s=>s.trim()).filter(Boolean),
+    emblemLeft:$("#j_eleft").value.trim(), emblemRight:$("#j_eright").value.trim() };
+}
+function openCreateJournal(){
+  $("#jTitle").textContent="Créer un journal";
+  $("#jBody").innerHTML = journalForm({},true) + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">Créer le journal</button></div>`;
+  $("#jmodal").style.display="flex";
+}
+async function createJournal(){
+  const p=readJournal(true);
+  if(!p.name){ $("#jErr").textContent="Donnez un nom."; return; }
+  if(!p.issue){ $("#jErr").textContent="Donnez un identifiant (lettres/chiffres/tirets)."; return; }
+  if(PAPERS[p.issue]){ $("#jErr").textContent="Cet identifiant existe déjà."; return; }
+  try{ await Papers.create(p); location.href=`editor.html?issue=${encodeURIComponent(p.issue)}`; }
+  catch(e){ $("#jErr").textContent=e.message; }
+}
+function openManageJournal(){
+  const p = Object.assign({issue:ISSUE}, PAPERS[ISSUE]||{});
+  $("#jTitle").textContent="Gérer : "+(p.name||ISSUE);
+  $("#jBody").innerHTML = journalForm(p,false)
+    + `<div class="jbar"><span class="grow"></span><button class="go" onclick="saveJournal()">Enregistrer le journal</button></div>
+       <div id="coeds"></div>`;
+  $("#jmodal").style.display="flex";
+  loadCoEditors();
+}
+async function saveJournal(){
+  try{ await Papers.update(ISSUE, readJournal(false)); PAPERS=await Papers.map(); reloadPreview();
+    $("#jErr").textContent="✓ Enregistré."; }
+  catch(e){ $("#jErr").textContent=e.message; }
+}
+async function loadCoEditors(){
+  try{
+    const ids = await Papers.editors(ISSUE);
+    const profs = await Profiles.all();
+    const byId = Object.fromEntries(profs.map(p=>[p.id,p]));
+    const rows = ids.map(id=>{ const pr=byId[id]||{}; return `<div class="coed"><span class="grow">${escapeHtml(pr.display_name||id.slice(0,8))}${id===ME?" (vous)":""}</span>${id===ME?"":`<button onclick="rmCoEditor('${id}')">Retirer</button>`}</div>`; }).join("");
+    const addable = profs.filter(p=>p.role==="editor" && !ids.includes(p.id));
+    const addOpts = addable.map(p=>`<option value="${p.id}">${escapeHtml(p.display_name||p.id.slice(0,8))}</option>`).join("");
+    $("#coeds").innerHTML = `<label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;margin:.8rem 0 .2rem;font-weight:600">Éditeurs du journal</label>
+      ${rows||"<div class='coed'>—</div>"}
+      ${addOpts?`<div class="jbar"><select id="coSel" style="flex:1;padding:.5rem;border:1px solid #c9bda0;border-radius:6px">${addOpts}</select><button onclick="addCoEditor()">Ajouter</button></div>`
+               :"<div style='font-size:.8rem;color:#7a7060;margin-top:.4rem'>Aucun autre éditeur à ajouter.</div>"}`;
+  }catch(e){ $("#coeds").innerHTML=`<div class="jerr">${escapeHtml(e.message)}</div>`; }
+}
+async function addCoEditor(){ try{ await Papers.addEditor(ISSUE,$("#coSel").value); loadCoEditors(); }catch(e){ alert(e.message); } }
+async function rmCoEditor(id){ try{ await Papers.removeEditor(ISSUE,id); loadCoEditors(); }catch(e){ alert(e.message); } }
+function closeJournal(){ $("#jmodal").style.display="none"; }
 async function move(id,dir){ try{ await Articles.move(id,dir); await loadList(); reloadPreview(); }catch(e){ toast(e.message); } }
 function previewURL(){ return `paper.html?issue=${encodeURIComponent(ISSUE)}&_=${Date.now()}`; }
 function reloadPreview(){ $("#pv").src=previewURL(); }
-function switchEdition(issue){ location.href = `editor.html?issue=${encodeURIComponent(issue)}`; }
-function initEditions(){
+function switchEdition(issue){
+  if(issue==="__new"){ $("#editionSel").value=ISSUE; openCreateJournal(); return; }
+  location.href = `editor.html?issue=${encodeURIComponent(issue)}`;
+}
+async function initEditions(){
   const sel=$("#editionSel"); if(!sel) return;
-  const keys=Object.keys(PAPERS);
-  if(!keys.includes(ISSUE)) keys.unshift(ISSUE);          // unknown/custom edition still shows
+  // editors only see the papers they manage; others see all editions
+  let keys = (MYROLE==="editor") ? MY_MANAGED.slice() : Object.keys(PAPERS);
+  if(!keys.includes(ISSUE)) keys.unshift(ISSUE);
   sel.innerHTML = keys.map(k=>{
     const name=(PAPERS[k]?.name)||k;
     return `<option value="${k}" ${k===ISSUE?"selected":""}>${name}</option>`;
-  }).join("");
-  // point the preview iframe + "open paper" at the current edition
+  }).join("") + (MYROLE==="editor" ? `<option value="__new">+ Créer un journal…</option>` : "");
   $("#pv").src = previewURL();
   $("#openPaper").href = `paper.html?issue=${encodeURIComponent(ISSUE)}`;
 }
@@ -573,8 +676,11 @@ async function boot(){
   $("#rolebadge").textContent = roleLabel(MYROLE); $("#rolebadge").style.display="";
   if(MYROLE==="editor") $("#adsLink").style.display="";   // editors moderate réclames
   ME = session.user.id;
+  try{ PAPERS = await Papers.map(); }catch(e){}
+  if(MYROLE==="editor"){ try{ MY_MANAGED = await Papers.myManaged(); }catch(e){} }
+  if(MYROLE==="editor" && MY_MANAGED.includes(ISSUE)) $("#manageLink").style.display="";
   renderFormBar();
-  initEditions();
+  await initEditions();
   wireDropzone();
   Articles.subscribe(loadList);
   await loadList(); newArticle();

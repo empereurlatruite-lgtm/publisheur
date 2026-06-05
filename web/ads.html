@@ -106,8 +106,8 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Profiles, Ads, Media, configured, esc } = window.Daihbi;
-const PAPERS = window.DAIHBI_PAPERS || {};
+const { Auth, Profiles, Ads, Media, Papers, configured, esc } = window.Daihbi;
+let PAPERS = window.DAIHBI_PAPERS || {};
 let MYROLE="reader", MYPROFILE=null, ME=null, current=null, pendingImg="";
 
 const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -205,6 +205,7 @@ async function boot(){
   hideGate(); $("#hdr").style.display=""; $("#app").style.display="";
   $("#who").textContent = MYPROFILE.display_name || s.user.email || "";
   $("#rolebadge").textContent = MYROLE==="editor" ? "Éditeur" : "Annonceur";
+  try{ PAPERS = await Papers.map(); }catch(e){}
   fillIssues(); fillCategories(); newAd(); await loadList();
 }
 boot();
