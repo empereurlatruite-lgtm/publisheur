@@ -72,6 +72,10 @@
   .gate p{opacity:.85;font-size:.9rem;line-height:1.5}
   .gate input{width:100%;font:inherit;padding:.7rem .8rem;margin:.8rem 0;border-radius:8px;border:1px solid #5a534a;background:#1f1c18;color:#f3ead6}
   .gate button{font:inherit;width:100%;padding:.7rem;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+  .gate .authtabs{display:flex;gap:.4rem;margin:.2rem 0 .2rem}
+  .gate .authtabs button{flex:1;width:auto;background:#1f1c18;color:#cdc4b2;border:1px solid #5a534a;padding:.5rem;border-radius:8px}
+  .gate .authtabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .gate a{color:#e8b9b2}
   .gate .err{color:#ff9b8e;font-size:.82rem;margin-top:.6rem;min-height:1em}
   .gate code{background:#1f1c18;padding:.1rem .3rem;border-radius:4px}
 </style>
@@ -178,27 +182,45 @@ function setupNotice(){
     <p>Connect your Supabase project: open <code>web/config.js</code> and paste your
     <b>Project URL</b> and <b>anon key</b> (Supabase → Settings → API), then reload.</p>`);
 }
-function loginScreen(msg){
+function loginScreen(msg, mode){
+  mode = mode || "signin";
+  const up = mode === "signup";
   showGate(`<h2>Publisheur</h2>
-    <p>Sign in to the newsroom.</p>
-    <input id="email" type="email" placeholder="you@example.com" autocomplete="username" autofocus>
-    <input id="password" type="password" placeholder="password" autocomplete="current-password">
-    <button onclick="doPasswordLogin()">Sign in</button>
+    <div class="authtabs">
+      <button class="${up?"":"on"}" onclick="loginScreen(null,'signin')">Se connecter</button>
+      <button class="${up?"on":""}" onclick="loginScreen(null,'signup')">Créer un compte</button>
+    </div>
+    <input id="email" type="email" placeholder="vous@exemple.com" autocomplete="username" autofocus>
+    <input id="password" type="password" placeholder="${up?"choisir un mot de passe (6+ caractères)":"mot de passe"}" autocomplete="${up?"new-password":"current-password"}">
+    <button onclick="${up?"doSignUp()":"doPasswordLogin()"}">${up?"Créer le compte":"Se connecter"}</button>
     <div class="err" id="loginErr">${msg||""}</div>
-    <p style="margin-top:1rem;font-size:.85rem;opacity:.7">No password? <a href="#" onclick="sendLink();return false">Email me a login link instead</a>.</p>`);
-  const pw=$("#password"); if(pw) pw.addEventListener("keydown",e=>{if(e.key==="Enter")doPasswordLogin();});
+    ${up
+      ? `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">Déjà un compte ? <a href="#" onclick="loginScreen(null,'signin');return false">Se connecter</a>.</p>`
+      : `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">Pas de mot de passe ? <a href="#" onclick="sendLink();return false">Recevoir un lien par e-mail</a>.</p>`}`);
+  const act = up ? doSignUp : doPasswordLogin;
+  const pw=$("#password"); if(pw) pw.addEventListener("keydown",e=>{if(e.key==="Enter")act();});
   const inp=$("#email"); if(inp) inp.addEventListener("keydown",e=>{if(e.key==="Enter")$("#password").focus();});
 }
 async function doPasswordLogin(){
   const email=$("#email").value.trim(), password=$("#password").value;
-  if(!email||!password){ $("#loginErr").textContent="Enter your email and password."; return; }
+  if(!email||!password){ $("#loginErr").textContent="Entrez votre e-mail et votre mot de passe."; return; }
   try{ await Auth.signInPassword(email,password); /* onChange handler reloads the app */ }
   catch(e){ $("#loginErr").textContent=e.message; }
 }
+async function doSignUp(){
+  const email=$("#email").value.trim(), password=$("#password").value;
+  if(!email||!password){ $("#loginErr").textContent="Entrez un e-mail et un mot de passe."; return; }
+  if(password.length<6){ $("#loginErr").textContent="Mot de passe : 6 caractères minimum."; return; }
+  try{
+    const data = await Auth.signUp(email,password);
+    if(data && data.session){ /* auto-confirmé → onChange recharge l'app */ }
+    else { $("#gateCard").innerHTML=`<h2>Vérifiez votre e-mail</h2><p>Compte créé. Cliquez le lien de confirmation envoyé à <b>${escapeHtml(email)}</b>, puis connectez-vous.</p>`; }
+  }catch(e){ $("#loginErr").textContent=e.message; }
+}
 async function sendLink(){
   const email=$("#email").value.trim();
-  if(!email){ $("#loginErr").textContent="Enter your email."; return; }
-  try{ await Auth.signIn(email); $("#gateCard").innerHTML=`<h2>Check your email</h2><p>We sent a login link to <b>${escapeHtml(email)}</b>. Open it on this device.</p>`; }
+  if(!email){ $("#loginErr").textContent="Entrez votre e-mail."; return; }
+  try{ await Auth.signIn(email); $("#gateCard").innerHTML=`<h2>Vérifiez votre e-mail</h2><p>Lien de connexion envoyé à <b>${escapeHtml(email)}</b>. Ouvrez-le sur cet appareil.</p>`; }
   catch(e){ $("#loginErr").textContent=e.message; }
 }
 async function doSignOut(){ await Auth.signOut(); location.reload(); }

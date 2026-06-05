@@ -58,6 +58,15 @@ const Auth = {
     const { error } = await db.auth.signInWithPassword({ email, password });
     if (error) throw error;
   },
+  async signUp(email, password) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { data, error } = await db.auth.signUp({
+      email, password,
+      options: { emailRedirectTo: location.href.split("#")[0] },
+    });
+    if (error) throw error;
+    return data; // data.session is non-null when email auto-confirm is on
+  },
   async signOut() {
     if (db) await db.auth.signOut();
   },
