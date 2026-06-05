@@ -1,0 +1,7 @@
+# Cloudflare Pages headers.
+# Always revalidate the app shell so collaborators get the latest version
+# the moment we deploy (no stale cached HTML/JS/config).
+/*.html
+  Cache-Control: no-cache
+/*.js
+  Cache-Control: no-cache
