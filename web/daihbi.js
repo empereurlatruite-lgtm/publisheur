@@ -212,6 +212,37 @@ const Profiles = {
   },
 };
 
+// ── Comments: reader "Courrier des lecteurs" (read anon, post = logged in) ───
+const Comments = {
+  async list(issue) {
+    if (!db) return [];
+    const { data, error } = await db.from("comments").select("*")
+      .eq("issue", issue).order("created_at", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+  async add(issue, body, authorName) {
+    if (!db) throw new Error("Supabase not configured.");
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) throw new Error("Connectez-vous pour commenter.");
+    const { data, error } = await db.from("comments")
+      .insert({ issue, body, author_name: authorName || "", author_id: user.id })
+      .select().single();
+    if (error) throw error;
+    return data;
+  },
+  async remove(id) {
+    const { error } = await db.from("comments").delete().eq("id", id);
+    if (error) throw error;
+  },
+  subscribe(issue, cb) {
+    if (!db) return;
+    db.channel("comments-" + issue)
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, () => cb())
+      .subscribe();
+  },
+};
+
 // ── Render helpers (shared by the paper page) ─────────────────────────────
 const esc = (s) =>
   (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -230,5 +261,5 @@ function md(text) {
     .join("");
 }
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, sortArticles, esc, md };
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, Comments, sortArticles, esc, md };
 })();

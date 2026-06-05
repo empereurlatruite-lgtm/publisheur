@@ -129,10 +129,29 @@
   .empty{padding:4rem 2rem;text-align:center;color:var(--muted);font-style:italic}
   .empty a{color:var(--accent)}
 
+  /* Courrier des lecteurs — web only, not part of the printed paper */
+  .lecteurs{max-width:760px;margin:0 auto 3rem;padding:0 1rem;color:#ece3cf;font-family:system-ui,sans-serif}
+  .lecteurs h3{font-family:"Playfair Display",serif;color:#f3ead6;font-size:1.5rem;margin:.2rem 0 1rem;text-align:center}
+  .clist{display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.2rem}
+  .cmt{background:#2c2924;border:1px solid #4a443c;border-radius:8px;padding:.6rem .8rem}
+  .cmt .meta{font-size:.72rem;color:#a89f8b;margin-bottom:.2rem;display:flex;gap:.5rem;align-items:center}
+  .cmt .meta .who{color:#e4c98a;font-weight:600}
+  .cmt .meta .del{margin-left:auto;background:none;border:none;color:#b98;cursor:pointer;font-size:.8rem}
+  .cmt .txt{font-size:.92rem;line-height:1.45;white-space:pre-wrap}
+  .cmt-empty{color:#8a8170;font-style:italic;text-align:center;padding:.5rem}
+  .cbox{background:#2c2924;border:1px solid #4a443c;border-radius:8px;padding:.8rem}
+  .cbox textarea,.cbox input{width:100%;font:inherit;background:#1f1c18;color:#f3ead6;border:1px solid #5a534a;border-radius:6px;padding:.5rem .6rem;margin-bottom:.5rem;box-sizing:border-box}
+  .cbox textarea{min-height:70px;resize:vertical}
+  .cbox .row{display:flex;gap:.5rem}
+  .cbox button{font:inherit;border:none;border-radius:6px;padding:.5rem .9rem;cursor:pointer;background:var(--accent);color:#fff;font-weight:600}
+  .cbox button.ghost{background:#3a3631;color:#f3ead6;border:1px solid #5a534a}
+  .cbox .hint{font-size:.78rem;color:#a89f8b;margin-bottom:.5rem}
+  .cbox .err{color:#ff9b8e;font-size:.8rem;min-height:1em}
+
   @page{size:A3 portrait;margin:12mm}
   @media print{
     body{background:#fff}
-    .toolbar{display:none !important}
+    .toolbar,.lecteurs{display:none !important}
     .stage{padding:0}
     .sheet{box-shadow:none;border:none;width:100%;padding:0}
     .well{column-count:5}
@@ -154,6 +173,12 @@
   <div class="sheet" id="sheet"><div class="empty">Loading the press…</div></div>
 </div>
 
+<section class="lecteurs" id="lecteurs" style="display:none">
+  <h3>Courrier des lecteurs</h3>
+  <div class="clist" id="cList"></div>
+  <div class="cbox" id="cBox"></div>
+</section>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="config.js"></script>
@@ -161,7 +186,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = (s,r=document)=>r.querySelector(s);
-const { Articles, esc, md, configured } = window.Daihbi;
+const { Articles, Auth, Profiles, Comments, esc, md, configured } = window.Daihbi;
 
 // Paper registry now lives in papers.js (shared with the editor).
 const PAPERS = window.DAIHBI_PAPERS || {};
@@ -269,9 +294,81 @@ async function savePNG(){
   a.href=canvas.toDataURL("image/png"); a.click();
 }
 
+// ── Courrier des lecteurs (read = anonyme, commenter = connecté) ────────────
+let ME_ID = null, MY_NAME = "", IS_EDITOR = false;
+
+function fmtC(d){ return new Date(d).toLocaleString("fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }
+
+async function refreshMe(){
+  const s = await Auth.session();
+  ME_ID = s?.user?.id || null;
+  if(ME_ID){ const p = await Profiles.me(); MY_NAME = (p&&p.display_name) || s.user.email?.split("@")[0] || "Lecteur"; IS_EDITOR = (p&&p.role)==="editor"; }
+  else { MY_NAME=""; IS_EDITOR=false; }
+}
+
+async function loadComments(){
+  let list=[]; try{ list = await Comments.list(ISSUE); }catch(e){ /* table maybe absent */ }
+  $("#cList").innerHTML = list.length ? list.map(c=>`
+    <div class="cmt">
+      <div class="meta"><span class="who">${esc(c.author_name||"Lecteur")}</span><span>· ${fmtC(c.created_at)}</span>
+        ${(c.author_id===ME_ID||IS_EDITOR)?`<button class="del" onclick="delComment('${c.id}')">supprimer</button>`:""}</div>
+      <div class="txt">${esc(c.body)}</div>
+    </div>`).join("") : `<div class="cmt-empty">Soyez le premier à réagir à cette édition.</div>`;
+}
+
+function renderCBox(){
+  const box=$("#cBox");
+  if(ME_ID){
+    box.innerHTML = `
+      <div class="hint">Vous commentez en tant que <b>${esc(MY_NAME)}</b>.</div>
+      <textarea id="cText" placeholder="Votre réaction, votre témoignage…"></textarea>
+      <div class="row"><button onclick="postComment()">Publier</button>
+        <button class="ghost" onclick="cSignOut()">Se déconnecter</button></div>
+      <div class="err" id="cErr"></div>`;
+  } else {
+    box.innerHTML = `
+      <div class="hint">Lecture libre. Connectez-vous (ou créez un compte lecteur) pour commenter.</div>
+      <input id="cEmail" type="email" placeholder="vous@exemple.com">
+      <input id="cPass" type="password" placeholder="mot de passe">
+      <div class="row"><button onclick="cSignIn()">Se connecter</button>
+        <button class="ghost" onclick="cSignUp()">Créer un compte lecteur</button></div>
+      <div class="err" id="cErr"></div>`;
+  }
+}
+
+async function postComment(){
+  const t=$("#cText").value.trim(); if(!t){ $("#cErr").textContent="Écrivez quelque chose."; return; }
+  try{ await Comments.add(ISSUE,t,MY_NAME); $("#cText").value=""; await loadComments(); }
+  catch(e){ $("#cErr").textContent=e.message; }
+}
+async function delComment(id){ if(!confirm("Supprimer ce commentaire ?"))return; try{ await Comments.remove(id); await loadComments(); }catch(e){ alert(e.message); } }
+async function cSignIn(){
+  try{ await Auth.signInPassword($("#cEmail").value.trim(), $("#cPass").value); await afterAuth(); }
+  catch(e){ $("#cErr").textContent=e.message; }
+}
+async function cSignUp(){
+  const em=$("#cEmail").value.trim(), pw=$("#cPass").value;
+  if(!em||pw.length<6){ $("#cErr").textContent="E-mail + mot de passe (6+ caractères)."; return; }
+  try{
+    const d=await Auth.signUp(em,pw,{role:"reader"});
+    if(d&&d.session){ await afterAuth(); }
+    else { $("#cBox").innerHTML=`<div class="hint">Compte créé ✓ — confirmez le lien dans votre e-mail (ignorez une éventuelle page d'erreur), puis revenez vous connecter.</div>`; }
+  }catch(e){ $("#cErr").textContent=e.message; }
+}
+async function cSignOut(){ await Auth.signOut(); await afterAuth(); }
+async function afterAuth(){ await refreshMe(); renderCBox(); await loadComments(); }
+
+async function initComments(){
+  if(!configured) return;
+  $("#lecteurs").style.display="";
+  await refreshMe(); renderCBox(); await loadComments();
+  Comments.subscribe(ISSUE, loadComments);
+}
+
 // live updates between collaborators
 if(configured) Articles.subscribe(load);
 load();
+initComments();
 </script>
 </body>
 </html>
