@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publisheur — Newsroom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  header{background:#211f1c;color:#f3ead6;display:flex;align-items:center;gap:1rem;padding:.6rem 1.1rem;flex:none}
+  header h1{font-family:"Playfair Display",serif;font-size:1.3rem;margin:0;letter-spacing:.02em}
+  header .grow{flex:1}
+  header .who{font-size:.78rem;opacity:.8}
+  header a,header button{font:inherit;color:#f3ead6;background:#3a3631;border:1px solid #555;border-radius:5px;padding:.4rem .7rem;text-decoration:none;cursor:pointer}
+  header button.primary{background:var(--accent);border-color:#a33;color:#fff;font-weight:600}
+
+  main{flex:1;display:grid;grid-template-columns:300px 1fr 1fr;min-height:0}
+  .col{min-height:0;overflow:auto;border-right:1px solid var(--line)}
+
+  #list{background:var(--panel)}
+  .listhead{display:flex;align-items:center;padding:.7rem .9rem;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);font-weight:600}
+  .listhead .grow{flex:1}
+  .item{padding:.6rem .9rem;border-bottom:1px solid var(--line);cursor:pointer;display:flex;gap:.5rem;align-items:flex-start}
+  .item:hover{background:#fff}
+  .item.sel{background:#fff;border-left:4px solid var(--accent);padding-left:calc(.9rem - 4px)}
+  .item .h{font-family:"Playfair Display",serif;font-weight:700;font-size:.98rem;line-height:1.15}
+  .item .meta{font-size:.72rem;color:#7a7060;margin-top:.2rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
+  .tag{font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;padding:.05rem .35rem;border-radius:3px;border:1px solid #c9bda0;background:#efe7d4}
+  .tag.lead{background:#7a1f1a;color:#fff;border-color:#7a1f1a}
+  .tag.major{background:#b5532a;color:#fff;border-color:#b5532a}
+  .tag.off{opacity:.5}
+  .arrows{display:flex;flex-direction:column;gap:1px}
+  .arrows button{border:1px solid var(--line);background:#fff;cursor:pointer;font-size:.6rem;line-height:1;padding:.1rem .25rem;border-radius:3px}
+
+  #form{background:#fbf8ef;padding:1rem 1.1rem}
+  #form .row{margin-bottom:.8rem}
+  #form label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#6a6253;margin-bottom:.25rem;font-weight:600}
+  #form input,#form select,#form textarea{width:100%;font:inherit;padding:.5rem .6rem;border:1px solid #c9bda0;border-radius:6px;background:#fff;color:var(--ink)}
+  #form textarea{min-height:240px;font-family:"PT Serif",Georgia,serif;line-height:1.5;resize:vertical}
+  #form input.head{font-family:"Playfair Display",serif;font-weight:700;font-size:1.15rem}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+  .formbar{display:flex;gap:.5rem;align-items:center;margin-top:.4rem}
+  .formbar .grow{flex:1}
+  .formbar button{font:inherit;border-radius:6px;padding:.55rem .9rem;cursor:pointer;border:1px solid #c9bda0;background:#fff}
+  .formbar button.save{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  .formbar button.del{color:#7a1f1a;border-color:#d8b6b2}
+  .hint{font-size:.72rem;color:#8a8070;margin-top:.3rem}
+  .chk{display:flex;align-items:center;gap:.4rem;font-size:.85rem;text-transform:none;letter-spacing:0;color:var(--ink)}
+
+  #preview{display:flex;flex-direction:column;border-right:none}
+  #preview .pvhead{padding:.5rem .9rem;border-bottom:1px solid var(--line);background:var(--panel);font-size:.8rem;color:#6a6253;display:flex;align-items:center;gap:.5rem}
+  #preview iframe{flex:1;border:none;width:100%;background:#6b6357}
+
+  .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#211f1c;color:#f3ead6;padding:.6rem 1rem;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;font-size:.85rem}
+  .toast.show{opacity:1}
+
+  /* login / setup gate */
+  .gate{position:fixed;inset:0;background:#211f1c;color:#f3ead6;display:flex;align-items:center;justify-content:center;z-index:100}
+  .gate .card{background:#2c2924;border:1px solid #4a443c;border-radius:12px;padding:2rem 2.2rem;max-width:430px;width:90%;text-align:center}
+  .gate h2{font-family:"Playfair Display",serif;font-size:2rem;margin:.2rem 0 .3rem}
+  .gate p{opacity:.85;font-size:.9rem;line-height:1.5}
+  .gate input{width:100%;font:inherit;padding:.7rem .8rem;margin:.8rem 0;border-radius:8px;border:1px solid #5a534a;background:#1f1c18;color:#f3ead6}
+  .gate button{font:inherit;width:100%;padding:.7rem;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+  .gate .err{color:#ff9b8e;font-size:.82rem;margin-top:.6rem;min-height:1em}
+  .gate code{background:#1f1c18;padding:.1rem .3rem;border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- login / setup gate -->
+<div class="gate" id="gate" style="display:none">
+  <div class="card" id="gateCard"></div>
+</div>
+
+<header style="display:none" id="hdr">
+  <h1>Publisheur <span style="opacity:.6;font-size:.8rem;font-family:system-ui">· Newsroom — Le Petit Daihbi</span></h1>
+  <span class="grow"></span>
+  <span class="who" id="who"></span>
+  <button onclick="newArticle()">+ New article</button>
+  <a href="paper.html" target="_blank">Open full paper ↗</a>
+  <button onclick="doSignOut()">Sign out</button>
+</header>
+
+<main style="display:none" id="app">
+  <div class="col" id="list">
+    <div class="listhead"><span class="grow">Articles</span></div>
+    <div id="items"></div>
+  </div>
+
+  <div class="col" id="form">
+    <div class="row"><label>Kicker (small overline)</label><input id="f_kicker" placeholder="e.g. FROM THE FRONT"></div>
+    <div class="row"><label>Headline</label><input id="f_headline" class="head" placeholder="Your headline here"></div>
+    <div class="row"><label>Subhead / deck</label><input id="f_subhead" placeholder="One-line summary"></div>
+    <div class="twocol">
+      <div class="row"><label>Byline</label><input id="f_byline" placeholder="Reporter name"></div>
+      <div class="row"><label>Prominence</label>
+        <select id="f_weight">
+          <option value="lead">Lead — front banner</option>
+          <option value="major">Major — wide story</option>
+          <option value="minor" selected>Minor — column story</option>
+          <option value="brief">Brief — short item</option>
+        </select>
+      </div>
+    </div>
+    <div class="row"><label>Image URL (optional)</label><input id="f_image" placeholder="https://…"></div>
+    <div class="row"><label>Body</label>
+      <textarea id="f_body" placeholder="Write the article. Blank line = new paragraph. **bold**, *italic*."></textarea>
+      <div class="hint">Blank line = new paragraph · <code>**bold**</code> · <code>*italic*</code></div>
+    </div>
+    <div class="formbar">
+      <label class="chk"><input type="checkbox" id="f_published" checked> Published</label>
+      <span class="grow"></span>
+      <button class="del" id="delBtn" onclick="delArticle()" style="display:none">Delete</button>
+      <button class="save" onclick="saveArticle()">Save</button>
+    </div>
+    <div class="hint" id="savedAt"></div>
+  </div>
+
+  <div class="col" id="preview">
+    <div class="pvhead">Live preview <span class="grow"></span><button onclick="reloadPreview()" style="font:inherit;border:1px solid var(--line);background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer">↻</button></div>
+    <iframe id="pv" src="paper.html"></iframe>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="daihbi.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const { Auth, Articles, configured } = window.Daihbi;
+let current = null;
+
+const F = {
+  kicker:$("#f_kicker"), headline:$("#f_headline"), subhead:$("#f_subhead"),
+  byline:$("#f_byline"), weight:$("#f_weight"), image:$("#f_image"),
+  body:$("#f_body"), published:$("#f_published"),
+};
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
+function escapeHtml(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+// ── Gate: setup notice or login ──────────────────────────────────────────
+function showGate(html){ $("#gate").style.display="flex"; $("#gateCard").innerHTML=html; }
+function hideGate(){ $("#gate").style.display="none"; }
+
+function setupNotice(){
+  showGate(`<h2>Almost there</h2>
+    <p>Connect your Supabase project: open <code>web/config.js</code> and paste your
+    <b>Project URL</b> and <b>anon key</b> (Supabase → Settings → API), then reload.</p>`);
+}
+function loginScreen(msg){
+  showGate(`<h2>Publisheur</h2>
+    <p>Sign in to the newsroom. We'll email you a one-tap login link.</p>
+    <input id="email" type="email" placeholder="you@example.com" autofocus>
+    <button onclick="sendLink()">Send login link</button>
+    <div class="err" id="loginErr">${msg||""}</div>`);
+  const inp=$("#email"); if(inp) inp.addEventListener("keydown",e=>{if(e.key==="Enter")sendLink();});
+}
+async function sendLink(){
+  const email=$("#email").value.trim();
+  if(!email){ $("#loginErr").textContent="Enter your email."; return; }
+  try{ await Auth.signIn(email); $("#gateCard").innerHTML=`<h2>Check your email</h2><p>We sent a login link to <b>${escapeHtml(email)}</b>. Open it on this device.</p>`; }
+  catch(e){ $("#loginErr").textContent=e.message; }
+}
+async function doSignOut(){ await Auth.signOut(); location.reload(); }
+
+// ── Form ──────────────────────────────────────────────────────────────────
+function formData(){
+  return {
+    kicker:F.kicker.value.trim(), headline:F.headline.value.trim()||"Untitled",
+    subhead:F.subhead.value.trim(), byline:F.byline.value.trim(),
+    weight:F.weight.value, image_url:F.image.value.trim(),
+    body:F.body.value, published:F.published.checked,
+  };
+}
+function fill(a){
+  current=a?a.id:null;
+  F.kicker.value=a?.kicker||""; F.headline.value=a?.headline||"";
+  F.subhead.value=a?.subhead||""; F.byline.value=a?.byline||"";
+  F.weight.value=a?.weight||"minor"; F.image.value=a?.image_url||"";
+  F.body.value=a?.body||""; F.published.checked=a?a.published:true;
+  $("#delBtn").style.display=a?"":"none";
+  $("#savedAt").textContent=a?.updated_at?"Last saved "+new Date(a.updated_at).toLocaleString():"";
+  highlight();
+}
+function newArticle(){ fill(null); F.headline.focus(); }
+function highlight(){ document.querySelectorAll(".item").forEach(el=>el.classList.toggle("sel",String(el.dataset.id)===String(current))); }
+
+async function loadList(){
+  let arts;
+  try{ arts=await Articles.listAll(); }catch(e){ toast("Load error: "+e.message); return; }
+  $("#items").innerHTML = arts.length ? arts.map(itemHTML).join("")
+    : `<div style="padding:1.4rem;color:#8a8070;font-style:italic">No articles yet. Click “+ New article”.</div>`;
+  highlight();
+}
+function itemHTML(a){
+  return `<div class="item" data-id="${a.id}" onclick="edit('${a.id}')">
+    <div style="flex:1">
+      <div class="h">${escapeHtml(a.headline)}</div>
+      <div class="meta"><span class="tag ${a.weight}">${a.weight}</span>
+        ${a.published?"":'<span class="tag off">draft</span>'}${a.byline?escapeHtml(a.byline):""}</div>
+    </div>
+    <div class="arrows" onclick="event.stopPropagation()">
+      <button title="Up" onclick="move('${a.id}','up')">▲</button>
+      <button title="Down" onclick="move('${a.id}','down')">▼</button>
+    </div>
+  </div>`;
+}
+async function edit(id){ try{ fill(await Articles.get(id)); }catch(e){ toast(e.message); } }
+
+async function saveArticle(){
+  const data=formData();
+  try{
+    const saved = current==null ? await Articles.create(data) : await Articles.update(current,data);
+    current=saved.id; toast("Saved");
+    await loadList(); fill(saved); reloadPreview();
+  }catch(e){ toast("Error: "+e.message); }
+}
+async function delArticle(){
+  if(current==null) return;
+  if(!confirm("Delete this article?")) return;
+  try{ await Articles.remove(current); toast("Deleted"); newArticle(); await loadList(); reloadPreview(); }
+  catch(e){ toast(e.message); }
+}
+async function move(id,dir){ try{ await Articles.move(id,dir); await loadList(); reloadPreview(); }catch(e){ toast(e.message); } }
+function reloadPreview(){ $("#pv").src="paper.html?_="+Date.now(); }
+
+document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s"){ e.preventDefault(); saveArticle(); } });
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+async function boot(){
+  if(!configured){ setupNotice(); return; }
+  const session = await Auth.session();
+  if(!session){ loginScreen(); Auth.onChange(s=>{ if(s) location.reload(); }); return; }
+  // signed in
+  hideGate();
+  $("#hdr").style.display=""; $("#app").style.display="";
+  $("#who").textContent = session.user.email || "";
+  Articles.subscribe(loadList);
+  await loadList(); newArticle();
+}
+boot();
+</script>
+</body>
+</html>

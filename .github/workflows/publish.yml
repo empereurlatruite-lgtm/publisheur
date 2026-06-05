@@ -1,0 +1,46 @@
+# Publish an issue: pull articles from Supabase → Scribus layout → PDF + PNG.
+# Run manually (Actions tab → "Publish issue" → Run workflow), or on a schedule.
+# Outputs are uploaded as a downloadable artifact.
+#
+# Requires two repo secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL, SUPABASE_KEY  (the anon key is fine for published articles)
+#
+# Note: the Foxhole war-wire needs the local foxhole_war.db, which is not in
+# the repo — so CI publishes the human-written articles from Supabase only.
+name: Publish issue
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "Issue name to publish"
+        default: "current"
+  # schedule:
+  #   - cron: "0 6 * * *"   # daily 06:00 UTC — uncomment to automate
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Scribus + tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends scribus poppler-utils xvfb
+
+      - name: Publish
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          chmod +x publish/publish.sh
+          ./publish/publish.sh "${{ github.event.inputs.issue || 'current' }}"
+
+      - name: Upload issue
+        uses: actions/upload-artifact@v4
+        with:
+          name: publisheur-issue
+          path: |
+            publish/out/issue.pdf
+            publish/out/page-*.png
