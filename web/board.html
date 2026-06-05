@@ -25,6 +25,8 @@
   .poolcard .t{font-family:"Playfair Display",serif;font-weight:700;font-size:.95rem;line-height:1.15}
   .poolcard .by{font-size:.74rem;color:#7a7060;margin:.15rem 0 .4rem}
   .byav{width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:.3rem;border:1px solid #b9ad90;filter:sepia(.3)}
+  .bsrc{display:inline-block;font-size:.62rem;text-transform:uppercase;letter-spacing:.03em;padding:.02rem .35rem;border-radius:999px;border:1px solid #b9ad90;background:#efe7d5;color:#6a6253}
+  .bsrc.ai{border-style:dashed;border-color:#9a7f55;color:#7a5a2a}
   .poolcard button{font:inherit;font-size:.76rem;border:1px solid #c9bda0;background:#fbf2ec;color:var(--accent);border-radius:5px;padding:.25rem .6rem;cursor:pointer;font-weight:600}
   .empty{color:#8a8070;font-style:italic;padding:1rem .8rem;font-size:.85rem}
   /* board */
@@ -110,6 +112,11 @@ const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt
 const WEIGHTS = [["lead","La Une"],["major","Majeurs"],["minor","Mineurs"],["brief","Brèves"]];
 let PAPER={}, PLACEMENTS=[], POOL=[], poolQ="", photoTarget=null;
 
+function srcTag(a){
+  if(!a.source) return "";
+  const ai=["ia","ai"].includes(String(a.source).trim().toLowerCase());
+  return ` <span class="bsrc ${ai?'ai':''}">${ai?'✦ IA':esc2(a.source)}</span>`;
+}
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1800); }
 function showGate(h){ $("#gate").style.display="flex"; $("#gc").innerHTML=h; }
 function previewURL(){ return `paper.html?issue=${encodeURIComponent(ISSUE)}&_=${Date.now()}`; }
@@ -133,7 +140,7 @@ function renderPool(){
   $("#poolList").innerHTML = avail.length ? avail.map(a=>`
     <div class="poolcard">
       <div class="t">${esc2(a.headline)}</div>
-      <div class="by">${a.author_avatar?`<img class="byav" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")}</div>
+      <div class="by">${a.author_avatar?`<img class="byav" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")}${srcTag(a)}</div>
       <button onclick="addToBoard('${a.id}')">＋ Ajouter à la une</button>
     </div>`).join("") : `<div class="empty">Aucune chronique disponible. Les rédacteurs soumettent leurs textes au pool.</div>`;
 }
@@ -151,7 +158,7 @@ function pcard(p){
     ${photo?`<img class="thumb" src="${esc2(photo)}">`:""}
     <div class="info">
       <div class="t">${esc2(a.headline||"(sans titre)")}</div>
-      <div class="by">${a.author_avatar?`<img class="byav" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")}</div>
+      <div class="by">${a.author_avatar?`<img class="byav" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")}${srcTag(a)}</div>
       <div class="acts">
         <span title="Proéminence">${wbtns}</span>
         <button onclick="movePlacement('${p.id}','up')" title="Monter">▲</button>

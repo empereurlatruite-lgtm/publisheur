@@ -123,6 +123,10 @@
   .byline .avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #2a2620;
     filter:grayscale(.5) sepia(.38) contrast(1.06);vertical-align:middle;margin-right:.4rem;background:#e9e1cd}
   .lead .byline .avatar{width:32px;height:32px;margin-right:.55rem}
+  .byline .src{display:inline-block;font-variant:normal;font-size:.62rem;letter-spacing:.05em;text-transform:uppercase;
+    padding:.05rem .42rem;border-radius:999px;margin-left:.4rem;vertical-align:middle;border:1px solid #b9ad90;color:#6a6253}
+  .byline .src.reg{background:#e7decb}
+  .byline .src.ai{background:#efe4d2;border-style:dashed;border-color:#9a7f55;color:#7a5a2a}
   .lead img{max-height:380px;object-fit:cover;margin:.5rem 0 .2rem}
   .story.major{-webkit-column-span:all;column-span:all;border-bottom:2px solid var(--rule);padding-bottom:.9rem;margin-bottom:1.1rem}
   .story.major .body{column-count:2;column-gap:var(--col-gap)}
@@ -218,10 +222,18 @@ applyPaper();
 
 function imgTag(url){ return url ? `<img src="${esc(url)}" alt="">` : ""; }
 function kicker(a){ return a.kicker ? `<div class="kicker">${esc(a.kicker)}</div>` : ""; }
+function srcBadge(a){
+  if(!a.source) return "";
+  const ai = ["ia","ai"].includes(String(a.source).trim().toLowerCase());
+  return ai
+    ? `<span class="src ai" title="Texte généré par intelligence artificielle">✦ Rédigé par IA</span>`
+    : `<span class="src reg" title="Régiment d'origine">${esc(a.source)}</span>`;
+}
 function byline(a){
-  if(!a.byline && !a.author_avatar) return "";
+  if(!a.byline && !a.author_avatar && !a.source) return "";
   const av = a.author_avatar ? `<img class="avatar" src="${esc(a.author_avatar)}" alt="">` : "";
-  return `<div class="byline">${av}${a.byline ? `par ${esc(a.byline)}` : ""}</div>`;
+  const sb = srcBadge(a);
+  return `<div class="byline">${av}${a.byline ? `par ${esc(a.byline)}` : ""}${sb ? ` ${sb}` : ""}</div>`;
 }
 
 function renderLead(a){

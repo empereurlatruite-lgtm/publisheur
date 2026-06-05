@@ -225,7 +225,10 @@
     <div class="row"><label>Surtitre (kicker)</label><input id="f_kicker" placeholder="ex. DÉPÊCHE DU FRONT"></div>
     <div class="row"><label>Titre</label><input id="f_headline" class="head" placeholder="Le titre de votre chronique"></div>
     <div class="row"><label>Chapô / sous-titre</label><input id="f_subhead" placeholder="Résumé en une ligne"></div>
-    <div class="row"><label>Signature</label><input id="f_byline" placeholder="Votre nom de plume"></div>
+    <div class="twocol">
+      <div class="row"><label>Signature</label><input id="f_byline" placeholder="Votre nom de plume"></div>
+      <div class="row"><label>De quel régiment ? (transparence)</label><select id="f_source"></select></div>
+    </div>
     <div class="row">
       <label>Photo suggérée (optionnel) — l’éditeur décidera de la mise en page</label>
       <div id="dropzone" class="dropzone">
@@ -303,9 +306,12 @@ const nameOf = id => (id && PROFMAP[id]) || (id ? "—" : "");
 
 const F = {
   kicker:$("#f_kicker"), headline:$("#f_headline"), subhead:$("#f_subhead"),
-  byline:$("#f_byline"), image:$("#f_image"),
+  byline:$("#f_byline"), source:$("#f_source"), image:$("#f_image"),
   body:$("#f_body"),
 };
+// régiment options for the provenance/transparency field
+F.source.innerHTML = `<option value="">— régiment —</option>`
+  + (window.DAIHBI_CLANS||[]).map(c=>`<option>${escapeHtml(c)}</option>`).join("");
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
 function escapeHtml(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 
@@ -381,7 +387,7 @@ function formData(){
   return {
     kicker:F.kicker.value.trim(), headline:F.headline.value.trim()||"Sans titre",
     subhead:F.subhead.value.trim(), byline:F.byline.value.trim(),
-    image_url:F.image.value.trim(),
+    source:F.source.value, image_url:F.image.value.trim(),
     body:F.body.value,
   };
 }
@@ -389,6 +395,7 @@ function fill(a){
   current=a?a.id:null;
   F.kicker.value=a?.kicker||""; F.headline.value=a?.headline||"";
   F.subhead.value=a?.subhead||""; F.byline.value=a?.byline||"";
+  F.source.value = a ? (a.source||"") : ((MYPROFILE&&MYPROFILE.clan)||"");   // default to my régiment
   F.image.value=a?.image_url||"";
   F.body.value=a?.body||"";
   const sl=$("#statusLbl"); if(sl) sl.textContent = a ? statusLabel(a) : "Nouvelle chronique";
