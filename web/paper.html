@@ -191,9 +191,9 @@
 <div class="toolbar">
   <b>Le Petit Daihbi</b>
   <span class="grow"></span>
-  <a class="btn" href="index.html">📰 Kiosque</a>
+  <a class="btn" href="/" target="_top">📰 Kiosque</a>
   <button onclick="load()">↻ Refresh</button>
-  <a class="btn" href="editor.html">✎ Edit articles</a>
+  <a class="btn" id="layoutLink" href="#" target="_top">✎ Éditer la mise en page</a>
   <button onclick="savePNG()">🖼 PNG</button>
   <button class="primary" onclick="window.print()">⎙ Print / PDF</button>
 </div>
@@ -227,7 +227,7 @@ let PAPER = PAPERS[ISSUE] || fallbackPaper();
 function applyPaper(){
   document.title = PAPER.name;
   $(".toolbar b").innerHTML = PAPER.name;
-  $(".toolbar a.btn").href = "editor.html?issue=" + encodeURIComponent(ISSUE);
+  const ll = $("#layoutLink"); if(ll) ll.href = "board.html?issue=" + encodeURIComponent(ISSUE);
   $("#sheet").className = "sheet " + (PAPER.plate || "");
 }
 applyPaper();

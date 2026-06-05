@@ -27,7 +27,9 @@
   .byav{width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:.3rem;border:1px solid #b9ad90;filter:sepia(.3)}
   .bsrc{display:inline-block;font-size:.62rem;text-transform:uppercase;letter-spacing:.03em;padding:.02rem .35rem;border-radius:999px;border:1px solid #b9ad90;background:#efe7d5;color:#6a6253}
   .bsrc.ai{border-style:dashed;border-color:#9a7f55;color:#7a5a2a}
+  .poolcard .poolacts{display:flex;gap:.4rem;align-items:center}
   .poolcard button{font:inherit;font-size:.76rem;border:1px solid #c9bda0;background:#fbf2ec;color:var(--accent);border-radius:5px;padding:.25rem .6rem;cursor:pointer;font-weight:600}
+  .poolcard .pdel{flex:none;background:#fff;border-color:#d8b6b2;color:#b33;padding:.25rem .45rem}
   .empty{color:#8a8070;font-style:italic;padding:1rem .8rem;font-size:.85rem}
   /* board */
   #board{background:#efe8d6}
@@ -142,7 +144,10 @@ function renderPool(){
     <div class="poolcard">
       <div class="t">${esc2(a.headline)}</div>
       <div class="by">${a.author_avatar?`<img class="byav" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")}${srcTag(a)}</div>
-      <button onclick="addToBoard('${a.id}')">＋ Ajouter à la une</button>
+      <div class="poolacts">
+        <button onclick="addToBoard('${a.id}')">＋ Ajouter à la une</button>
+        <button class="pdel" title="Supprimer la chronique" onclick="deleteChronicle('${a.id}')">🗑</button>
+      </div>
     </div>`).join("") : `<div class="empty">Aucune chronique disponible. Les rédacteurs soumettent leurs textes au pool.</div>`;
 }
 function renderBoard(){
@@ -168,11 +173,18 @@ function pcard(p){
         ${p.published
           ? `<button class="unpubbtn" onclick="togglePub('${p.id}',false)">Dépublier</button>`
           : `<button class="pubbtn" onclick="togglePub('${p.id}',true)">Publier</button>`}
-        <button class="rm" onclick="removePlacement('${p.id}')" title="Retirer">Retirer</button>
+        <button class="rm" onclick="removePlacement('${p.id}')" title="Retirer de cette édition">Retirer</button>
+        <button class="rm" onclick="deleteChronicle('${a.id}')" title="Supprimer la chronique (de tous les journaux)">🗑</button>
       </div>
     </div></div>`;
 }
 async function addToBoard(articleId){ try{ await Placements.add(articleId, ISSUE); await load(); }catch(e){ toast(e.message); } }
+async function deleteChronicle(id){
+  const a = (PLACEMENTS.find(p=>p.article_id===id)||{}).article || POOL.find(x=>x.id===id) || {};
+  if(!confirm(`Supprimer définitivement la chronique « ${a.headline||"sans titre"} » ?\nElle disparaîtra de TOUS les journaux où elle paraît. Action irréversible.`)) return;
+  try{ await Chronicles.remove(id); await load(); reloadPreview(); toast("Chronique supprimée"); }
+  catch(e){ toast("Refusé : "+e.message+" (auteur ou éditeur uniquement)"); }
+}
 async function removePlacement(id){ if(!confirm("Retirer cette chronique de l’édition ?"))return; try{ await Placements.remove(id); await load(); }catch(e){ toast(e.message); } }
 async function setWeight(id,w){ try{ await Placements.update(id,{weight:w}); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
 async function togglePub(id,pub){ try{ await Placements.update(id,{published:pub}); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
