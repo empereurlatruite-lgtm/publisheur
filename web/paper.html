@@ -99,6 +99,13 @@
   .lead .lead-cols{column-count:3;column-gap:var(--col-gap);column-rule:1px solid #cbbfa3;
     text-align:justify;hyphens:auto;font-size:1rem;line-height:1.5;margin-top:.7rem}
   .lead .lead-cols p{margin:0 0 .55rem;break-inside:avoid-column}
+  /* lead with an inset photo: single justified flow, text wraps the floated photo */
+  .lead-flow{max-width:62rem;margin:0 auto;text-align:justify;hyphens:auto;font-size:1.02rem;line-height:1.55}
+  .lead-flow p{margin:0 0 .6rem}
+  .lead-flow .lead-open{max-width:none;margin:0}
+  .lead-flow .lead-photo{float:right;width:42%;max-width:380px;height:auto;max-height:none;
+    margin:.2rem 0 .7rem 1.4rem;border:1px solid #b9ad90}
+  @media(max-width:640px){.lead-flow .lead-photo{float:none;width:100%;margin:.4rem 0}}
 
   .well{column-count:3;column-gap:var(--col-gap);column-rule:1px solid #cbbfa3;text-align:justify;hyphens:auto}
   .story{break-inside:avoid;margin:0 0 1.3rem;padding-bottom:1rem;border-bottom:1px solid #cbbfa3}
@@ -183,10 +190,19 @@ function renderLead(a){
   const m = html.match(/^(\s*<p>[\s\S]*?<\/p>)([\s\S]*)$/);
   const open = m ? m[1] : html;
   const rest = (m ? m[2] : "").trim();
-  return `<section class="lead">
-    ${kicker(a)}<h2>${esc(a.headline)}</h2>
+  const head = `${kicker(a)}<h2>${esc(a.headline)}</h2>
     ${a.subhead ? `<div class="deck">${esc(a.subhead)}</div>` : ""}
-    ${byline(a)}${imgTag(a.image_url)}
+    ${byline(a)}`;
+  if (a.image_url) {
+    // photo inset (floated), text wraps around it — like the hand-made originals
+    return `<section class="lead">${head}
+      <div class="lead-flow">
+        <img class="lead-photo" src="${esc(a.image_url)}" alt="">
+        <div class="lead-open">${open}</div>${rest}
+      </div>
+    </section>`;
+  }
+  return `<section class="lead">${head}
     <div class="lead-open">${open}</div>
     ${rest ? `<div class="lead-cols">${rest}</div>` : ""}
   </section>`;
