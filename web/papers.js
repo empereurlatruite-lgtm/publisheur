@@ -34,7 +34,6 @@ window.DAIHBI_PAPERS = {
     plate: "plate-fraktur",
     ear: ["Édition du Front", "Prix : 5 centimes", "2<sup>e</sup> REI · Daihbi"],
     slogans: [],
-    emblemRight: WARDEN_SHIELD,
   },
   "horizon-bleu": {
     name: "L’Horizon Bleu",
@@ -50,6 +49,5 @@ window.DAIHBI_PAPERS = {
     plate: "plate-echo",
     ear: ["Numéro 002", "Édition du 4 juin 2026", "Distribution aux forces & citoyens"],
     slogans: ["Tenir la ligne", "Protéger nos foyers", "Pour Callahan !"],
-    emblemRight: WARDEN_SHIELD,
   },
 };
