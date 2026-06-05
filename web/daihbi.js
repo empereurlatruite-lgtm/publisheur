@@ -277,6 +277,17 @@ const Papers = {
   async removeEditor(issue, editorId) { const { error } = await db.from("paper_editors").delete().eq("issue", issue).eq("editor_id", editorId); if (error) throw error; },
 };
 
+// ── Revisions: prior versions of an article (history + rollback) ────────────
+const Revisions = {
+  async list(articleId) {
+    if (!db || !articleId) return [];
+    const { data, error } = await db.from("article_revisions").select("*")
+      .eq("article_id", articleId).order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+};
+
 // ── Comments: reader "Courrier des lecteurs" (read anon, post = logged in) ───
 const Comments = {
   async list(issue) {
@@ -392,5 +403,5 @@ function md(text) {
     .join("");
 }
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, Comments, Portfolio, Ads, Papers, sortArticles, esc, md };
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, Comments, Portfolio, Ads, Papers, Revisions, sortArticles, esc, md };
 })();

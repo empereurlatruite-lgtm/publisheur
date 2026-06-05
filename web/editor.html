@@ -94,6 +94,13 @@
   .coed .grow{flex:1}
   .coed button{font:inherit;font-size:.74rem;border:1px solid #c9bda0;background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer}
   .jerr{font-size:.82rem;min-height:1em;margin-top:.4rem;color:#b33}
+  .revrow{border:1px solid var(--line);border-radius:8px;padding:.6rem .7rem;margin-bottom:.6rem;background:#fff}
+  .revmeta{display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;justify-content:space-between}
+  .revmeta b{font-family:"Playfair Display",serif}
+  .revmeta span{font-size:.74rem;color:#7a7060}
+  .revexcerpt{font-size:.85rem;color:#4a443c;margin:.3rem 0;line-height:1.4;max-height:3.6em;overflow:hidden}
+  .revacts button{font:inherit;font-size:.78rem;border:1px solid #c9bda0;background:#fff;border-radius:5px;padding:.3rem .6rem;cursor:pointer}
+  .revacts button:hover{background:#f3ecdd}
   .twocol{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
   .formbar{display:flex;gap:.5rem;align-items:center;margin-top:.4rem;flex-wrap:wrap}
   .formbar .grow{flex:1}
@@ -213,7 +220,7 @@
       <div class="hint">Blank line = new paragraph · <code>**bold**</code> · <code>*italic*</code></div>
     </div>
     <div class="formbar" id="formbar"></div>
-    <div class="hint" id="savedAt"></div>
+    <div class="hint"><span id="savedAt"></span><a href="#" id="histLink" style="display:none;margin-left:.6rem;color:var(--accent)" onclick="openHistory();return false">🕘 Historique des révisions</a></div>
   </div>
 
   <div class="col" id="preview">
@@ -241,13 +248,21 @@
   </div>
 </div>
 
+<!-- Revision history modal -->
+<div class="pmodal" id="hmodal" style="display:none">
+  <div class="pcard" style="max-width:680px">
+    <div class="phead"><b>Historique des révisions</b><span class="grow"></span><button class="px" onclick="closeHistory()">✕</button></div>
+    <div class="jbody" id="hList"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="papers.js"></script>
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Articles, Media, Profiles, Portfolio, Papers, configured } = window.Daihbi;
+const { Auth, Articles, Media, Profiles, Portfolio, Papers, Revisions, configured } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 let PAPERS = window.DAIHBI_PAPERS || {};
 let MY_MANAGED = [];   // issues this editor owns/co-edits
@@ -350,6 +365,7 @@ function fill(a){
   const sl=$("#statusLbl"); if(sl) sl.textContent = a ? statusLabel(a) : "Nouveau brouillon";
   $("#delBtn").style.display=a?"":"none";
   $("#savedAt").textContent=a?.updated_at?"Modifié le "+new Date(a.updated_at).toLocaleString("fr-FR"):"";
+  $("#histLink").style.display = a ? "" : "none";
   showPreview(a?.image_url||""); $("#upstatus").textContent="";
   highlight();
 }
@@ -636,6 +652,35 @@ async function loadCoEditors(){
 async function addCoEditor(){ try{ await Papers.addEditor(ISSUE,$("#coSel").value); loadCoEditors(); }catch(e){ alert(e.message); } }
 async function rmCoEditor(id){ try{ await Papers.removeEditor(ISSUE,id); loadCoEditors(); }catch(e){ alert(e.message); } }
 function closeJournal(){ $("#jmodal").style.display="none"; }
+
+// ── Historique des révisions ────────────────────────────────────────────────
+async function openHistory(){
+  if(current==null) return;
+  $("#hmodal").style.display="flex"; $("#hList").innerHTML="<div style='padding:1rem;color:#7a7060'>Chargement…</div>";
+  try{
+    const revs = await Revisions.list(current);
+    const profs = await Profiles.all(); const byId=Object.fromEntries(profs.map(p=>[p.id,p]));
+    $("#hList").innerHTML = revs.length ? revs.map(r=>{
+      const who=(byId[r.author_id]&&byId[r.author_id].display_name)||"?";
+      const body=(r.body||""); const ex=body.slice(0,160)+(body.length>160?"…":"");
+      return `<div class="revrow">
+        <div class="revmeta"><b>${escapeHtml(r.headline||"(sans titre)")}</b>
+          <span>${new Date(r.created_at).toLocaleString("fr-FR")} · ${escapeHtml(who)} · ${escapeHtml(statusLabel(r))}</span></div>
+        <div class="revexcerpt">${escapeHtml(ex)||"<i>(vide)</i>"}</div>
+        <div class="revacts"><button onclick='restoreRevision(${JSON.stringify(r).replace(/'/g,"&#39;")})'>↩ Restaurer ce texte</button></div>
+      </div>`;
+    }).join("") : `<div style="padding:1.2rem;color:#7a7060;font-style:italic">Aucune révision encore. L’historique se remplit à chaque enregistrement modifiant le texte.</div>`;
+  }catch(e){ $("#hList").innerHTML=`<div class="jerr" style="padding:1rem">${escapeHtml(e.message)}</div>`; }
+}
+function closeHistory(){ $("#hmodal").style.display="none"; }
+async function restoreRevision(r){
+  if(!confirm("Restaurer ce texte ? La version actuelle sera conservée dans l’historique."))return;
+  try{
+    const saved = await Articles.update(current, { kicker:r.kicker||"", headline:r.headline||"", subhead:r.subhead||"",
+      byline:r.byline||"", body:r.body||"", weight:r.weight||"minor", image_url:r.image_url||"" });
+    fill(saved); await loadList(); reloadPreview(); closeHistory(); toast("Révision restaurée ✓");
+  }catch(e){ alert(e.message); }
+}
 async function move(id,dir){ try{ await Articles.move(id,dir); await loadList(); reloadPreview(); }catch(e){ toast(e.message); } }
 function previewURL(){ return `paper.html?issue=${encodeURIComponent(ISSUE)}&_=${Date.now()}`; }
 function reloadPreview(){ $("#pv").src=previewURL(); }
