@@ -196,7 +196,7 @@ async function loadList(){
 async function boot(){
   if(!configured){ showGate("<h2>Non connecté</h2><p>Ajoutez vos clés Supabase dans config.js.</p>"); return; }
   const s = await Auth.session();
-  if(!s){ loginScreen("signin"); Auth.onChange(x=>{ if(x) boot(); }); return; }
+  if(!s){ const pr=new URLSearchParams(location.search).get("role"); loginScreen(pr?"signup":"signin"); Auth.onChange(x=>{ if(x) boot(); }); return; }
   MYPROFILE = await Profiles.me(); MYROLE=(MYPROFILE&&MYPROFILE.role)||"reader"; ME=s.user.id;
   if(!["annonceur","editor"].includes(MYROLE)){
     showGate(`<h2>Réservé aux annonceurs</h2><p>Votre compte est « ${esc2(MYROLE)} ». Le studio publicitaire est réservé aux annonceurs et aux éditeurs.</p>

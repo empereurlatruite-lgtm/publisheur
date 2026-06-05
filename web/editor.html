@@ -273,23 +273,22 @@ function setupNotice(){
     <p>Connect your Supabase project: open <code>web/config.js</code> and paste your
     <b>Project URL</b> and <b>anon key</b> (Supabase → Settings → API), then reload.</p>`);
 }
-function loginScreen(msg, mode){
+function loginScreen(msg, mode, preRole){
   mode = mode || "signin";
   const up = mode === "signup";
+  const r = preRole || "writer";
+  const radio = (v,l) => `<label><input type="radio" name="role" value="${v}" ${v===r?"checked":""}> ${l}</label>`;
   showGate(`<h2>Publisheur</h2>
     <div class="authtabs">
       <button class="${up?"":"on"}" onclick="loginScreen(null,'signin')">Se connecter</button>
-      <button class="${up?"on":""}" onclick="loginScreen(null,'signup')">Créer un compte</button>
+      <button class="${up?"on":""}" onclick="loginScreen(null,'signup','${r}')">Créer un compte</button>
     </div>
     <input id="email" type="email" placeholder="vous@exemple.com" autocomplete="username" autofocus>
     <input id="password" type="password" placeholder="${up?"choisir un mot de passe (6+ caractères)":"mot de passe"}" autocomplete="${up?"new-password":"current-password"}">
     ${up ? `
       <input id="display_name" type="text" placeholder="Nom de plume (affiché)" autocomplete="name">
       <div class="rolepick">
-        <label><input type="radio" name="role" value="reader"> Lecteur</label>
-        <label><input type="radio" name="role" value="writer" checked> Rédacteur</label>
-        <label><input type="radio" name="role" value="illustrator"> Illustrateur</label>
-        <label><input type="radio" name="role" value="annonceur"> Annonceur</label>
+        ${radio("reader","Lecteur")}${radio("writer","Rédacteur")}${radio("illustrator","Illustrateur")}${radio("annonceur","Annonceur")}
       </div>
       <select id="clan">${(window.DAIHBI_CLANS||["Indépendant"]).map(c=>`<option>${c}</option>`).join("")}</select>
     ` : ""}
@@ -663,7 +662,11 @@ document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s")
 async function boot(){
   if(!configured){ setupNotice(); return; }
   const session = await Auth.session();
-  if(!session){ loginScreen(); Auth.onChange(s=>{ if(s) location.reload(); }); return; }
+  if(!session){
+    const pr=new URLSearchParams(location.search).get("role");   // from the kiosque intro
+    loginScreen(null, pr?"signup":"signin", pr);
+    Auth.onChange(s=>{ if(s) location.reload(); }); return;
+  }
   // load profile + role
   MYPROFILE = await Profiles.me();
   MYROLE = (MYPROFILE && MYPROFILE.role) || "reader";

@@ -15,9 +15,25 @@
   header.top{background:#1b1916;color:#f3ead6;padding:1.6rem 1.2rem 1.3rem;text-align:center;border-bottom:4px double #6b6357}
   header.top h1{font-family:"Playfair Display",serif;font-weight:900;font-size:2.6rem;margin:0;letter-spacing:.01em}
   header.top .sub{font-family:"Old Standard TT",serif;font-style:italic;opacity:.8;margin-top:.2rem}
-  header.top a.news{position:absolute;right:1rem;top:1rem;color:#f3ead6;text-decoration:none;font-family:system-ui,sans-serif;
+  header.top .topright{position:absolute;right:1rem;top:1rem;display:flex;gap:.5rem}
+  header.top .news{color:#f3ead6;text-decoration:none;font-family:system-ui,sans-serif;cursor:pointer;
     font-size:.8rem;border:1px solid #5a534a;border-radius:6px;padding:.4rem .7rem;background:#2c2924}
-  header.top a.news:hover{background:#3a3631}
+  header.top .news:hover{background:#3a3631}
+  /* intro / role-chooser modal */
+  .introm{position:fixed;inset:0;z-index:60;background:rgba(20,18,16,.82);display:flex;align-items:center;justify-content:center;padding:1.2rem}
+  .introc{position:relative;background:#211f1c;color:#f3ead6;border:1px solid #5a534a;border-radius:14px;max-width:560px;width:100%;padding:1.8rem 1.8rem 1.4rem;text-align:center;font-family:system-ui,sans-serif}
+  .introc h2{font-family:"Playfair Display",serif;font-size:2rem;margin:.1rem 0 .5rem}
+  .introlead{opacity:.9;line-height:1.5;margin:0 auto 1.2rem;max-width:42ch}
+  .introx{position:absolute;top:.7rem;right:.8rem;background:none;border:none;color:#bdb3a1;font-size:1.1rem;cursor:pointer}
+  .introroles{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+  .introroles button{display:flex;flex-direction:column;align-items:center;gap:.15rem;background:#2c2924;border:1px solid #5a534a;border-radius:10px;padding:.9rem .6rem;cursor:pointer;color:#f3ead6;font:inherit}
+  .introroles button:hover{background:#3a3631;border-color:#7a1f1a}
+  .introroles .ic{font-size:1.5rem}
+  .introroles b{font-size:1rem}
+  .introroles .d{font-size:.76rem;opacity:.7}
+  .introskip{margin:1.1rem 0 .3rem}
+  .introskip a{color:#e8b9b2}
+  .intronote{font-size:.74rem;opacity:.55;line-height:1.4;margin:.3rem auto 0;max-width:46ch}
 
   .filters{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:center;
     padding:.8rem 1rem;background:#211f1c;color:#eee;font-family:system-ui,sans-serif;font-size:.85rem;box-shadow:0 2px 8px rgba(0,0,0,.4)}
@@ -64,10 +80,31 @@
 <body>
 
 <header class="top">
-  <a class="news" href="editor.html">✎ Espace rédaction</a>
+  <div class="topright">
+    <button class="news" onclick="openIntro()">✋ Rejoindre</button>
+    <a class="news" href="editor.html">✎ Espace rédaction</a>
+  </div>
   <h1>Le Kiosque</h1>
   <div class="sub">La presse Warden francophone — propulsée par Publisheur</div>
 </header>
+
+<!-- Intro / role-chooser modal -->
+<div class="introm" id="introm" style="display:none">
+  <div class="introc">
+    <button class="introx" onclick="closeIntro()">✕</button>
+    <h2>Bienvenue au Kiosque</h2>
+    <p class="introlead">La presse <b>Warden francophone</b> — écrite et mise en page <b>ensemble</b>.
+      Lisez librement ; pour contribuer, dites-nous qui vous êtes :</p>
+    <div class="introroles">
+      <button onclick="chooseRole('reader')"><span class="ic">📖</span><b>Lecteur</b><span class="d">Lire &amp; commenter</span></button>
+      <button onclick="chooseRole('writer')"><span class="ic">✍️</span><b>Rédacteur</b><span class="d">Écrire des articles</span></button>
+      <button onclick="chooseRole('illustrator')"><span class="ic">🎨</span><b>Illustrateur</b><span class="d">Fournir des visuels</span></button>
+      <button onclick="chooseRole('annonceur')"><span class="ic">📣</span><b>Annonceur</b><span class="d">Publier des réclames</span></button>
+    </div>
+    <p class="introskip"><a href="#" onclick="closeIntro();return false">Juste parcourir le kiosque →</a></p>
+    <p class="intronote">Éditeur en chef d’un journal ? Inscrivez-vous comme rédacteur ; un éditeur vous donnera les droits (ou vous créerez votre journal).</p>
+  </div>
+</div>
 
 <div class="filters">
   <input type="search" id="q" placeholder="Rechercher un journal, un titre…">
@@ -181,8 +218,21 @@ function wireFilters(){
   });
 }
 
+// ── Intro / role chooser ──
+function openIntro(){ $("#introm").style.display="flex"; }
+function closeIntro(){ $("#introm").style.display="none"; try{ localStorage.setItem("daihbi_intro_seen","1"); }catch(e){} }
+function chooseRole(role){
+  try{ localStorage.setItem("daihbi_intro_seen","1"); }catch(e){}
+  if(role==="reader"){ closeIntro(); return; }            // lecture libre, compte au moment de commenter
+  if(role==="annonceur"){ location.href="ads.html?role=annonceur"; return; }
+  location.href="editor.html?role="+encodeURIComponent(role);   // writer | illustrator
+}
+
 (async function boot(){
   if(!configured){ $("#grid").innerHTML = `<div class="state">Pas encore connecté.<br>Ajoutez vos clés Supabase dans <code>config.js</code>.</div>`; return; }
+  // first visit → show the intro (the « Rejoindre » button reopens it anytime)
+  let seen=false; try{ seen=!!localStorage.getItem("daihbi_intro_seen"); }catch(e){}
+  if(!seen) openIntro();
   wireFilters();
   try{ PAPERS = await Papers.map(); }catch(e){ /* keep papers.js */ }
   try{ EDITIONS = await fetchEditions(); render(); }
