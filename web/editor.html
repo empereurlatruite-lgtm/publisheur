@@ -76,11 +76,16 @@
 </div>
 
 <header style="display:none" id="hdr">
-  <h1>Publisheur <span style="opacity:.6;font-size:.8rem;font-family:system-ui">· Newsroom — Le Petit Daihbi</span></h1>
+  <h1>Publisheur <span style="opacity:.6;font-size:.8rem;font-family:system-ui">· Newsroom</span></h1>
+  <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;opacity:.85">
+    Édition
+    <select id="editionSel" onchange="switchEdition(this.value)"
+      style="font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:5px;padding:.25rem .4rem"></select>
+  </label>
   <span class="grow"></span>
   <span class="who" id="who"></span>
   <button onclick="newArticle()">+ New article</button>
-  <a href="paper.html" target="_blank">Open full paper ↗</a>
+  <a id="openPaper" href="paper.html" target="_blank">Open full paper ↗</a>
   <button onclick="doSignOut()">Sign out</button>
 </header>
 
@@ -129,10 +134,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
+<script src="papers.js"></script>
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const { Auth, Articles, configured } = window.Daihbi;
+const ISSUE = window.Daihbi.ISSUE;
+const PAPERS = window.DAIHBI_PAPERS || {};
 let current = null;
 
 const F = {
@@ -236,7 +244,21 @@ async function delArticle(){
   catch(e){ toast(e.message); }
 }
 async function move(id,dir){ try{ await Articles.move(id,dir); await loadList(); reloadPreview(); }catch(e){ toast(e.message); } }
-function reloadPreview(){ $("#pv").src="paper.html?_="+Date.now(); }
+function previewURL(){ return `paper.html?issue=${encodeURIComponent(ISSUE)}&_=${Date.now()}`; }
+function reloadPreview(){ $("#pv").src=previewURL(); }
+function switchEdition(issue){ location.href = `editor.html?issue=${encodeURIComponent(issue)}`; }
+function initEditions(){
+  const sel=$("#editionSel"); if(!sel) return;
+  const keys=Object.keys(PAPERS);
+  if(!keys.includes(ISSUE)) keys.unshift(ISSUE);          // unknown/custom edition still shows
+  sel.innerHTML = keys.map(k=>{
+    const name=(PAPERS[k]?.name)||k;
+    return `<option value="${k}" ${k===ISSUE?"selected":""}>${name}</option>`;
+  }).join("");
+  // point the preview iframe + "open paper" at the current edition
+  $("#pv").src = previewURL();
+  $("#openPaper").href = `paper.html?issue=${encodeURIComponent(ISSUE)}`;
+}
 
 document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s"){ e.preventDefault(); saveArticle(); } });
 
@@ -249,6 +271,7 @@ async function boot(){
   hideGate();
   $("#hdr").style.display=""; $("#app").style.display="";
   $("#who").textContent = session.user.email || "";
+  initEditions();
   Articles.subscribe(loadList);
   await loadList(); newArticle();
 }

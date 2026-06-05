@@ -138,38 +138,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="config.js"></script>
+<script src="papers.js"></script>
 <script src="daihbi.js"></script>
 <script>
 const $ = (s,r=document)=>r.querySelector(s);
 const { Articles, esc, md, configured } = window.Daihbi;
 
-// ── Paper registry: one deployment, many regiment titles ──────────────────
-// Keyed by edition (issue). Pick with ?issue=<key>. Falls back to a generic
-// masthead for unknown editions. This is the multi-title model — each regiment
-// keeps its own nameplate while sharing the same newsroom + database.
-const PAPERS = {
-  "current": {
-    name: "Le Petit Daihbi",
-    tagline: "Journal Quotidien du Front — « Tout pour le Régiment »",
-    plate: "plate-fraktur",
-    ear: ["Édition du Front", "Prix : 5 centimes", "2<sup>e</sup> REI · Daihbi"],
-    slogans: [],
-  },
-  "horizon-bleu": {
-    name: "L’Horizon Bleu",
-    tagline: "Sous notre bannière nous écrivons l’Histoire",
-    plate: "plate-anton",
-    ear: ["Front de l’Ouest", "501<sup>e</sup> Régiment", "Warden"],
-    slogans: ["Vive les Wardens", "Vive la 501<sup>e</sup>", "Vive la France"],
-  },
-  "echo-du-front": {
-    name: "L’Écho du Front",
-    tagline: "Journal indépendant Warden — Témoigner, informer, tenir",
-    plate: "plate-echo",
-    ear: ["Numéro 002", "Édition du 4 juin 2026", "Distribution aux forces & citoyens"],
-    slogans: ["Tenir la ligne", "Protéger nos foyers", "Pour Callahan !"],
-  },
-};
+// Paper registry now lives in papers.js (shared with the editor).
+const PAPERS = window.DAIHBI_PAPERS || {};
 const ISSUE = window.Daihbi.ISSUE;
 const PAPER = PAPERS[ISSUE] || {
   name: ISSUE.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()),
