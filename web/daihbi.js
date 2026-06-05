@@ -8,7 +8,10 @@
 // `const { Auth, Articles } = window.Daihbi` (SyntaxError: already declared).
 (function () {
 const CFG = window.DAIHBI_CONFIG || {};
-const ISSUE = CFG.ISSUE || "current";
+// Edition can be chosen per-URL (?issue=horizon-bleu) so one deployment serves
+// many regiments' papers; falls back to config.js, then "current".
+const ISSUE =
+  new URLSearchParams(location.search).get("issue") || CFG.ISSUE || "current";
 
 const _configured =
   CFG.SUPABASE_URL && !CFG.SUPABASE_URL.includes("YOUR-PROJECT") &&

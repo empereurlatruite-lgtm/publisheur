@@ -6,7 +6,7 @@
 <title>Le Petit Daihbi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1a1714; --paper:#f5efe1; --rule:#2a2622;
@@ -46,6 +46,19 @@
     font-size:5.2rem;line-height:.95;margin:.2rem 0;letter-spacing:.01em}
   .nameplate .sub{font-family:"Old Standard TT",serif;font-style:italic;color:var(--muted);
     font-size:1rem;letter-spacing:.04em}
+  /* per-paper masthead styles (data-driven by edition) */
+  .plate-anton h1{font-family:"Anton","Oswald",Impact,sans-serif;font-weight:400;
+    text-transform:uppercase;font-size:5.6rem;letter-spacing:.015em}
+  .plate-anton .sub{font-family:"Oswald",sans-serif;font-style:normal;font-weight:700;
+    text-transform:none;color:var(--ink);letter-spacing:.02em;font-size:1.05rem}
+  /* footer slogan bar (e.g. Vive les Wardens · Vive la 501e · Vive la France) */
+  .slogans{display:flex;justify-content:space-between;align-items:center;gap:1rem;
+    border-top:3px double var(--rule);border-bottom:3px double var(--rule);
+    padding:.55rem .3rem;margin-top:1.5rem;
+    font-family:"Old Standard TT",serif;font-weight:700;font-size:1.05rem;letter-spacing:.03em}
+  .slogans span{flex:1;text-align:center}
+  .slogans span:first-child{text-align:left}
+  .slogans span:last-child{text-align:right}
   .dateline-bar{display:flex;justify-content:space-between;align-items:center;
     border-top:3px double var(--rule);border-bottom:3px double var(--rule);
     padding:.3rem .2rem;margin:.5rem 0 1.2rem;
@@ -57,7 +70,7 @@
   .kicker{font-family:"Old Standard TT",serif;text-transform:uppercase;letter-spacing:.18em;
     font-size:.72rem;color:var(--accent);font-weight:700;text-align:center;margin-bottom:.3rem}
   .lead h2{font-family:"Playfair Display",serif;font-weight:900;text-align:center;
-    font-size:3.6rem;line-height:1.02;margin:.1rem 0 .3rem}
+    font-size:3.6rem;line-height:1.02;margin:.1rem 0 .3rem;text-transform:uppercase}
   .lead .deck{font-family:"Old Standard TT",serif;font-style:italic;text-align:center;
     font-size:1.15rem;color:var(--muted);margin-bottom:.5rem;
     border-bottom:1px solid #cbbfa3;padding-bottom:.7rem;max-width:46rem;margin:0 auto .5rem}
@@ -121,9 +134,41 @@
 const $ = (s,r=document)=>r.querySelector(s);
 const { Articles, esc, md, configured } = window.Daihbi;
 
+// ── Paper registry: one deployment, many regiment titles ──────────────────
+// Keyed by edition (issue). Pick with ?issue=<key>. Falls back to a generic
+// masthead for unknown editions. This is the multi-title model — each regiment
+// keeps its own nameplate while sharing the same newsroom + database.
+const PAPERS = {
+  "current": {
+    name: "Le Petit Daihbi",
+    tagline: "Journal Quotidien du Front — « Tout pour le Régiment »",
+    plate: "plate-fraktur",
+    ear: ["Édition du Front", "Prix : 5 centimes", "2<sup>e</sup> REI · Daihbi"],
+    slogans: [],
+  },
+  "horizon-bleu": {
+    name: "L’Horizon Bleu",
+    tagline: "Sous notre bannière nous écrivons l’Histoire",
+    plate: "plate-anton",
+    ear: ["Front de l’Ouest", "501<sup>e</sup> Régiment", "Warden"],
+    slogans: ["Vive les Wardens", "Vive la 501<sup>e</sup>", "Vive la France"],
+  },
+};
+const ISSUE = window.Daihbi.ISSUE;
+const PAPER = PAPERS[ISSUE] || {
+  name: ISSUE.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()),
+  tagline: "", plate: "plate-fraktur",
+  ear: ["Édition", "", "Warden"], slogans: [],
+};
+
+// reflect the chosen paper in the chrome
+document.title = PAPER.name;
+$(".toolbar b").innerHTML = PAPER.name;
+$(".toolbar a.btn").href = "editor.html?issue=" + encodeURIComponent(ISSUE);
+
 function imgTag(url){ return url ? `<img src="${esc(url)}" alt="">` : ""; }
 function kicker(a){ return a.kicker ? `<div class="kicker">${esc(a.kicker)}</div>` : ""; }
-function byline(a){ return a.byline ? `<div class="byline">By ${esc(a.byline)}</div>` : ""; }
+function byline(a){ return a.byline ? `<div class="byline">par ${esc(a.byline)}</div>` : ""; }
 
 function renderLead(a){
   return `<section class="lead">
@@ -158,22 +203,26 @@ async function load(){
   const lead = leads[0] || null;
   const rest = arts.filter(a=>a!==lead).map(a=> a.weight==="lead" ? {...a,weight:"major"} : a);
 
+  const footer = PAPER.slogans && PAPER.slogans.length
+    ? `<div class="slogans">${PAPER.slogans.map(s=>`<span>${s}</span>`).join("")}</div>`
+    : `<div class="colophon">${esc(PAPER.name)} · ${arts.length} article${arts.length>1?"s":""} · Warden</div>`;
+
   $("#sheet").innerHTML = `
-    <div class="ear"><span>Édition du Front</span><span>Prix : 5 centimes</span><span>2<sup>e</sup> REI · Daihbi</span></div>
-    <div class="nameplate">
-      <h1>Le Petit Daihbi</h1>
-      <div class="sub">Journal Quotidien du Front — « Tout pour le Régiment »</div>
+    <div class="ear"><span>${PAPER.ear[0]||""}</span><span>${PAPER.ear[1]||""}</span><span>${PAPER.ear[2]||""}</span></div>
+    <div class="nameplate ${PAPER.plate}">
+      <h1>${esc(PAPER.name)}</h1>
+      ${PAPER.tagline ? `<div class="sub">${PAPER.tagline}</div>` : ""}
     </div>
     <div class="dateline-bar">
       <span>${fmtDate(new Date())}</span>
-      <span class="mid">ÉDITION « ${esc(window.Daihbi.ISSUE).toUpperCase()} »</span>
-      <span>2<sup>e</sup> REI</span>
+      <span class="mid">ÉDITION « ${esc(ISSUE).toUpperCase()} »</span>
+      <span>${PAPER.ear[2]||""}</span>
     </div>
     ${arts.length===0
-      ? `<div class="empty">No published articles yet.<br><a href="editor.html">Write one →</a></div>`
+      ? `<div class="empty">Aucun article publié.<br><a href="editor.html?issue=${encodeURIComponent(ISSUE)}">En écrire un →</a></div>`
       : (lead?renderLead(lead):"") +
-        `<div class="well">${rest.map(renderStory).join("")}</div>` +
-        `<div class="colophon">Le Petit Daihbi · ${arts.length} articles · 2REI</div>`}
+        (rest.length?`<div class="well">${rest.map(renderStory).join("")}</div>`:"") +
+        footer}
   `;
 }
 
