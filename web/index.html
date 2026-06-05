@@ -1,28 +1,192 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Publisheur</title>
+<title>Publisheur — Le Kiosque</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Old+Standard+TT:ital@0;1&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-  html,body{margin:0;height:100%;background:#211f1c;color:#f3ead6;font-family:"Old Standard TT",Georgia,serif;display:flex;align-items:center;justify-content:center}
-  .card{text-align:center;padding:2rem}
-  h1{font-family:"UnifrakturCook",serif;font-size:5rem;margin:0 0 .2rem;line-height:1}
-  .sub{font-style:italic;opacity:.8;margin-bottom:2rem}
-  a{display:inline-block;margin:.4rem;padding:.8rem 1.6rem;border:1px solid #5a534a;border-radius:8px;color:#f3ead6;text-decoration:none;background:#2c2924}
-  a:hover{background:#3a3631}
-  a.primary{background:#7a1f1a;border-color:#a33}
+  :root{--ink:#1a1714;--paper:#f5efe1;--rule:#2a2622;--muted:#5b5349;--accent:#7a1f1a;--bg:#26231f}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"PT Serif",Georgia,serif}
+
+  header.top{background:#1b1916;color:#f3ead6;padding:1.6rem 1.2rem 1.3rem;text-align:center;border-bottom:4px double #6b6357}
+  header.top h1{font-family:"Playfair Display",serif;font-weight:900;font-size:2.6rem;margin:0;letter-spacing:.01em}
+  header.top .sub{font-family:"Old Standard TT",serif;font-style:italic;opacity:.8;margin-top:.2rem}
+  header.top a.news{position:absolute;right:1rem;top:1rem;color:#f3ead6;text-decoration:none;font-family:system-ui,sans-serif;
+    font-size:.8rem;border:1px solid #5a534a;border-radius:6px;padding:.4rem .7rem;background:#2c2924}
+  header.top a.news:hover{background:#3a3631}
+
+  .filters{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:center;
+    padding:.8rem 1rem;background:#211f1c;color:#eee;font-family:system-ui,sans-serif;font-size:.85rem;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+  .filters input[type=search],.filters input[type=date]{font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:6px;padding:.4rem .6rem}
+  .filters input[type=search]{min-width:14rem}
+  .chip{font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:999px;padding:.35rem .8rem;cursor:pointer}
+  .chip:hover{background:#3a3631}
+  .chip.on{background:var(--accent);border-color:#a33;color:#fff}
+  .filters .count{opacity:.6;margin-left:.3rem}
+
+  .grid{max-width:1200px;margin:0 auto;padding:1.6rem 1rem 3rem;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.4rem}
+
+  .card{background:var(--paper);border:1px solid #d8cdb2;box-shadow:0 6px 22px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;overflow:hidden;transition:transform .12s,box-shadow .12s}
+  .card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.55)}
+  .card .preview{padding:1.2rem 1.2rem .9rem;border-bottom:2px solid var(--rule);
+    background-image:radial-gradient(rgba(120,100,70,.06) 1px,transparent 1px);background-size:3px 3px}
+  .card .ears{display:flex;justify-content:space-between;font-family:"Old Standard TT",serif;font-size:.6rem;
+    letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);padding-bottom:.3rem;margin-bottom:.4rem}
+  .card .mast{text-align:center;font-family:"UnifrakturCook",serif;font-weight:700;line-height:.95;font-size:2.2rem;margin:.1rem 0}
+  .card .tag{text-align:center;font-family:"Old Standard TT",serif;font-style:italic;color:var(--muted);font-size:.72rem;margin-bottom:.5rem}
+  .card.anton .mast{font-family:"Anton",Impact,sans-serif;font-weight:400;text-transform:uppercase;font-size:2.3rem}
+  .card.echo  .mast{font-family:"Oswald",sans-serif;font-weight:700;text-transform:uppercase;color:#1f3a5f;font-size:2.1rem}
+  .card.echo  .tag,.card.echo .ears{color:#1f3a5f}
+  .card .teaser{border-top:1px solid #cbbfa3;padding-top:.5rem}
+  .card .kick{font-family:"Old Standard TT",serif;text-transform:uppercase;letter-spacing:.14em;font-size:.6rem;color:var(--accent);font-weight:700;text-align:center}
+  .card.echo .kick{color:#1f3a5f}
+  .card .lead{font-family:"Playfair Display",serif;font-weight:900;text-align:center;font-size:1.25rem;line-height:1.05;margin:.15rem 0 .2rem;text-transform:uppercase}
+  .card .deck{font-family:"Old Standard TT",serif;font-style:italic;text-align:center;color:var(--muted);font-size:.8rem;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .meta{display:flex;align-items:center;gap:.5rem;padding:.7rem 1.1rem;font-family:system-ui,sans-serif;font-size:.78rem;color:var(--muted)}
+  .card .meta .grow{flex:1}
+  .card .read{background:var(--accent);color:#fff;text-decoration:none;border-radius:6px;padding:.45rem .9rem;font-weight:700}
+  .card.echo .read{background:#1f3a5f}
+  .card .read:hover{filter:brightness(1.1)}
+  .card.empty .lead{opacity:.5}
+  .badge{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;background:#e7dcc2;color:#6a5;border:1px solid #cbbfa3;border-radius:4px;padding:.1rem .35rem;color:var(--muted)}
+
+  .state{grid-column:1/-1;text-align:center;color:#cdc4b2;padding:3rem 1rem;font-style:italic}
+  footer{ text-align:center;color:#8a8170;font-family:system-ui,sans-serif;font-size:.75rem;padding:1.5rem}
 </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Publisheur</h1>
-    <div class="sub">Write together, lay it out, print the front page.<br>
-      Current edition — <i>Le Petit Daihbi</i>, Journal du Front · 2<sup>e</sup> REI</div>
-    <a class="primary" href="editor.html">✎ Newsroom (write)</a>
-    <a href="paper.html">📰 Read the paper</a>
-  </div>
+
+<header class="top">
+  <a class="news" href="editor.html">✎ Espace rédaction</a>
+  <h1>Le Kiosque</h1>
+  <div class="sub">La presse Warden francophone — propulsée par Publisheur</div>
+</header>
+
+<div class="filters">
+  <input type="search" id="q" placeholder="Rechercher un journal, un titre…">
+  <button class="chip on" data-range="all">Tout</button>
+  <button class="chip" data-range="today">Aujourd’hui</button>
+  <button class="chip" data-range="7">7 jours</button>
+  <input type="date" id="day" title="Filtrer par jour">
+  <span class="count" id="count"></span>
+</div>
+
+<div class="grid" id="grid"><div class="state">Ouverture du kiosque…</div></div>
+<footer>Publisheur · presse collaborative Warden</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="papers.js"></script>
+<script src="daihbi.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const { db, esc, configured } = window.Daihbi;
+const PAPERS = window.DAIHBI_PAPERS || {};
+const plateClass = p => ({"plate-anton":"anton","plate-echo":"echo"}[p] || "fraktur");
+const WRANK = {lead:0,major:1,minor:2,brief:3};
+
+let EDITIONS = [];           // [{issue, paper, count, latest(Date), lead}]
+let filter = { q:"", range:"all", day:"" };
+
+function fmtDate(d){ return d ? d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}) : ""; }
+
+async function fetchEditions(){
+  const { data, error } = await db.from("articles")
+    .select("issue,kicker,headline,subhead,weight,updated_at,published")
+    .eq("published", true);
+  if(error) throw error;
+  const byIssue = {};
+  for(const a of (data||[])){
+    (byIssue[a.issue] ||= []).push(a);
+  }
+  // union of registry papers and any issue present in the data
+  const keys = new Set([...Object.keys(PAPERS), ...Object.keys(byIssue)]);
+  const eds = [];
+  for(const issue of keys){
+    const arts = (byIssue[issue]||[]).slice().sort((a,b)=>(WRANK[a.weight]??9)-(WRANK[b.weight]??9));
+    const paper = PAPERS[issue] || { name: issue.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()), tagline:"", plate:"plate-fraktur", ear:["Édition","","Warden"] };
+    const latest = arts.reduce((m,a)=>{ const t=new Date(a.updated_at); return t>m?t:m; }, new Date(0));
+    eds.push({ issue, paper, count:arts.length, latest: arts.length?latest:null, lead: arts[0]||null });
+  }
+  // most recently updated first; empty editions last
+  eds.sort((a,b)=> (b.latest?.getTime()||0) - (a.latest?.getTime()||0));
+  return eds;
+}
+
+function sameDay(a,b){ return a&&b && a.toDateString()===b.toDateString(); }
+function passesDate(ed){
+  if(filter.day){ return ed.latest && sameDay(ed.latest, new Date(filter.day+"T12:00:00")); }
+  if(filter.range==="today"){ return ed.latest && sameDay(ed.latest, new Date()); }
+  if(filter.range==="7"){ if(!ed.latest) return false; return (Date.now()-ed.latest.getTime()) <= 7*864e5; }
+  return true;
+}
+function passesText(ed){
+  const q=filter.q.trim().toLowerCase(); if(!q) return true;
+  return (ed.paper.name+" "+(ed.paper.tagline||"")+" "+(ed.lead?.headline||"")).toLowerCase().includes(q);
+}
+
+function cardHTML(ed){
+  const p=ed.paper, cls=plateClass(p.plate);
+  const ear=p.ear||["","",""];
+  const lead=ed.lead;
+  const teaser = ed.count ? `
+    <div class="teaser">
+      ${lead?.kicker?`<div class="kick">${esc(lead.kicker)}</div>`:""}
+      <div class="lead">${esc(lead?.headline||"")}</div>
+      ${lead?.subhead?`<div class="deck">${esc(lead.subhead)}</div>`:""}
+    </div>` : `<div class="teaser"><div class="lead">À paraître</div></div>`;
+  return `<article class="card ${cls} ${ed.count?"":"empty"}">
+    <a href="paper.html?issue=${encodeURIComponent(ed.issue)}" style="text-decoration:none;color:inherit">
+      <div class="preview">
+        <div class="ears"><span>${ear[0]||""}</span><span>${ear[2]||""}</span></div>
+        <div class="mast">${esc(p.name)}</div>
+        ${p.tagline?`<div class="tag">${p.tagline}</div>`:""}
+        ${teaser}
+      </div>
+    </a>
+    <div class="meta">
+      <span>${ed.count? `${ed.count} article${ed.count>1?"s":""}` : `<span class="badge">vide</span>`}${ed.latest?` · ${fmtDate(ed.latest)}`:""}</span>
+      <span class="grow"></span>
+      <a class="read" href="paper.html?issue=${encodeURIComponent(ed.issue)}">Lire →</a>
+    </div>
+  </article>`;
+}
+
+function render(){
+  const list = EDITIONS.filter(e=>passesText(e)&&passesDate(e));
+  $("#count").textContent = `${list.length} ${list.length>1?"journaux":"journal"}`;
+  $("#grid").innerHTML = list.length
+    ? list.map(cardHTML).join("")
+    : `<div class="state">Aucun journal pour ce filtre.</div>`;
+}
+
+function wireFilters(){
+  $("#q").addEventListener("input", e=>{ filter.q=e.target.value; render(); });
+  document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+    document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+    c.classList.add("on"); filter.range=c.dataset.range; filter.day=""; $("#day").value=""; render();
+  }));
+  $("#day").addEventListener("change", e=>{
+    filter.day=e.target.value;
+    document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+    if(!filter.day){ document.querySelector('.chip[data-range="all"]').classList.add("on"); filter.range="all"; }
+    render();
+  });
+}
+
+(async function boot(){
+  if(!configured){ $("#grid").innerHTML = `<div class="state">Pas encore connecté.<br>Ajoutez vos clés Supabase dans <code>config.js</code>.</div>`; return; }
+  wireFilters();
+  try{ EDITIONS = await fetchEditions(); render(); }
+  catch(e){ $("#grid").innerHTML = `<div class="state">Impossible de charger le kiosque.<br>${esc(e.message)}</div>`; }
+})();
+</script>
 </body>
 </html>
