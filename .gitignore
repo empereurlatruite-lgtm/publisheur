@@ -4,6 +4,10 @@
 *.db-wal
 *.db-shm
 
+# Secrets — NEVER commit (DB password, service_role key, etc.)
+.env
+.env.*
+
 # Python
 __pycache__/
 *.pyc
