@@ -243,6 +243,28 @@ const Comments = {
   },
 };
 
+// ── Portfolio: illustrators' shared image gallery ───────────────────────────
+const Portfolio = {
+  async list() {
+    if (!db) return [];
+    const { data, error } = await db.from("images").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+  async add({ url, caption, clan, uploader_name }) {
+    const { data: { user } } = await db.auth.getUser();
+    const { data, error } = await db.from("images")
+      .insert({ url, caption: caption || "", clan: clan || "", uploader_name: uploader_name || "", uploader_id: user.id })
+      .select().single();
+    if (error) throw error;
+    return data;
+  },
+  async remove(id) {
+    const { error } = await db.from("images").delete().eq("id", id);
+    if (error) throw error;
+  },
+};
+
 // ── Render helpers (shared by the paper page) ─────────────────────────────
 const esc = (s) =>
   (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -261,5 +283,5 @@ function md(text) {
     .join("");
 }
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, Comments, sortArticles, esc, md };
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, Comments, Portfolio, sortArticles, esc, md };
 })();
