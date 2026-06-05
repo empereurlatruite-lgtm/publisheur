@@ -214,7 +214,10 @@ async function doSignUp(){
   try{
     const data = await Auth.signUp(email,password);
     if(data && data.session){ /* auto-confirmé → onChange recharge l'app */ }
-    else { $("#gateCard").innerHTML=`<h2>Vérifiez votre e-mail</h2><p>Compte créé. Cliquez le lien de confirmation envoyé à <b>${escapeHtml(email)}</b>, puis connectez-vous.</p>`; }
+    else { $("#gateCard").innerHTML=`<h2>Compte créé ✓</h2>
+      <p>Un e-mail de confirmation a été envoyé à <b>${escapeHtml(email)}</b>.</p>
+      <p style="font-size:.85rem;opacity:.85">Cliquez le lien — <b>même si la page affiche une erreur</b>, votre compte est validé.
+      Revenez ensuite ici et <a href="#" onclick="loginScreen(null,'signin');return false">connectez-vous</a> avec votre mot de passe.</p>`; }
   }catch(e){ $("#loginErr").textContent=e.message; }
 }
 async function sendLink(){
