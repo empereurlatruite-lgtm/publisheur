@@ -136,6 +136,10 @@
   .dcard.dnew .dnew-plus{font-size:2.4rem;line-height:1}
   .dempty{grid-column:1/-1;color:#8a8070;font-style:italic;text-align:center;padding:2rem}
 
+  /* chronicle workspace: list + form only (no paper preview) */
+  #app.chron{grid-template-columns:minmax(260px,360px) 1fr}
+  #app.chron #preview{display:none}
+  #app.chron .whochips{display:none}
   #preview{display:flex;flex-direction:column;border-right:none}
   #preview .pvhead{padding:.5rem .9rem;border-bottom:1px solid var(--line);background:var(--panel);font-size:.8rem;color:#6a6253;display:flex;align-items:center;gap:.5rem}
   #preview iframe{flex:1;border:none;width:100%;background:#6b6357}
@@ -171,7 +175,9 @@
 </div>
 
 <header style="display:none" id="hdr">
-  <h1>Publisheur <span style="opacity:.6;font-size:.8rem;font-family:system-ui">· Newsroom</span></h1>
+  <h1>Publisheur <span style="opacity:.6;font-size:.8rem;font-family:system-ui">· Rédaction</span></h1>
+  <button id="chronLink" style="display:none" onclick="showChronicles()">✍️ Mes chroniques</button>
+  <button id="journauxLink" style="display:none" onclick="showJournaux()">📰 Mes journaux</button>
   <button id="homeLink" style="display:none" onclick="goDashboard()">🏠 Mes journaux</button>
   <label id="editionWrap" style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;opacity:.85">
     Édition
@@ -202,7 +208,7 @@
 <main style="display:none" id="app">
   <div class="col" id="list">
     <div class="listtop">
-      <div class="listhead"><span class="grow">Articles</span><span id="listcount" style="font-weight:400;color:#7a7060;font-size:.78rem"></span></div>
+      <div class="listhead"><span class="grow">Mes chroniques</span><span id="listcount" style="font-weight:400;color:#7a7060;font-size:.78rem"></span></div>
       <div class="listfilter">
         <input type="search" id="listq" placeholder="Filtrer par titre ou auteur…" oninput="setQuery(this.value)">
         <div class="whochips">
@@ -216,22 +222,12 @@
   </div>
 
   <div class="col" id="form">
-    <div class="row"><label>Kicker (small overline)</label><input id="f_kicker" placeholder="e.g. FROM THE FRONT"></div>
-    <div class="row"><label>Headline</label><input id="f_headline" class="head" placeholder="Your headline here"></div>
-    <div class="row"><label>Subhead / deck</label><input id="f_subhead" placeholder="One-line summary"></div>
-    <div class="twocol">
-      <div class="row"><label>Byline</label><input id="f_byline" placeholder="Reporter name"></div>
-      <div class="row"><label>Prominence</label>
-        <select id="f_weight">
-          <option value="lead">Lead — front banner</option>
-          <option value="major">Major — wide story</option>
-          <option value="minor" selected>Minor — column story</option>
-          <option value="brief">Brief — short item</option>
-        </select>
-      </div>
-    </div>
+    <div class="row"><label>Surtitre (kicker)</label><input id="f_kicker" placeholder="ex. DÉPÊCHE DU FRONT"></div>
+    <div class="row"><label>Titre</label><input id="f_headline" class="head" placeholder="Le titre de votre chronique"></div>
+    <div class="row"><label>Chapô / sous-titre</label><input id="f_subhead" placeholder="Résumé en une ligne"></div>
+    <div class="row"><label>Signature</label><input id="f_byline" placeholder="Votre nom de plume"></div>
     <div class="row">
-      <label>Image (optionnel)</label>
+      <label>Photo suggérée (optionnel) — l’éditeur décidera de la mise en page</label>
       <div id="dropzone" class="dropzone">
         <div class="dzrow">
           <input id="f_image" placeholder="https://…  ou glissez/téléversez une photo" oninput="showPreview(this.value)">
@@ -294,7 +290,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Articles, Media, Profiles, Portfolio, Papers, Revisions, configured } = window.Daihbi;
+const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, configured } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 let PAPERS = window.DAIHBI_PAPERS || {};
 let MY_MANAGED = [];   // issues this editor owns/co-edits
@@ -307,7 +303,7 @@ const nameOf = id => (id && PROFMAP[id]) || (id ? "—" : "");
 
 const F = {
   kicker:$("#f_kicker"), headline:$("#f_headline"), subhead:$("#f_subhead"),
-  byline:$("#f_byline"), weight:$("#f_weight"), image:$("#f_image"),
+  byline:$("#f_byline"), image:$("#f_image"),
   body:$("#f_body"),
 };
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
@@ -383,9 +379,9 @@ async function doSignOut(){ await Auth.signOut(); location.reload(); }
 // ── Form ──────────────────────────────────────────────────────────────────
 function formData(){
   return {
-    kicker:F.kicker.value.trim(), headline:F.headline.value.trim()||"Untitled",
+    kicker:F.kicker.value.trim(), headline:F.headline.value.trim()||"Sans titre",
     subhead:F.subhead.value.trim(), byline:F.byline.value.trim(),
-    weight:F.weight.value, image_url:F.image.value.trim(),
+    image_url:F.image.value.trim(),
     body:F.body.value,
   };
 }
@@ -393,13 +389,9 @@ function fill(a){
   current=a?a.id:null;
   F.kicker.value=a?.kicker||""; F.headline.value=a?.headline||"";
   F.subhead.value=a?.subhead||""; F.byline.value=a?.byline||"";
-  F.weight.value=a?.weight||"minor"; F.image.value=a?.image_url||"";
+  F.image.value=a?.image_url||"";
   F.body.value=a?.body||"";
-  const sl=$("#statusLbl"); if(sl) sl.textContent = a ? statusLabel(a) : "Nouveau brouillon";
-  const isPub = !!(a && a.published);
-  const pb=$("#pubBtn"), ub=$("#unpubBtn");
-  if(pb) pb.style.display = isPub ? "none" : "";
-  if(ub) ub.style.display = isPub ? "" : "none";
+  const sl=$("#statusLbl"); if(sl) sl.textContent = a ? statusLabel(a) : "Nouvelle chronique";
   $("#delBtn").style.display=a?"":"none";
   $("#savedAt").textContent=a?.updated_at
     ? "Modifié le "+new Date(a.updated_at).toLocaleString("fr-FR")+(a.last_edited_by?" par "+nameOf(a.last_edited_by):"")
@@ -439,7 +431,7 @@ let ME = null;                      // current user's id (set in boot)
 const listFilter = { q:"", who:"all" };   // who: all | mine | others
 
 async function loadList(){
-  try{ ALL = await Articles.listAll(); }catch(e){ toast("Load error: "+e.message); return; }
+  try{ ALL = await Chronicles.listMine(); }catch(e){ toast("Load error: "+e.message); return; }
   renderList();
 }
 function setQuery(v){ listFilter.q=v; renderList(); }
@@ -457,68 +449,49 @@ function matchFilter(a){
 }
 function renderList(){
   const arts = ALL.filter(matchFilter);
-  const total = ALL.length, others = ALL.filter(a=>a.author_id&&a.author_id!==ME).length;
-  $("#listcount").textContent = `${arts.length}/${total}` + (others?` · ${others} d’autres`:"");
+  $("#listcount").textContent = `${arts.length}`;
   $("#items").innerHTML = arts.length ? arts.map(itemHTML).join("")
-    : `<div style="padding:1.4rem;color:#8a8070;font-style:italic">Aucun article pour ce filtre.</div>`;
+    : `<div style="padding:1.4rem;color:#8a8070;font-style:italic">Aucune chronique. Cliquez « + Chronique ».</div>`;
   highlight();
 }
 function itemHTML(a){
-  const mine = a.author_id && a.author_id===ME;
   return `<div class="item" data-id="${a.id}" onclick="edit('${a.id}')">
     <div style="flex:1">
       <div class="h">${escapeHtml(a.headline)}</div>
-      <div class="meta"><span class="tag ${a.weight}">${a.weight}</span>
-        <span class="tag ${a.published?'pub':(((a.status||'')==='review')?'rev':'off')}">${statusLabel(a)}</span>
-        ${mine?'<span class="mine">vous</span>':""}${a.byline?escapeHtml(a.byline):""}</div>
-    </div>
-    <div class="arrows" onclick="event.stopPropagation()">
-      <button title="Up" onclick="move('${a.id}','up')">▲</button>
-      <button title="Down" onclick="move('${a.id}','down')">▼</button>
+      <div class="meta"><span class="tag ${a.status==='submitted'?'pub':'off'}">${statusLabel(a)}</span>
+        ${a.byline?escapeHtml(a.byline):""}</div>
     </div>
   </div>`;
 }
-async function edit(id){ try{ fill(await Articles.get(id)); }catch(e){ toast(e.message); } }
+async function edit(id){ try{ fill(await Chronicles.get(id)); }catch(e){ toast(e.message); } }
 
 function statusLabel(a){
-  const s = a.status || (a.published ? "published" : "draft");
-  return { draft:"Brouillon", review:"En relecture", published:"Publié" }[s] || s;
+  return { draft:"Brouillon", submitted:"Soumise au pool", review:"Soumise au pool", published:"Soumise au pool" }[a.status||"draft"] || (a.status||"draft");
 }
 async function saveArticle(action){
   const data=formData();
-  if(action==="draft"){ data.published=false; data.status="draft"; }
-  else if(action==="review"){ data.published=false; data.status="review"; }
-  else if(action==="publish"){ data.published=true; data.status="published"; }
-  else if(action==="unpublish"){ data.published=false; data.status="draft"; }
-  // else: generic save — leave published/status untouched (content-only)
+  if(action==="draft"){ data.status="draft"; }
+  else if(action==="submit"){ data.status="submitted"; }
+  // else: generic save — leave status untouched
   try{
-    const saved = current==null ? await Articles.create(data) : await Articles.update(current,data);
+    const saved = current==null ? await Chronicles.create(data) : await Chronicles.update(current,data);
     current=saved.id;
-    toast(saved.published ? "Publié ✓" : (saved.status==="review" ? "Soumis en relecture ✓" : "Enregistré ✓"));
-    await loadList(); fill(saved); reloadPreview();
+    toast(saved.status==="submitted" ? "Soumise au pool ✓ — un éditeur peut la mettre en page." : "Enregistrée ✓");
+    await loadList(); fill(saved);
   }catch(e){ toast("Erreur : "+e.message); }
 }
 async function delArticle(){
   if(current==null) return;
-  if(!confirm("Supprimer cet article ?")) return;
-  try{ await Articles.remove(current); toast("Supprimé"); newArticle(); await loadList(); reloadPreview(); }
+  if(!confirm("Supprimer cette chronique ?")) return;
+  try{ await Chronicles.remove(current); toast("Supprimée"); newArticle(); await loadList(); }
   catch(e){ toast(e.message); }
 }
 function renderFormBar(){
   const bar=$("#formbar"); if(!bar) return;
-  const head = `<span class="statuslbl" id="statusLbl"></span><span class="grow"></span>
-    <button class="del" id="delBtn" onclick="delArticle()" style="display:none">Supprimer</button>`;
-  if(MYROLE==="editor"){
-    bar.innerHTML = head +
-      `<button class="save ghost" onclick="saveArticle('draft')">Brouillon</button>
-       <button class="save ghost" onclick="saveArticle('review')">Soumettre en relecture</button>
-       <button class="save" id="pubBtn" onclick="saveArticle('publish')">Publier</button>
-       <button class="save ghost" id="unpubBtn" style="display:none" onclick="saveArticle('unpublish')">Dépublier</button>`;
-  } else {
-    bar.innerHTML = head +
-      `<button class="save ghost" onclick="saveArticle('draft')">Brouillon</button>
-       <button class="save" onclick="saveArticle('review')">Soumettre en relecture</button>`;
-  }
+  bar.innerHTML = `<span class="statuslbl" id="statusLbl"></span><span class="grow"></span>
+    <button class="del" id="delBtn" onclick="delArticle()" style="display:none">Supprimer</button>
+    <button class="save ghost" onclick="saveArticle('draft')">Brouillon</button>
+    <button class="save" onclick="saveArticle('submit')">Soumettre au pool</button>`;
 }
 
 // ── Profile ─────────────────────────────────────────────────────────────────
@@ -663,17 +636,7 @@ async function createJournal(){
   if(PAPERS[p.issue]){ $("#jErr").textContent="Cet identifiant existe déjà."; return; }
   try{
     await Papers.create(p);
-    // seed a starter article so the new edition has a template to edit
-    try{
-      await window.Daihbi.db.from("articles").insert({
-        issue:p.issue, weight:"lead", status:"draft", published:false, position:0,
-        kicker:"À LA UNE", headline:"Votre titre de une", subhead:"Modèle — cliquez pour l’éditer",
-        byline:(MYPROFILE&&MYPROFILE.display_name)||"",
-        body:"Bienvenue dans votre nouveau journal.\n\nÉcrivez votre premier article ici — laissez une ligne vide entre les paragraphes. **Gras**, *italique*.",
-        author_id:ME,
-      });
-    }catch(_){}
-    location.href=`editor.html?issue=${encodeURIComponent(p.issue)}`;
+    location.href=`board.html?issue=${encodeURIComponent(p.issue)}`;   // lay it out (pull from the pool)
   }catch(e){ $("#jErr").textContent=e.message; }
 }
 function openManageJournal(){
@@ -756,14 +719,12 @@ function closeHistory(){ $("#hmodal").style.display="none"; }
 async function restoreRevision(r){
   if(!confirm("Restaurer ce texte ? La version actuelle sera conservée dans l’historique."))return;
   try{
-    const saved = await Articles.update(current, { kicker:r.kicker||"", headline:r.headline||"", subhead:r.subhead||"",
-      byline:r.byline||"", body:r.body||"", weight:r.weight||"minor", image_url:r.image_url||"" });
-    fill(saved); await loadList(); reloadPreview(); closeHistory(); toast("Révision restaurée ✓");
+    const saved = await Chronicles.update(current, { kicker:r.kicker||"", headline:r.headline||"", subhead:r.subhead||"",
+      byline:r.byline||"", body:r.body||"", image_url:r.image_url||"" });
+    fill(saved); await loadList(); closeHistory(); toast("Révision restaurée ✓");
   }catch(e){ alert(e.message); }
 }
-async function move(id,dir){ try{ await Articles.move(id,dir); await loadList(); reloadPreview(); }catch(e){ toast(e.message); } }
-function previewURL(){ return `paper.html?issue=${encodeURIComponent(ISSUE)}&_=${Date.now()}`; }
-function reloadPreview(){ $("#pv").src=previewURL(); }
+function reloadPreview(){ /* chronicle workspace has no paper preview */ }
 function switchEdition(issue){
   if(issue==="__new"){ $("#editionSel").value=ISSUE; openCreateJournal(); return; }
   location.href = `editor.html?issue=${encodeURIComponent(issue)}`;
@@ -803,25 +764,26 @@ async function boot(){
   $("#hdr").style.display="";
   $("#who").textContent = MYPROFILE.display_name || MY_EMAIL;
   $("#rolebadge").textContent = roleLabel(MYROLE); $("#rolebadge").style.display="";
-  if(MYROLE==="editor") $("#adsLink").style.display="";   // editors moderate réclames
+  // chronicle workspace: hide paper-specific header controls
+  ["editionWrap","manageLink","printLink","openPaper","homeLink"].forEach(id=>{const e=$("#"+id); if(e) e.style.display="none";});
+  const nb=$("#newBtn"); if(nb) nb.textContent="✍️ Nouvelle chronique";
   try{ const ps=await Profiles.all(); PROFMAP=Object.fromEntries(ps.map(p=>[p.id, p.display_name||""])); }catch(e){}
-  try{ PAPERS = await Papers.map(); }catch(e){}
-  if(MYROLE==="editor"){ try{ MY_MANAGED = await Papers.myManaged(); }catch(e){} }
-
-  // No edition chosen → land on the editions dashboard (don't jump into editing)
-  if(!new URLSearchParams(location.search).has("issue")){ renderDashboard(); return; }
-
-  // An edition is chosen → the article editor for ISSUE
-  $("#dash").style.display="none"; $("#app").style.display="";
-  $("#homeLink").style.display="";
-  if(MYROLE==="editor" && MY_MANAGED.includes(ISSUE)){ $("#manageLink").style.display=""; $("#printLink").style.display=""; }
-  renderFormBar();
-  await initEditions();
-  wireDropzone();
-  Articles.subscribe(loadList);
-  await loadList(); newArticle();
+  if(MYROLE==="editor"){
+    $("#adsLink").style.display="";
+    $("#journauxLink").style.display=""; $("#chronLink").style.display="";
+    try{ PAPERS = await Papers.map(); MY_MANAGED = await Papers.myManaged(); }catch(e){}
+  }
+  showChronicles();
 }
-function goDashboard(){ location.href = "editor.html"; }
+function showChronicles(){
+  $("#dash").style.display="none"; $("#app").style.display=""; $("#app").classList.add("chron");
+  $("#newBtn").style.display="";
+  renderFormBar(); wireDropzone();
+  Chronicles.subscribe(loadList);
+  loadList().then(()=>newArticle());
+}
+function showJournaux(){ $("#app").style.display="none"; renderDashboard(); }
+function goDashboard(){ showJournaux(); }
 function renderDashboard(){
   $("#app").style.display="none"; $("#dash").style.display="";
   // hide article-context header controls on the dashboard
@@ -844,11 +806,11 @@ function dashCard(issue, p){
     ${p.tagline?`<div class="dtag">${escapeHtml(p.tagline)}</div>`:""}
     <div class="dmeta">${escapeHtml(p.clan||"")}</div>
     <div class="dacts">
-      <button class="open" onclick="openEdition('${issue}')">${MYROLE==="editor"?"Éditer":"Écrire"} →</button>
-      ${MYROLE==="editor"?`<button class="del" title="Supprimer le journal" onclick="deleteEdition('${issue}')">🗑</button>`:""}
+      <button class="open" onclick="openEdition('${issue}')">Mettre en page →</button>
+      <button class="del" title="Supprimer le journal" onclick="deleteEdition('${issue}')">🗑</button>
     </div></div>`;
 }
-function openEdition(issue){ location.href = "editor.html?issue="+encodeURIComponent(issue); }
+function openEdition(issue){ location.href = "board.html?issue="+encodeURIComponent(issue); }
 async function deleteEdition(issue){
   const nm = (PAPERS[issue]&&PAPERS[issue].name)||issue;
   if(!confirm(`Supprimer le journal « ${nm} » ?\nLe titre disparaît du kiosque ; les articles déjà écrits restent en base.`)) return;

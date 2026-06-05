@@ -75,98 +75,94 @@ const Auth = {
   },
 };
 
-// ── Articles ──────────────────────────────────────────────────────────────
-const Articles = {
-  /** All articles in the current issue (editor view: includes drafts). */
-  async listAll() {
+// ── Chronicles ─ articles = the writer's TEXT (a chronicle), not bound to a paper
+const Chronicles = {
+  /** The current user's own chronicles (writer's "Mes chroniques"). */
+  async listMine() {
     if (!db) return [];
-    const { data, error } = await db
-      .from("articles")
-      .select("*")
-      .eq("issue", ISSUE);
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) return [];
+    const { data, error } = await db.from("articles").select("*")
+      .eq("author_id", user.id).order("updated_at", { ascending: false });
     if (error) throw error;
-    return sortArticles(data || []);
+    return data || [];
   },
-
-  /** Published only (public paper). */
-  async listPublished() {
+  /** The shared pool: submitted chronicles for editors to browse. */
+  async listPool(q) {
     if (!db) return [];
-    const { data, error } = await db
-      .from("articles")
-      .select("*")
-      .eq("issue", ISSUE)
-      .eq("published", true);
+    const { data, error } = await db.from("articles").select("*")
+      .eq("status", "submitted").order("updated_at", { ascending: false }).limit(300);
     if (error) throw error;
-    return sortArticles(data || []);
+    let rows = data || [];
+    if (q) { const s = q.toLowerCase();
+      rows = rows.filter(a => ((a.headline||"")+" "+(a.byline||"")+" "+(a.kicker||"")).toLowerCase().includes(s)); }
+    return rows;
   },
-
   async get(id) {
     const { data, error } = await db.from("articles").select("*").eq("id", id).single();
     if (error) throw error;
     return data;
   },
-
   async create(fields) {
     const { data: { user } } = await db.auth.getUser();
-    const max = await this._maxPosition();
-    const row = {
-      issue: ISSUE,
-      kicker: "", headline: "Untitled", subhead: "", byline: "",
-      body: "", weight: "minor", image_url: "", published: false, status: "draft",
-      position: max + 1,
-      author_id: user?.id || null,
-      ...fields,
-    };
+    const row = { kicker:"", headline:"Sans titre", subhead:"", byline:"", body:"",
+      image_url:"", status:"draft", author_id: user?.id || null, ...fields };
     const { data, error } = await db.from("articles").insert(row).select().single();
     if (error) throw error;
     return data;
   },
-
   async update(id, fields) {
     const { data, error } = await db.from("articles").update(fields).eq("id", id).select().single();
     if (error) throw error;
     return data;
   },
-
-  async remove(id) {
-    const { error } = await db.from("articles").delete().eq("id", id);
-    if (error) throw error;
-  },
-
-  /** Swap position with the adjacent article in the same weight band. */
-  async move(id, direction) {
-    const all = await this.listAll();
-    const me = all.find((a) => a.id === id);
-    if (!me) return;
-    const band = all.filter((a) => a.weight === me.weight);
-    const i = band.findIndex((a) => a.id === id);
-    const j = direction === "up" ? i - 1 : i + 1;
-    if (j < 0 || j >= band.length) return;
-    const other = band[j];
-    await Promise.all([
-      this.update(me.id, { position: other.position }),
-      this.update(other.id, { position: me.position }),
-    ]);
-  },
-
-  async _maxPosition() {
-    const { data } = await db
-      .from("articles")
-      .select("position")
-      .eq("issue", ISSUE)
-      .order("position", { ascending: false })
-      .limit(1);
-    return data && data[0] ? data[0].position : 0;
-  },
-
-  /** Live updates: cb() fires whenever any article in this issue changes. */
+  async remove(id) { const { error } = await db.from("articles").delete().eq("id", id); if (error) throw error; },
+  async submit(id) { return this.update(id, { status: "submitted" }); },
+  async toDraft(id) { return this.update(id, { status: "draft" }); },
   subscribe(cb) {
     if (!db) return;
-    db.channel("articles-" + ISSUE)
-      .on("postgres_changes",
-          { event: "*", schema: "public", table: "articles" },
-          () => cb())
-      .subscribe();
+    db.channel("chronicles").on("postgres_changes",
+      { event: "*", schema: "public", table: "articles" }, () => cb()).subscribe();
+  },
+};
+
+// ── Placements ─ an editor runs a chronicle in their edition (the LAYOUT) ────
+const Placements = {
+  /** Board view: every placement in the edition + its joined chronicle. */
+  async forIssue(issue) {
+    if (!db) return [];
+    const { data, error } = await db.from("placements")
+      .select("*, article:articles(*)").eq("issue", issue);
+    if (error) throw error;
+    return data || [];
+  },
+  /** Public render: published placements + chronicle, sorted by weight+position. */
+  async publishedForIssue(issue) {
+    if (!db) return [];
+    const { data, error } = await db.from("placements")
+      .select("*, article:articles(*)").eq("issue", issue).eq("published", true);
+    if (error) throw error;
+    return (data || []).sort((a, b) =>
+      (WRANK[a.weight] ?? 9) - (WRANK[b.weight] ?? 9) || (a.position||0) - (b.position||0));
+  },
+  async add(articleId, issue) {
+    const { data: { user } } = await db.auth.getUser();
+    const { data, error } = await db.from("placements")
+      .insert({ article_id: articleId, issue, weight: "minor", position: 0, published: false, placed_by: user?.id || null })
+      .select("*, article:articles(*)").single();
+    if (error) throw error;
+    return data;
+  },
+  async update(id, fields) {
+    const { data, error } = await db.from("placements").update(fields).eq("id", id).select("*, article:articles(*)").single();
+    if (error) throw error;
+    return data;
+  },
+  async remove(id) { const { error } = await db.from("placements").delete().eq("id", id); if (error) throw error; },
+  subscribe(issue, cb) {
+    if (!db) return;
+    db.channel("placements-" + issue).on("postgres_changes",
+      { event: "*", schema: "public", table: "placements" }, () => cb()).subscribe();
   },
 };
 
@@ -403,5 +399,5 @@ function md(text) {
     .join("");
 }
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, Articles, Media, Profiles, Comments, Portfolio, Ads, Papers, Revisions, sortArticles, esc, md };
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, Chronicles, Placements, Media, Profiles, Comments, Portfolio, Ads, Papers, Revisions, sortArticles, esc, md };
 })();

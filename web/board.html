@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publisheur — Mise en page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100vh;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);overflow:hidden}
+  header{background:#211f1c;color:#f3ead6;display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;flex:none}
+  header h1{font-family:"Playfair Display",serif;font-size:1.2rem;margin:0}
+  header .grow{flex:1}
+  header a,header button{font:inherit;font-size:.85rem;color:#f3ead6;background:#2c2924;border:1px solid #555;border-radius:6px;padding:.4rem .7rem;text-decoration:none;cursor:pointer}
+  header button.go{background:var(--accent);border-color:#a33;color:#fff;font-weight:600}
+  main{display:grid;grid-template-columns:300px 1fr minmax(320px,440px);height:calc(100vh - 49px)}
+  .col{overflow:auto;border-right:1px solid var(--line)}
+  .colhead{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);padding:.6rem .8rem;font-weight:600;font-size:.85rem;z-index:2;display:flex;gap:.5rem;align-items:center}
+  .colhead .grow{flex:1}
+  /* pool */
+  #pool input{width:100%;font:inherit;padding:.4rem .5rem;border:1px solid var(--line);border-radius:6px;margin:.5rem .8rem;width:calc(100% - 1.6rem)}
+  .poolcard{margin:.4rem .8rem;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .poolcard .t{font-family:"Playfair Display",serif;font-weight:700;font-size:.95rem;line-height:1.15}
+  .poolcard .by{font-size:.74rem;color:#7a7060;margin:.15rem 0 .4rem}
+  .poolcard button{font:inherit;font-size:.76rem;border:1px solid #c9bda0;background:#fbf2ec;color:var(--accent);border-radius:5px;padding:.25rem .6rem;cursor:pointer;font-weight:600}
+  .empty{color:#8a8070;font-style:italic;padding:1rem .8rem;font-size:.85rem}
+  /* board */
+  #board{background:#efe8d6}
+  .grp{padding:.5rem .8rem}
+  .grplabel{font-family:"Playfair Display",serif;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:#6a6253;border-bottom:2px solid var(--ink);padding-bottom:.2rem;margin:.4rem 0 .5rem}
+  .pcard{background:#fff;border:1px solid var(--line);border-radius:8px;padding:.55rem .7rem;margin-bottom:.55rem;display:flex;gap:.6rem;align-items:flex-start}
+  .pcard.pub{border-left:4px solid #2f6b3f}
+  .pcard .thumb{width:54px;height:42px;object-fit:cover;border:1px solid #b9ad90;border-radius:4px;flex:none;filter:grayscale(.5) sepia(.2)}
+  .pcard .info{flex:1;min-width:0}
+  .pcard .t{font-family:"Playfair Display",serif;font-weight:700;font-size:.95rem;line-height:1.15}
+  .pcard .by{font-size:.72rem;color:#7a7060}
+  .pcard .acts{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.4rem;align-items:center}
+  .pcard .acts button{font:inherit;font-size:.72rem;border:1px solid #c9bda0;background:#fff;border-radius:5px;padding:.15rem .45rem;cursor:pointer}
+  .pcard .wbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .pcard .pubbtn{background:#2f6b3f;color:#fff;border-color:#2f6b3f;font-weight:600}
+  .pcard .unpubbtn{background:#fff;color:#2f6b3f;border-color:#9bbfa8}
+  .pcard .rm{color:#b33;margin-left:auto}
+  /* preview */
+  #preview{display:flex;flex-direction:column;border-right:none}
+  #preview .pvhead{padding:.5rem .8rem;border-bottom:1px solid var(--line);background:var(--panel);font-size:.8rem;color:#6a6253;display:flex;gap:.5rem;align-items:center}
+  #preview iframe{flex:1;border:none;width:100%;background:#6b6357}
+  /* gate */
+  .gate{position:fixed;inset:0;background:#211f1c;color:#f3ead6;display:flex;align-items:center;justify-content:center;padding:1rem;z-index:50}
+  .gate .gc{background:#2c2924;border:1px solid #4a443c;border-radius:12px;padding:2rem;max-width:440px;text-align:center}
+  .gate a{color:#e8b9b2}
+  /* photo picker modal */
+  .pmodal{position:fixed;inset:0;background:rgba(20,18,16,.75);z-index:60;display:none;align-items:center;justify-content:center;padding:1.2rem}
+  .pmodal .card{background:#fbf8ef;border-radius:12px;max-width:760px;width:96vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+  .pmodal .h{display:flex;padding:.7rem 1rem;border-bottom:1px solid var(--line);font-family:"Playfair Display",serif}
+  .pmodal .h .grow{flex:1}
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.7rem;padding:1rem;overflow:auto}
+  .pgrid figure{margin:0;cursor:pointer;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
+  .pgrid img{width:100%;height:90px;object-fit:cover}
+  .pgrid figcaption{font-size:.72rem;padding:.25rem .4rem;color:#6a6253}
+  .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#211f1c;color:#f3ead6;padding:.55rem 1rem;border-radius:8px;opacity:0;transition:opacity .2s;font-size:.85rem;z-index:80}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="gate" id="gate"><div class="gc" id="gc">Chargement…</div></div>
+
+<header id="hdr" style="display:none">
+  <h1>Mise en page · <span id="paperName"></span></h1>
+  <span class="grow"></span>
+  <a href="editor.html">← Mes journaux</a>
+  <a id="openPaper" href="#" target="_blank">Voir la une ↗</a>
+  <button class="go" onclick="runExport()">🖨 PDF imprimable</button>
+  <button onclick="signOut()">Se déconnecter</button>
+</header>
+
+<main id="app" style="display:none">
+  <div class="col" id="pool">
+    <div class="colhead">Le pool <span class="grow"></span><span id="poolCount" style="font-weight:400;color:#7a7060;font-size:.78rem"></span></div>
+    <input type="search" id="poolq" placeholder="Rechercher une chronique…" oninput="setPoolQ(this.value)">
+    <div id="poolList"></div>
+  </div>
+  <div class="col" id="board">
+    <div class="colhead">La mise en page — glissez les chroniques dans la une</div>
+    <div id="boardGroups"></div>
+  </div>
+  <div class="col" id="preview">
+    <div class="pvhead">Aperçu de la une <span class="grow"></span><button onclick="reloadPreview()" style="font:inherit;border:1px solid var(--line);background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer">↻</button></div>
+    <iframe id="pv" src="about:blank"></iframe>
+  </div>
+</main>
+
+<div class="pmodal" id="photoModal"><div class="card">
+  <div class="h"><b>Choisir une photo (portfolio)</b><span class="grow"></span><button onclick="closePhoto()" style="border:none;background:none;font-size:1.1rem;cursor:pointer">✕</button></div>
+  <div class="pgrid" id="photoGrid"></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="papers.js"></script>
+<script src="daihbi.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const { Auth, Profiles, Chronicles, Placements, Papers, Portfolio, configured, esc } = window.Daihbi;
+const ISSUE = window.Daihbi.ISSUE;
+const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const WEIGHTS = [["lead","La Une"],["major","Majeurs"],["minor","Mineurs"],["brief","Brèves"]];
+let PAPER={}, PLACEMENTS=[], POOL=[], poolQ="", photoTarget=null;
+
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1800); }
+function showGate(h){ $("#gate").style.display="flex"; $("#gc").innerHTML=h; }
+function previewURL(){ return `paper.html?issue=${encodeURIComponent(ISSUE)}&_=${Date.now()}`; }
+function reloadPreview(){ $("#pv").src=previewURL(); }
+async function signOut(){ await Auth.signOut(); location.href="editor.html"; }
+
+async function load(){
+  try{
+    PLACEMENTS = await Placements.forIssue(ISSUE);
+    POOL = await Chronicles.listPool(poolQ);
+  }catch(e){ toast("Erreur : "+e.message); return; }
+  render();
+}
+function setPoolQ(v){ poolQ=v; Chronicles.listPool(poolQ).then(p=>{ POOL=p; renderPool(); }); }
+
+function render(){ renderPool(); renderBoard(); }
+function renderPool(){
+  const placed = new Set(PLACEMENTS.map(p=>p.article_id));
+  const avail = POOL.filter(a=>!placed.has(a.id));
+  $("#poolCount").textContent = `${avail.length}`;
+  $("#poolList").innerHTML = avail.length ? avail.map(a=>`
+    <div class="poolcard">
+      <div class="t">${esc2(a.headline)}</div>
+      <div class="by">${esc2(a.byline||"—")}</div>
+      <button onclick="addToBoard('${a.id}')">＋ Ajouter à la une</button>
+    </div>`).join("") : `<div class="empty">Aucune chronique disponible. Les rédacteurs soumettent leurs textes au pool.</div>`;
+}
+function renderBoard(){
+  $("#boardGroups").innerHTML = WEIGHTS.map(([w,label])=>{
+    const grp = PLACEMENTS.filter(p=>p.weight===w).sort((a,b)=>(a.position-b.position));
+    return `<div class="grp"><div class="grplabel">${label}${grp.length?` · ${grp.length}`:""}</div>
+      ${grp.length ? grp.map(p=>pcard(p)).join("") : `<div class="empty" style="padding:.3rem .2rem">—</div>`}</div>`;
+  }).join("");
+}
+function pcard(p){
+  const a=p.article||{}; const photo = p.image_url || a.image_url || "";
+  const wbtns = WEIGHTS.map(([w,l])=>`<button class="wbtn ${p.weight===w?'on':''}" onclick="setWeight('${p.id}','${w}')">${l[0]}</button>`).join("");
+  return `<div class="pcard ${p.published?'pub':''}">
+    ${photo?`<img class="thumb" src="${esc2(photo)}">`:""}
+    <div class="info">
+      <div class="t">${esc2(a.headline||"(sans titre)")}</div>
+      <div class="by">${esc2(a.byline||"—")}</div>
+      <div class="acts">
+        <span title="Proéminence">${wbtns}</span>
+        <button onclick="movePlacement('${p.id}','up')" title="Monter">▲</button>
+        <button onclick="movePlacement('${p.id}','down')" title="Descendre">▼</button>
+        <button onclick="openPhoto('${p.id}')" title="Photo">🖼</button>
+        ${p.published
+          ? `<button class="unpubbtn" onclick="togglePub('${p.id}',false)">Dépublier</button>`
+          : `<button class="pubbtn" onclick="togglePub('${p.id}',true)">Publier</button>`}
+        <button class="rm" onclick="removePlacement('${p.id}')" title="Retirer">Retirer</button>
+      </div>
+    </div></div>`;
+}
+async function addToBoard(articleId){ try{ await Placements.add(articleId, ISSUE); await load(); }catch(e){ toast(e.message); } }
+async function removePlacement(id){ if(!confirm("Retirer cette chronique de l’édition ?"))return; try{ await Placements.remove(id); await load(); }catch(e){ toast(e.message); } }
+async function setWeight(id,w){ try{ await Placements.update(id,{weight:w}); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
+async function togglePub(id,pub){ try{ await Placements.update(id,{published:pub}); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
+async function movePlacement(id,dir){
+  const me=PLACEMENTS.find(p=>p.id===id); if(!me) return;
+  const grp=PLACEMENTS.filter(p=>p.weight===me.weight).sort((a,b)=>(a.position-b.position));
+  const i=grp.findIndex(p=>p.id===id), j=dir==="up"?i-1:i+1;
+  if(j<0||j>=grp.length) return;
+  const order=grp.map(p=>p.id); [order[i],order[j]]=[order[j],order[i]];
+  try{ await Promise.all(order.map((pid,idx)=>Placements.update(pid,{position:idx}))); await load(); reloadPreview(); }
+  catch(e){ toast(e.message); }
+}
+// photo override via portfolio
+async function openPhoto(id){
+  photoTarget=id; $("#photoModal").style.display="flex";
+  let imgs=[]; try{ imgs=await Portfolio.list(); }catch(e){}
+  $("#photoGrid").innerHTML =
+    `<figure onclick="setPhoto('')"><div style="height:90px;display:flex;align-items:center;justify-content:center;color:#9a907c">✕ aucune</div><figcaption>Retirer la photo</figcaption></figure>`
+    + imgs.map(im=>`<figure onclick="setPhoto('${esc2(im.url)}')"><img src="${esc2(im.url)}"><figcaption>${esc2(im.caption||im.uploader_name||"")}</figcaption></figure>`).join("");
+}
+function closePhoto(){ $("#photoModal").style.display="none"; photoTarget=null; }
+async function setPhoto(url){ if(!photoTarget) return; try{ await Placements.update(photoTarget,{image_url:url}); closePhoto(); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
+
+async function runExport(){
+  const s=await Auth.session(); if(!s) return;
+  toast("Export imprimable lancé…");
+  try{
+    const res=await fetch("/api/export",{method:"POST",headers:{"content-type":"application/json","Authorization":"Bearer "+s.access_token},body:JSON.stringify({issue:ISSUE})});
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok){ toast("Erreur : "+(d.error||res.status)); return; }
+    toast("Scribus met en page le PDF… (~1–2 min)");
+    let n=0; const iv=setInterval(async()=>{ n++; try{ const r=await fetch(d.pdf+"?t="+Date.now(),{cache:"no-store"}); if(r.ok){clearInterval(iv);toast("PDF prêt ✓");window.open(d.pdf,"_blank");} }catch(_){} if(n>=30)clearInterval(iv); },6000);
+  }catch(e){ toast("Erreur : "+e.message); }
+}
+
+async function boot(){
+  if(!configured){ showGate("<h2>Non connecté</h2>"); return; }
+  const s=await Auth.session();
+  if(!s){ showGate(`<h2>Connexion requise</h2><p>La mise en page est réservée à l’éditeur du journal.</p><p style="margin-top:.6rem"><a href="editor.html?role=writer">Se connecter / Rejoindre →</a></p>`); return; }
+  const prof=await Profiles.me(); const role=(prof&&prof.role)||"reader";
+  let managed=[]; try{ managed=await Papers.myManaged(); }catch(e){}
+  if(role!=="editor" || !managed.includes(ISSUE)){
+    showGate(`<h2>Réservé à l’éditeur</h2><p>Seul l’éditeur en chef de ce journal peut le mettre en page.</p>
+      <p style="margin-top:.6rem"><a href="paper.html?issue=${encodeURIComponent(ISSUE)}">📰 Lire le journal</a> · <a href="editor.html">✍️ Mes chroniques</a></p>`); return;
+  }
+  try{ const pm=await Papers.map(); PAPER=pm[ISSUE]||{name:ISSUE}; }catch(e){ PAPER={name:ISSUE}; }
+  $("#gate").style.display="none"; $("#hdr").style.display=""; $("#app").style.display="grid";
+  $("#paperName").textContent=PAPER.name||ISSUE;
+  $("#openPaper").href=`paper.html?issue=${encodeURIComponent(ISSUE)}`;
+  reloadPreview();
+  Placements.subscribe(ISSUE, ()=>load());
+  await load();
+}
+boot();
+</script>
+</body>
+</html>

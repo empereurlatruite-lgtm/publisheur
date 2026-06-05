@@ -135,12 +135,16 @@ let filter = { q:"", range:"all", day:"" };
 function fmtDate(d){ return d ? d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}) : ""; }
 
 async function fetchEditions(){
-  const { data, error } = await db.from("articles")
-    .select("issue,kicker,headline,subhead,weight,updated_at,published")
+  // published placements (layout) joined to their chronicle (text)
+  const { data, error } = await db.from("placements")
+    .select("issue,weight,updated_at,article:articles(kicker,headline,subhead)")
     .eq("published", true);
   if(error) throw error;
   const byIssue = {};
-  for(const a of (data||[])){
+  for(const p of (data||[])){
+    const a = { issue:p.issue, weight:p.weight, updated_at:p.updated_at,
+      kicker:(p.article&&p.article.kicker)||"", headline:(p.article&&p.article.headline)||"",
+      subhead:(p.article&&p.article.subhead)||"" };
     (byIssue[a.issue] ||= []).push(a);
   }
   // union of registry papers and any issue present in the data

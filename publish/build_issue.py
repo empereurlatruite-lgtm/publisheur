@@ -52,18 +52,27 @@ def _creds_from_config():
 
 
 def fetch_supabase(url, key, issue):
+    # published placements (layout) joined to their chronicle (text)
     endpoint = (
-        f"{url.rstrip('/')}/rest/v1/articles"
-        f"?issue=eq.{issue}&published=eq.true&select=*"
+        f"{url.rstrip('/')}/rest/v1/placements"
+        f"?issue=eq.{issue}&published=eq.true"
+        f"&select=weight,position,image_url,article:articles(*)"
     )
     req = urllib.request.Request(endpoint, headers={
         "apikey": key, "Authorization": f"Bearer {key}", "Accept": "application/json",
     })
     with urllib.request.urlopen(req, timeout=20) as r:
         rows = json.loads(r.read())
-    for a in rows:
+    items = []
+    for p in rows:
+        a = dict(p.get("article") or {})
+        a["weight"] = p.get("weight", "minor")
+        a["position"] = p.get("position", 0)
+        if p.get("image_url"):
+            a["image_url"] = p["image_url"]          # per-paper photo override
         a["source"] = "db"
-    return rows
+        items.append(a)
+    return items
 
 
 def fetch_paper(url, key, issue):
