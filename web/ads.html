@@ -10,11 +10,10 @@
   :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6}
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
-  header{background:#211f1c;color:#f3ead6;display:flex;align-items:center;gap:.7rem;padding:.7rem 1.1rem}
-  header h1{font-family:"Playfair Display",serif;font-size:1.25rem;margin:0}
+  /* header visuals come from shared nav.css; layout stays here */
+  header{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.1rem}
+  header h1{font-size:1.25rem;margin:0}
   header .grow{flex:1}
-  header a,header button{font:inherit;font-size:.85rem;color:#f3ead6;background:#2c2924;border:1px solid #555;border-radius:6px;padding:.4rem .7rem;text-decoration:none;cursor:pointer}
-  .rolebadge{font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;background:#3a3631;border:1px solid #5a534a;border-radius:4px;padding:.1rem .4rem}
   main{max-width:1000px;margin:1.4rem auto;padding:0 1rem;display:grid;grid-template-columns:1fr 1fr;gap:1.4rem}
   @media(max-width:760px){main{grid-template-columns:1fr}}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem 1.1rem}
@@ -53,6 +52,7 @@
   .gate button.full{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:.65rem;font:inherit;font-weight:600;cursor:pointer;margin-top:.3rem}
   .gate a{color:#e8b9b2}
 </style>
+<link rel="stylesheet" href="nav.css">
 </head>
 <body>
 
@@ -60,11 +60,9 @@
 
 <header id="hdr" style="display:none">
   <h1>Publisheur <span style="opacity:.6;font-size:.8rem">· Studio publicitaire</span></h1>
-  <span class="rolebadge" id="rolebadge"></span>
   <span class="grow"></span>
-  <span id="who" style="font-size:.85rem;opacity:.85"></span>
   <a href="index.html">📰 Kiosque</a>
-  <button onclick="signOut()">Se déconnecter</button>
+  <span class="navuser" id="navuser"></span>
 </header>
 
 <main id="app" style="display:none">
@@ -106,7 +104,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Profiles, Ads, Media, Papers, configured, esc } = window.Daihbi;
+const { Auth, Profiles, Ads, Media, Papers, NavUser, configured, esc } = window.Daihbi;
 let PAPERS = window.DAIHBI_PAPERS || {};
 let MYROLE="reader", MYPROFILE=null, ME=null, current=null, pendingImg="";
 
@@ -153,7 +151,7 @@ function fillCategories(){
 }
 const catLabel = k => (window.DAIHBI_AD_CAT_LABEL ? window.DAIHBI_AD_CAT_LABEL(k) : k);
 function prev(url){ const p=$("#preview"); if(url){p.src=url;p.style.display="";}else p.style.display="none"; }
-async function pick(file){ if(!file)return; $("#imgErr").textContent="Envoi…"; try{ pendingImg=await Media.upload(file,"ads"); $("#f_image").value=pendingImg; prev(pendingImg); $("#imgErr").textContent=""; }catch(e){ $("#imgErr").textContent=e.message; } }
+async function pick(file){ if(!file)return; $("#imgErr").textContent="Envoi…"; try{ const up=await Media.upload(file,"ads"); pendingImg=up.url; $("#f_image").value=pendingImg; prev(pendingImg); $("#imgErr").textContent=""; }catch(e){ $("#imgErr").textContent=e.message; } }
 function newAd(){ current=null; $("#formTitle").textContent="Nouvelle réclame";
   ["f_title","f_maker","f_body","f_link","f_image"].forEach(i=>$("#"+i).value=""); $("#f_issue").value="all"; $("#f_category").value="fabricant"; prev(""); $("#delBtn").style.display="none"; $("#formErr").textContent=""; }
 function editAd(a){ current=a.id; $("#formTitle").textContent="Modifier la réclame";
@@ -211,8 +209,10 @@ async function boot(){
       <p style="margin-top:.6rem"><a href="index.html">← Kiosque</a> · <a href="#" onclick="signOut();return false">Se déconnecter</a></p>`); return;
   }
   hideGate(); $("#hdr").style.display=""; $("#app").style.display="";
-  $("#who").textContent = MYPROFILE.display_name || s.user.email || "";
-  $("#rolebadge").textContent = MYROLE==="editor" ? "Éditeur" : "Annonceur";
+  NavUser.render($("#navuser"), {
+    profile: MYPROFILE, email: s.user.email, role: MYROLE,
+    roleLabel: r => r==="editor" ? "Rédacteur en chef" : "Annonceur", onLogout: signOut,
+  });
   try{ PAPERS = await Papers.map(); }catch(e){}
   fillIssues(); fillCategories(); newAd(); await loadList();
 }

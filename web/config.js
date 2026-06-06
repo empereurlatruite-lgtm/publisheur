@@ -8,4 +8,10 @@ window.DAIHBI_CONFIG = {
 
   // Which edition the editor reads/writes. Bump this to start a new issue.
   ISSUE: "current",
+
+  // Canonical public origin used for auth email links (confirm / magic-link /
+  // password reset). Without this, redirects mirror the page you signed up from
+  // — so testing on localhost bakes a localhost link into the email. Leave blank
+  // ONLY for pure local dev. Must also be allow-listed in Supabase → Auth → URL.
+  SITE_URL: "https://publisheur.pages.dev",
 };

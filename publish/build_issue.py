@@ -70,7 +70,7 @@ def fetch_supabase(url, key, issue):
         a["position"] = p.get("position", 0)
         if p.get("image_url"):
             a["image_url"] = p["image_url"]          # per-paper photo override
-        a["source"] = "db"
+        # keep the chronicle's own `source` (régiment, or "IA") for the badge
         items.append(a)
     return items
 
@@ -133,7 +133,11 @@ def normalize(a):
         "body": a.get("body") or "",
         "weight": a["weight"] if a.get("weight") in WEIGHTS else "minor",
         "image_url": (a.get("image_url") or "").strip(),
-        "source": a.get("source", "db"),
+        "source": (a.get("source") or "").strip(),
+        # Author's portrait + provenance follow the chronicle into print. The
+        # portrait is carried for completeness; layout.py prints the provenance
+        # badge as text (an inline headshot in auto-flow columns is future work).
+        "author_avatar": (a.get("author_avatar") or "").strip(),
         "position": a.get("position", 0),
     }
 

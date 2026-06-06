@@ -16,19 +16,13 @@
   html,body{margin:0;background:#6b6357;}
   body{font-family:"PT Serif",Georgia,"Times New Roman",serif;color:var(--ink);}
 
+  /* .toolbar nav styled by shared nav.css */
   .toolbar{
     position:sticky;top:0;z-index:50;display:flex;gap:.5rem;align-items:center;
-    flex-wrap:wrap;padding:.6rem 1rem;background:#211f1c;color:#eee;
-    font-family:system-ui,sans-serif;font-size:.85rem;box-shadow:0 2px 8px rgba(0,0,0,.4);
+    flex-wrap:wrap;padding:.6rem 1rem;font-size:.85rem;
   }
   .toolbar .grow{flex:1}
-  .toolbar b{font-family:"Playfair Display",serif;font-size:1rem;letter-spacing:.02em}
-  .toolbar button,.toolbar a.btn{
-    background:#3a3631;color:#f3ead6;border:1px solid #555;border-radius:5px;
-    padding:.4rem .7rem;cursor:pointer;font:inherit;text-decoration:none;display:inline-flex;gap:.35rem;align-items:center;
-  }
-  .toolbar button:hover,.toolbar a.btn:hover{background:#4d473f}
-  .toolbar button.primary{background:var(--accent);border-color:#a33;color:#fff}
+  .toolbar b{font-size:1rem}
 
   .stage{padding:1.5rem;display:flex;justify-content:center}
   .sheet{
@@ -185,6 +179,7 @@
     .well{column-count:5}
   }
 </style>
+<link rel="stylesheet" href="nav.css">
 </head>
 <body>
 
@@ -215,7 +210,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = (s,r=document)=>r.querySelector(s);
-const { Placements, Auth, Profiles, Comments, Ads, Papers, esc, md, configured } = window.Daihbi;
+const { Placements, AdPlacements, Auth, Profiles, Comments, Ads, Papers, esc, md, configured } = window.Daihbi;
 
 // Editions come from the DB (Papers.map), with papers.js as the fallback.
 const ISSUE = window.Daihbi.ISSUE;
@@ -312,8 +307,15 @@ async function load(){
       image_url: p.image_url || p.article.image_url || "" }));
   }
   catch(e){ $("#sheet").innerHTML = `<div class="empty">Could not load articles.<br>${esc(e.message)}</div>`; return; }
+  // Réclames: the editor lays them out (ad_placements), in their chosen order.
+  // Fall back to auto-flowing all approved ads when nothing's been placed yet
+  // (or before the ad_placements migration has run).
   let ads = [];
-  try{ ads = await Ads.listApproved(ISSUE); }catch(e){ /* ads table may be absent */ }
+  try{
+    const ap = await AdPlacements.publishedForIssue(ISSUE);
+    ads = ap.map(p=>p.ad).filter(Boolean);
+    if(!ads.length) ads = await Ads.listApproved(ISSUE);
+  }catch(e){ try{ ads = await Ads.listApproved(ISSUE); }catch(_){} }
 
   // transparency: AI-written chronicles go in a 1-column sidebar on the right,
   // human chronicles fill a 2-column well on the left.
@@ -460,7 +462,7 @@ async function initComments(){
 }
 
 // live updates between collaborators
-if(configured) Placements.subscribe(ISSUE, load);
+if(configured){ Placements.subscribe(ISSUE, load); AdPlacements.subscribe(ISSUE, load); }
 load();
 initComments();
 </script>

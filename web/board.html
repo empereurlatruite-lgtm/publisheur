@@ -7,50 +7,84 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6}
+  :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6;--ok:#2f6b3f}
   *{box-sizing:border-box}
   html,body{margin:0;height:100vh;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);overflow:hidden}
-  header{background:#211f1c;color:#f3ead6;display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;flex:none}
-  header h1{font-family:"Playfair Display",serif;font-size:1.2rem;margin:0}
+  /* header visuals come from shared nav.css; layout stays here */
+  header{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;flex:none}
+  header h1{font-size:1.2rem;margin:0}
   header .grow{flex:1}
-  header a,header button{font:inherit;font-size:.85rem;color:#f3ead6;background:#2c2924;border:1px solid #555;border-radius:6px;padding:.4rem .7rem;text-decoration:none;cursor:pointer}
-  header button.go{background:var(--accent);border-color:#a33;color:#fff;font-weight:600}
-  main{display:grid;grid-template-columns:300px 1fr minmax(320px,440px);height:calc(100vh - 49px)}
+  main{display:grid;grid-template-columns:300px 1fr minmax(320px,440px);height:calc(100vh - 52px)}
   .col{overflow:auto;border-right:1px solid var(--line)}
   .colhead{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);padding:.6rem .8rem;font-weight:600;font-size:.85rem;z-index:2;display:flex;gap:.5rem;align-items:center}
   .colhead .grow{flex:1}
-  /* pool */
-  #pool input{width:100%;font:inherit;padding:.4rem .5rem;border:1px solid var(--line);border-radius:6px;margin:.5rem .8rem;width:calc(100% - 1.6rem)}
-  .poolcard{margin:.4rem .8rem;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:#fff}
-  .poolcard .t{font-family:"Playfair Display",serif;font-weight:700;font-size:.95rem;line-height:1.15}
-  .poolcard .by{font-size:.74rem;color:#7a7060;margin:.15rem 0 .4rem}
+  .colhead .hint{font-weight:400;color:#7a7060;font-size:.74rem}
+
+  /* ── palette (left) — tabbed: chroniques · réclames · images ── */
+  #palette{display:flex;flex-direction:column}
+  .ptabs{display:flex;gap:.3rem;padding:.5rem .6rem 0}
+  .ptab{flex:1;font:inherit;font-size:.76rem;border:1px solid var(--line);background:#fff;border-radius:7px 7px 0 0;border-bottom:none;
+    padding:.4rem .3rem;cursor:pointer;color:#6a6253;font-weight:600}
+  .ptab.on{background:var(--panel);color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
+  .ptab .n{opacity:.6;font-weight:400}
+  #paletteBody{flex:1;overflow:auto;padding:.5rem 0}
+  #palette input[type=search]{font:inherit;padding:.4rem .5rem;border:1px solid var(--line);border-radius:6px;margin:.2rem .8rem .4rem;width:calc(100% - 1.6rem)}
+
+  .pal{margin:.4rem .8rem;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:grab;display:flex;gap:.55rem;align-items:flex-start}
+  .pal:active{cursor:grabbing}
+  .pal.dragging{opacity:.4}
+  .pal .thumb{width:46px;height:38px;object-fit:cover;border:1px solid #b9ad90;border-radius:4px;flex:none;filter:grayscale(.4) sepia(.15)}
+  .pal .info{flex:1;min-width:0}
+  .pal .t{font-family:"Playfair Display",serif;font-weight:700;font-size:.92rem;line-height:1.15}
+  .pal .by{font-size:.72rem;color:#7a7060;margin-top:.1rem}
+  .pal .acts{display:flex;gap:.35rem;margin-top:.35rem}
+  .pal button{font:inherit;font-size:.74rem;border:1px solid #c9bda0;background:#fbf2ec;color:var(--accent);border-radius:5px;padding:.2rem .55rem;cursor:pointer;font-weight:600}
+  .pal .pdel{background:#fff;border-color:#d8b6b2;color:#b33;padding:.2rem .4rem}
+  .pal .cat{display:inline-block;font-size:.62rem;text-transform:uppercase;letter-spacing:.03em;color:#6a6253}
+  /* image palette is a tighter grid */
+  #imgGrid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding:0 .8rem}
+  #imgGrid figure{margin:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;cursor:grab}
+  #imgGrid figure.dragging{opacity:.4}
+  #imgGrid img{width:100%;height:72px;object-fit:cover;display:block;pointer-events:none}
+  #imgGrid figcaption{font-size:.66rem;padding:.2rem .35rem;color:#6a6253;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
   .byav{width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:.3rem;border:1px solid #b9ad90;filter:sepia(.3)}
   .bsrc{display:inline-block;font-size:.62rem;text-transform:uppercase;letter-spacing:.03em;padding:.02rem .35rem;border-radius:999px;border:1px solid #b9ad90;background:#efe7d5;color:#6a6253}
   .bsrc.ai{border-style:dashed;border-color:#9a7f55;color:#7a5a2a}
-  .poolcard .poolacts{display:flex;gap:.4rem;align-items:center}
-  .poolcard button{font:inherit;font-size:.76rem;border:1px solid #c9bda0;background:#fbf2ec;color:var(--accent);border-radius:5px;padding:.25rem .6rem;cursor:pointer;font-weight:600}
-  .poolcard .pdel{flex:none;background:#fff;border-color:#d8b6b2;color:#b33;padding:.25rem .45rem}
   .empty{color:#8a8070;font-style:italic;padding:1rem .8rem;font-size:.85rem}
-  /* board */
+
+  /* ── board (center) — drop zones ── */
   #board{background:#efe8d6}
-  .grp{padding:.5rem .8rem}
-  .grplabel{font-family:"Playfair Display",serif;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:#6a6253;border-bottom:2px solid var(--ink);padding-bottom:.2rem;margin:.4rem 0 .5rem}
-  .pcard{background:#fff;border:1px solid var(--line);border-radius:8px;padding:.55rem .7rem;margin-bottom:.55rem;display:flex;gap:.6rem;align-items:flex-start}
-  .pcard.pub{border-left:4px solid #2f6b3f}
-  .pcard .thumb{width:54px;height:42px;object-fit:cover;border:1px solid #b9ad90;border-radius:4px;flex:none;filter:grayscale(.5) sepia(.2)}
+  .zone{padding:.4rem .8rem .6rem}
+  .zonelabel{font-family:"Playfair Display",serif;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:#6a6253;border-bottom:2px solid var(--ink);padding-bottom:.2rem;margin:.5rem 0 .5rem;display:flex;align-items:center;gap:.4rem}
+  .zonelabel .n{font-family:system-ui;font-size:.72rem;letter-spacing:0;color:#9a907c}
+  .zonelabel.ads{border-bottom-color:#9a7f55;color:#7a5a2a}
+  .dropwrap{min-height:46px;border:1.5px dashed transparent;border-radius:9px;padding:.2rem;transition:border-color .12s,background .12s}
+  .dropwrap.drop-hi{border-color:var(--accent);background:rgba(122,31,26,.06)}
+  .dropwrap .ph{color:#a89e88;font-style:italic;font-size:.8rem;text-align:center;padding:.5rem .2rem}
+
+  .pcard{background:#fff;border:1px solid var(--line);border-radius:8px;padding:.5rem .6rem;margin-bottom:.5rem;display:flex;gap:.55rem;align-items:flex-start;cursor:grab;position:relative}
+  .pcard:active{cursor:grabbing}
+  .pcard.dragging{opacity:.4}
+  .pcard.pub{border-left:4px solid var(--ok)}
+  .pcard.photo-hi{outline:2px solid var(--accent);outline-offset:1px}
+  .pcard .grip{color:#bdb09a;font-size:.95rem;line-height:1;flex:none;margin-top:.1rem;cursor:grab}
+  .pcard .thumb{width:50px;height:40px;object-fit:cover;border:1px solid #b9ad90;border-radius:4px;flex:none;filter:grayscale(.5) sepia(.2)}
   .pcard .info{flex:1;min-width:0}
-  .pcard .t{font-family:"Playfair Display",serif;font-weight:700;font-size:.95rem;line-height:1.15}
-  .pcard .by{font-size:.72rem;color:#7a7060}
-  .pcard .acts{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.4rem;align-items:center}
-  .pcard .acts button{font:inherit;font-size:.72rem;border:1px solid #c9bda0;background:#fff;border-radius:5px;padding:.15rem .45rem;cursor:pointer}
-  .pcard .wbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .pcard .pubbtn{background:#2f6b3f;color:#fff;border-color:#2f6b3f;font-weight:600}
-  .pcard .unpubbtn{background:#fff;color:#2f6b3f;border-color:#9bbfa8}
-  .pcard .rm{color:#b33;margin-left:auto}
-  /* preview */
+  .pcard .t{font-family:"Playfair Display",serif;font-weight:700;font-size:.93rem;line-height:1.15}
+  .pcard .by{font-size:.72rem;color:#7a7060;margin-top:.1rem}
+  .pcard .dot{position:absolute;top:.5rem;right:.55rem;width:9px;height:9px;border-radius:50%;background:#cabfa6;border:1px solid #b3a888}
+  .pcard.pub .dot{background:var(--ok);border-color:var(--ok)}
+  .pcard .editcue{position:absolute;bottom:.35rem;right:.55rem;font-size:.64rem;color:#b3a888}
+  .adcard{border-left:4px solid #c9b079}
+  .adcard.pub{border-left-color:#9a7f55}
+  .adcard .t{font-family:system-ui;font-weight:700;font-size:.88rem}
+
+  /* preview (right) */
   #preview{display:flex;flex-direction:column;border-right:none}
   #preview .pvhead{padding:.5rem .8rem;border-bottom:1px solid var(--line);background:var(--panel);font-size:.8rem;color:#6a6253;display:flex;gap:.5rem;align-items:center}
   #preview iframe{flex:1;border:none;width:100%;background:#6b6357}
+
   /* gate */
   .gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:1.2rem;z-index:50;
     background:radial-gradient(62% 52% at 50% 26%, #38332c 0%, #1b1916 72%)}
@@ -68,18 +102,39 @@
   .gate .gc .acts .primary:hover{background:#8f2620}
   .gate .gc .hint{font-size:.8rem;color:#9a907c;margin-top:1.15rem}
   .gate .gc .hint a{color:#7a1f1a}
-  /* photo picker modal */
-  .pmodal{position:fixed;inset:0;background:rgba(20,18,16,.75);z-index:60;display:none;align-items:center;justify-content:center;padding:1.2rem}
-  .pmodal .card{background:#fbf8ef;border-radius:12px;max-width:760px;width:96vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
-  .pmodal .h{display:flex;padding:.7rem 1rem;border-bottom:1px solid var(--line);font-family:"Playfair Display",serif}
-  .pmodal .h .grow{flex:1}
-  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.7rem;padding:1rem;overflow:auto}
+
+  /* shared modal shell (edit panel + photo picker) */
+  .modal{position:fixed;inset:0;background:rgba(20,18,16,.78);z-index:60;display:none;align-items:center;justify-content:center;padding:1.2rem}
+  .modal.open{display:flex}
+  .modal .card{background:#fbf8ef;border-radius:12px;max-width:760px;width:96vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 72px rgba(0,0,0,.5)}
+  .modal .h{display:flex;align-items:center;padding:.7rem 1rem;border-bottom:1px solid var(--line);font-family:"Playfair Display",serif;font-size:1.05rem}
+  .modal .h .grow{flex:1}
+  .modal .x{border:none;background:none;font-size:1.15rem;cursor:pointer;color:#6a6253}
+  .modal .body{padding:1rem 1.1rem;overflow:auto}
+  /* edit panel rows */
+  .erow{display:flex;align-items:center;gap:.6rem;padding:.55rem 0;border-bottom:1px solid #ece2cc}
+  .erow:last-child{border-bottom:none}
+  .erow .lbl{width:7.5rem;flex:none;color:#6a6253;font-size:.82rem}
+  .erow .ctl{flex:1;display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+  .ebtn{font:inherit;font-size:.8rem;border:1px solid #c9bda0;background:#fff;border-radius:6px;padding:.32rem .7rem;cursor:pointer}
+  .ebtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .ebtn.pub{background:var(--ok);color:#fff;border-color:var(--ok);font-weight:600}
+  .ebtn.unpub{background:#fff;color:var(--ok);border-color:#9bbfa8;font-weight:600}
+  .ebtn.danger{color:#b33;border-color:#d8b6b2;background:#fff}
+  .ebtn.link{color:var(--accent);border-color:#d8c4a0;background:#fbf2ec}
+  .ethumb{width:96px;height:72px;object-fit:cover;border:1px solid #b9ad90;border-radius:5px;background:#efe7d5}
+  .enote{font-size:.78rem;color:#8a8070;line-height:1.4}
+  /* photo picker grid */
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.7rem;padding:0;overflow:auto}
   .pgrid figure{margin:0;cursor:pointer;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
+  .pgrid figure:hover{border-color:var(--accent)}
   .pgrid img{width:100%;height:90px;object-fit:cover}
   .pgrid figcaption{font-size:.72rem;padding:.25rem .4rem;color:#6a6253}
-  .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#211f1c;color:#f3ead6;padding:.55rem 1rem;border-radius:8px;opacity:0;transition:opacity .2s;font-size:.85rem;z-index:80}
+
+  .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#211f1c;color:#f3ead6;padding:.55rem 1rem;border-radius:8px;opacity:0;transition:opacity .2s;font-size:.85rem;z-index:90}
   .toast.show{opacity:1}
 </style>
+<link rel="stylesheet" href="nav.css">
 </head>
 <body>
 <div class="gate" id="gate"><div class="gc" id="gc"><div class="brand">📰 Publisheur · Mise en page</div><p>Chargement…</p></div></div>
@@ -91,18 +146,22 @@
   <a href="editor.html">← Mes journaux</a>
   <a id="openPaper" href="#" target="_blank">Voir la une ↗</a>
   <button class="go" onclick="runExport()">🖨 PDF imprimable</button>
-  <button onclick="signOut()">Se déconnecter</button>
+  <span class="navuser" id="navuser"></span>
 </header>
 
 <main id="app" style="display:none">
-  <div class="col" id="pool">
-    <div class="colhead">Le pool <span class="grow"></span><span id="poolCount" style="font-weight:400;color:#7a7060;font-size:.78rem"></span></div>
+  <div class="col" id="palette">
+    <div class="ptabs">
+      <button class="ptab on" id="tab-chron" onclick="setTab('chron')">Chroniques <span class="n" id="n-chron"></span></button>
+      <button class="ptab"    id="tab-ads"   onclick="setTab('ads')">Réclames <span class="n" id="n-ads"></span></button>
+      <button class="ptab"    id="tab-img"   onclick="setTab('img')">Images <span class="n" id="n-img"></span></button>
+    </div>
     <input type="search" id="poolq" placeholder="Rechercher une chronique…" oninput="setPoolQ(this.value)">
-    <div id="poolList"></div>
+    <div id="paletteBody"></div>
   </div>
   <div class="col" id="board">
-    <div class="colhead">La mise en page — glissez les chroniques dans la une</div>
-    <div id="boardGroups"></div>
+    <div class="colhead">La mise en page <span class="grow"></span><span class="hint">glissez ici · double-cliquez pour éditer</span></div>
+    <div id="boardZones"></div>
   </div>
   <div class="col" id="preview">
     <div class="pvhead">Aperçu de la une <span class="grow"></span><button onclick="reloadPreview()" style="font:inherit;border:1px solid var(--line);background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer">↻</button></div>
@@ -110,10 +169,22 @@
   </div>
 </main>
 
-<div class="pmodal" id="photoModal"><div class="card">
-  <div class="h"><b>Choisir une photo (portfolio)</b><span class="grow"></span><button onclick="closePhoto()" style="border:none;background:none;font-size:1.1rem;cursor:pointer">✕</button></div>
-  <div class="pgrid" id="photoGrid"></div>
-</div></div>
+<!-- layout-only edit panel -->
+<div class="modal" id="editModal">
+  <div class="card">
+    <div class="h"><span id="editTitle">Éditer le placement</span><span class="grow"></span><button class="x" onclick="closeEdit()">✕</button></div>
+    <div class="body" id="editBody"></div>
+  </div>
+</div>
+
+<!-- portfolio photo picker -->
+<div class="modal" id="photoModal">
+  <div class="card">
+    <div class="h"><span>Choisir une photo (portfolio)</span><span class="grow"></span><button class="x" onclick="closePhoto()">✕</button></div>
+    <div class="body"><div class="pgrid" id="photoGrid"></div></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -122,14 +193,23 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Profiles, Chronicles, Placements, Papers, Portfolio, configured, esc } = window.Daihbi;
+const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Ads, NavUser, configured, esc } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const WEIGHTS = [["lead","La Une"],["major","Majeurs"],["minor","Mineurs"],["brief","Brèves"]];
-let PAPER={}, PLACEMENTS=[], POOL=[], poolQ="", photoTarget=null;
+const WLABEL = Object.fromEntries(WEIGHTS);
+const catLabel = k => (window.DAIHBI_AD_CAT_LABEL && k) ? window.DAIHBI_AD_CAT_LABEL(k) : "Réclame";
+
+let PAPER={}, PLACEMENTS=[], ADPLACEMENTS=[], POOL=[], ADS=[], IMAGES=[];
+let poolQ="", tab="chron", photoTarget=null, currentEdit=null;
+let DRAG=null;   // {kind, id?|i?} during a drag
+
+const clamp=(n,lo,hi)=>Math.max(lo,Math.min(n,hi));
+const getPl = id => PLACEMENTS.find(p=>p.id===id);
+const getAp = id => ADPLACEMENTS.find(p=>p.id===id);
 
 function srcTag(a){
-  if(!a.source) return "";
+  if(!a||!a.source) return "";
   const ai=["ia","ai"].includes(String(a.source).trim().toLowerCase());
   return ` <span class="bsrc ${ai?'ai':''}">${ai?'✦ IA':esc2(a.source)}</span>`;
 }
@@ -141,85 +221,303 @@ async function signOut(){ await Auth.signOut(); location.href="editor.html"; }
 
 async function load(){
   try{
-    PLACEMENTS = await Placements.forIssue(ISSUE);
-    POOL = await Chronicles.listPool(poolQ);
+    PLACEMENTS   = await Placements.forIssue(ISSUE);
+    POOL         = await Chronicles.listPool(poolQ);
+    // Optional palettes — never let one missing/late-migrated table (e.g.
+    // ad_placements before its migration runs) blank out the whole board.
+    try{ ADPLACEMENTS = await AdPlacements.forIssue(ISSUE); }catch(e){ ADPLACEMENTS=[]; }
+    try{ ADS         = await Ads.listApproved(ISSUE); }catch(e){ ADS=[]; }
+    try{ IMAGES      = await Portfolio.list(); }catch(e){ IMAGES=[]; }
   }catch(e){ toast("Erreur : "+e.message); return; }
   render();
+  if(currentEdit) renderEditBody();
 }
-function setPoolQ(v){ poolQ=v; Chronicles.listPool(poolQ).then(p=>{ POOL=p; renderPool(); }); }
+function setPoolQ(v){ poolQ=v; Chronicles.listPool(poolQ).then(p=>{ POOL=p; renderPalette(); }); }
 
-function render(){ renderPool(); renderBoard(); }
-function renderPool(){
-  const placed = new Set(PLACEMENTS.map(p=>p.article_id));
-  const avail = POOL.filter(a=>!placed.has(a.id));
-  $("#poolCount").textContent = `${avail.length}`;
-  $("#poolList").innerHTML = avail.length ? avail.map(a=>`
-    <div class="poolcard">
-      <div class="t">${esc2(a.headline)}</div>
-      <div class="by">${a.author_avatar?`<img class="byav" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")}${srcTag(a)}</div>
-      <div class="poolacts">
-        <button onclick="addToBoard('${a.id}')">＋ Ajouter à la une</button>
-        <button class="pdel" title="Supprimer la chronique" onclick="deleteChronicle('${a.id}')">🗑</button>
-      </div>
-    </div>`).join("") : `<div class="empty">Aucune chronique disponible. Les rédacteurs soumettent leurs textes au pool.</div>`;
+/* ── render ──────────────────────────────────────────────────────────── */
+function render(){ renderPalette(); renderBoard(); }
+
+function setTab(t){ tab=t; document.querySelectorAll(".ptab").forEach(b=>b.classList.remove("on")); $("#tab-"+t).classList.add("on"); $("#poolq").style.display = t==="chron"?"":"none"; renderPalette(); }
+
+function renderPalette(){
+  const placedArt = new Set(PLACEMENTS.map(p=>p.article_id));
+  const placedAd  = new Set(ADPLACEMENTS.map(p=>p.ad_id));
+  const availChron = POOL.filter(a=>!placedArt.has(a.id));
+  const availAds   = ADS.filter(a=>!placedAd.has(a.id));
+  $("#n-chron").textContent = availChron.length||"";
+  $("#n-ads").textContent   = availAds.length||"";
+  $("#n-img").textContent   = IMAGES.length||"";
+  const body=$("#paletteBody");
+  if(tab==="chron"){
+    body.innerHTML = availChron.length ? availChron.map(a=>`
+      <div class="pal" draggable="true" ondragstart='onDragStart(event,{kind:"pool-article",id:"${a.id}"})' ondragend="onDragEnd(event)">
+        ${a.image_url?`<img class="thumb" src="${esc2(a.image_url)}">`:""}
+        <div class="info">
+          <div class="t">${esc2(a.headline||"(sans titre)")}</div>
+          <div class="by">${a.author_avatar?`<img class="byav" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")}${srcTag(a)}</div>
+          <div class="acts">
+            <button onclick="quickAdd('${a.id}')" title="Ajouter en Mineurs">＋ Placer</button>
+            <button class="pdel" title="Supprimer la chronique" onclick="deleteChronicle('${a.id}')">🗑</button>
+          </div>
+        </div>
+      </div>`).join("") : `<div class="empty">Aucune chronique à placer. Les chroniqueurs soumettent leurs textes au pool.</div>`;
+  } else if(tab==="ads"){
+    body.innerHTML = availAds.length ? availAds.map(a=>`
+      <div class="pal" draggable="true" ondragstart='onDragStart(event,{kind:"pool-ad",id:"${a.id}"})' ondragend="onDragEnd(event)">
+        ${a.image_url?`<img class="thumb" src="${esc2(a.image_url)}">`:""}
+        <div class="info">
+          <span class="cat">${esc2(catLabel(a.category))}</span>
+          <div class="t">${esc2(a.title||"(réclame)")}</div>
+          <div class="by">${esc2(a.maker||a.advertiser_name||"")}</div>
+          <div class="acts"><button onclick="quickAddAd('${a.id}')" title="Placer la réclame">＋ Placer</button></div>
+        </div>
+      </div>`).join("") : `<div class="empty">Aucune réclame approuvée pour cette édition. Validez-les dans le studio (ads.html).</div>`;
+  } else {
+    body.innerHTML = IMAGES.length
+      ? `<div id="imgGrid">${IMAGES.map((im,i)=>`
+          <figure draggable="true" ondragstart='onDragStart(event,{kind:"image",i:${i}})' ondragend="onDragEnd(event)" title="Glissez sur une chronique">
+            <img src="${esc2(im.url)}">
+            <figcaption>${esc2(im.caption||im.uploader_name||"")}</figcaption>
+          </figure>`).join("")}</div>`
+      : `<div class="empty">Aucune image au portfolio. Les illustrateurs en déposent dans leur espace.</div>`;
+  }
 }
+
 function renderBoard(){
-  $("#boardGroups").innerHTML = WEIGHTS.map(([w,label])=>{
-    const grp = PLACEMENTS.filter(p=>p.weight===w).sort((a,b)=>(a.position-b.position));
-    return `<div class="grp"><div class="grplabel">${label}${grp.length?` · ${grp.length}`:""}</div>
-      ${grp.length ? grp.map(p=>pcard(p)).join("") : `<div class="empty" style="padding:.3rem .2rem">—</div>`}</div>`;
+  const zones = WEIGHTS.map(([w,label])=>{
+    const grp = PLACEMENTS.filter(p=>p.weight===w).sort((a,b)=>a.position-b.position);
+    return `<section class="zone">
+      <div class="zonelabel">${label}${grp.length?` <span class="n">· ${grp.length}</span>`:""}</div>
+      <div class="dropwrap" ondragover="onZoneOver(event,'${w}')" ondragleave="onZoneLeave(event)" ondrop="onZoneDrop(event,'${w}')">
+        ${grp.length ? grp.map(pcard).join("") : `<div class="ph">Glissez une chronique ici</div>`}
+      </div>
+    </section>`;
   }).join("");
+  const ads = ADPLACEMENTS.slice().sort((a,b)=>a.position-b.position);
+  const adZone = `<section class="zone">
+    <div class="zonelabel ads">Réclames${ads.length?` <span class="n">· ${ads.length}</span>`:""}</div>
+    <div class="dropwrap" ondragover="onZoneOver(event,'ads')" ondragleave="onZoneLeave(event)" ondrop="onZoneDrop(event,'ads')">
+      ${ads.length ? ads.map(adcard).join("") : `<div class="ph">Glissez une réclame ici</div>`}
+    </div>
+  </section>`;
+  $("#boardZones").innerHTML = zones + adZone;
 }
+
 function pcard(p){
   const a=p.article||{}; const photo = p.image_url || a.image_url || "";
-  const wbtns = WEIGHTS.map(([w,l])=>`<button class="wbtn ${p.weight===w?'on':''}" onclick="setWeight('${p.id}','${w}')">${l[0]}</button>`).join("");
-  return `<div class="pcard ${p.published?'pub':''}">
+  return `<div class="pcard ${p.published?'pub':''}" draggable="true"
+      ondragstart='onDragStart(event,{kind:"placement",id:"${p.id}"})' ondragend="onDragEnd(event)"
+      ondragover="onCardOver(event)" ondragleave="onCardLeave(event)" ondrop="onCardDrop(event,'${p.id}')"
+      ondblclick="openEdit('placement','${p.id}')" title="Double-cliquez pour éditer · glissez une image pour la photo">
+    <span class="grip">⠿</span>
     ${photo?`<img class="thumb" src="${esc2(photo)}">`:""}
     <div class="info">
       <div class="t">${esc2(a.headline||"(sans titre)")}</div>
       <div class="by">${a.author_avatar?`<img class="byav" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")}${srcTag(a)}</div>
-      <div class="acts">
-        <span title="Proéminence">${wbtns}</span>
-        <button onclick="movePlacement('${p.id}','up')" title="Monter">▲</button>
-        <button onclick="movePlacement('${p.id}','down')" title="Descendre">▼</button>
-        <button onclick="openPhoto('${p.id}')" title="Photo">🖼</button>
-        ${p.published
-          ? `<button class="unpubbtn" onclick="togglePub('${p.id}',false)">Dépublier</button>`
-          : `<button class="pubbtn" onclick="togglePub('${p.id}',true)">Publier</button>`}
-        <button class="rm" onclick="removePlacement('${p.id}')" title="Retirer de cette édition">Retirer</button>
-        <button class="rm" onclick="deleteChronicle('${a.id}')" title="Supprimer la chronique (de tous les journaux)">🗑</button>
-      </div>
-    </div></div>`;
+    </div>
+    <span class="dot"></span><span class="editcue">✎</span>
+  </div>`;
 }
-async function addToBoard(articleId){ try{ await Placements.add(articleId, ISSUE); await load(); }catch(e){ toast(e.message); } }
+function adcard(p){
+  const a=p.ad||{};
+  return `<div class="pcard adcard ${p.published?'pub':''}" draggable="true"
+      ondragstart='onDragStart(event,{kind:"ad-placement",id:"${p.id}"})' ondragend="onDragEnd(event)"
+      ondblclick="openEdit('ad','${p.id}')" title="Double-cliquez pour éditer">
+    <span class="grip">⠿</span>
+    ${a.image_url?`<img class="thumb" src="${esc2(a.image_url)}">`:""}
+    <div class="info">
+      <span class="cat" style="font-size:.62rem;color:#7a5a2a;text-transform:uppercase">${esc2(catLabel(a.category))}</span>
+      <div class="t">${esc2(a.title||"(réclame)")}</div>
+      <div class="by">${esc2(a.maker||a.advertiser_name||"")}</div>
+    </div>
+    <span class="dot"></span><span class="editcue">✎</span>
+  </div>`;
+}
+
+/* ── drag & drop ─────────────────────────────────────────────────────── */
+function onDragStart(e,payload){ DRAG=payload; e.dataTransfer.effectAllowed="move"; try{e.dataTransfer.setData("text/plain",JSON.stringify(payload));}catch(_){ } e.currentTarget.classList.add("dragging"); }
+function onDragEnd(e){ e.currentTarget.classList.remove("dragging"); clearHi(); DRAG=null; }
+function clearHi(){ document.querySelectorAll(".drop-hi").forEach(el=>el.classList.remove("drop-hi")); document.querySelectorAll(".photo-hi").forEach(el=>el.classList.remove("photo-hi")); }
+function zoneAccepts(zone,kind){ return zone==="ads" ? (kind==="pool-ad"||kind==="ad-placement") : (kind==="pool-article"||kind==="placement"); }
+function onZoneOver(e,zone){ if(DRAG&&zoneAccepts(zone,DRAG.kind)){ e.preventDefault(); e.currentTarget.classList.add("drop-hi"); } }
+function onZoneLeave(e){ e.currentTarget.classList.remove("drop-hi"); }
+// index at which to insert, from pointer Y vs the (non-dragged) cards in the zone
+function dropIndex(wrap,clientY,sel){
+  const cards=[...wrap.querySelectorAll(sel)].filter(c=>!c.classList.contains("dragging"));
+  for(let i=0;i<cards.length;i++){ const r=cards[i].getBoundingClientRect(); if(clientY < r.top+r.height/2) return i; }
+  return cards.length;
+}
+async function onZoneDrop(e,zone){
+  if(!(DRAG&&zoneAccepts(zone,DRAG.kind))) return;
+  e.preventDefault(); const d=DRAG; DRAG=null; clearHi();
+  const wrap=e.currentTarget;
+  try{
+    if(zone==="ads"){
+      const idx=dropIndex(wrap,e.clientY,".adcard");
+      if(d.kind==="pool-ad")      await addAdAt(d.id, idx);
+      else if(d.kind==="ad-placement") await moveAd(d.id, idx);
+    }else{
+      const idx=dropIndex(wrap,e.clientY,".pcard");
+      if(d.kind==="pool-article")  await addArticleAt(d.id, zone, idx);
+      else if(d.kind==="placement") await moveArticle(d.id, zone, idx);
+    }
+    await load(); reloadPreview();
+  }catch(err){ toast(err.message); }
+}
+// image → drop on a chronicle card sets its photo override
+function onCardOver(e){ if(DRAG&&DRAG.kind==="image"){ e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add("photo-hi"); } }
+function onCardLeave(e){ e.currentTarget.classList.remove("photo-hi"); }
+async function onCardDrop(e,placementId){
+  if(!(DRAG&&DRAG.kind==="image")) return;   // other kinds bubble to the zone
+  e.preventDefault(); e.stopPropagation();
+  const url=(IMAGES[DRAG.i]||{}).url||""; DRAG=null; clearHi();
+  try{ await Placements.update(placementId,{image_url:url}); await load(); reloadPreview(); toast("Photo mise à jour"); }
+  catch(err){ toast(err.message); }
+}
+
+/* ── placement ops (reorder = renumber positions of the group) ───────── */
+async function addArticleAt(articleId,weight,index){
+  const np=await Placements.add(articleId,ISSUE);
+  const ids=PLACEMENTS.filter(p=>p.weight===weight).sort((a,b)=>a.position-b.position).map(p=>p.id);
+  index=clamp(index,0,ids.length); ids.splice(index,0,np.id);
+  await Promise.all(ids.map((pid,i)=>Placements.update(pid, pid===np.id?{weight,position:i}:{position:i})));
+}
+async function moveArticle(placementId,weight,index){
+  const ids=PLACEMENTS.filter(p=>p.weight===weight&&p.id!==placementId).sort((a,b)=>a.position-b.position).map(p=>p.id);
+  index=clamp(index,0,ids.length); ids.splice(index,0,placementId);
+  await Promise.all(ids.map((pid,i)=>Placements.update(pid, pid===placementId?{weight,position:i}:{position:i})));
+}
+async function addAdAt(adId,index){
+  const np=await AdPlacements.add(adId,ISSUE);
+  const ids=ADPLACEMENTS.slice().sort((a,b)=>a.position-b.position).map(p=>p.id);
+  index=clamp(index,0,ids.length); ids.splice(index,0,np.id);
+  await Promise.all(ids.map((pid,i)=>AdPlacements.update(pid,{position:i})));
+}
+async function moveAd(placementId,index){
+  const ids=ADPLACEMENTS.filter(p=>p.id!==placementId).sort((a,b)=>a.position-b.position).map(p=>p.id);
+  index=clamp(index,0,ids.length); ids.splice(index,0,placementId);
+  await Promise.all(ids.map((pid,i)=>AdPlacements.update(pid,{position:i})));
+}
+
+/* palette ＋ buttons (non-DnD fallback) */
+async function quickAdd(articleId){ try{ await addArticleAt(articleId,"minor",1e9); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
+async function quickAddAd(adId){ try{ await addAdAt(adId,1e9); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
+
 async function deleteChronicle(id){
   const a = (PLACEMENTS.find(p=>p.article_id===id)||{}).article || POOL.find(x=>x.id===id) || {};
   if(!confirm(`Supprimer définitivement la chronique « ${a.headline||"sans titre"} » ?\nElle disparaîtra de TOUS les journaux où elle paraît. Action irréversible.`)) return;
-  try{ await Chronicles.remove(id); await load(); reloadPreview(); toast("Chronique supprimée"); }
+  try{ await Chronicles.remove(id); if(currentEdit&&currentEdit.kind==="placement") closeEdit(); await load(); reloadPreview(); toast("Chronique supprimée"); }
   catch(e){ toast("Refusé : "+e.message+" (auteur ou éditeur uniquement)"); }
 }
-async function removePlacement(id){ if(!confirm("Retirer cette chronique de l’édition ?"))return; try{ await Placements.remove(id); await load(); }catch(e){ toast(e.message); } }
-async function setWeight(id,w){ try{ await Placements.update(id,{weight:w}); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
-async function togglePub(id,pub){ try{ await Placements.update(id,{published:pub}); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
-async function movePlacement(id,dir){
-  const me=PLACEMENTS.find(p=>p.id===id); if(!me) return;
-  const grp=PLACEMENTS.filter(p=>p.weight===me.weight).sort((a,b)=>(a.position-b.position));
-  const i=grp.findIndex(p=>p.id===id), j=dir==="up"?i-1:i+1;
-  if(j<0||j>=grp.length) return;
-  const order=grp.map(p=>p.id); [order[i],order[j]]=[order[j],order[i]];
-  try{ await Promise.all(order.map((pid,idx)=>Placements.update(pid,{position:idx}))); await load(); reloadPreview(); }
+
+/* ── edit panel (layout only) ────────────────────────────────────────── */
+function openEdit(kind,id){ currentEdit={kind,id}; $("#editModal").classList.add("open"); renderEditBody(); }
+function closeEdit(){ currentEdit=null; $("#editModal").classList.remove("open"); }
+function renderEditBody(){
+  if(!currentEdit) return;
+  const {kind,id}=currentEdit;
+  if(kind==="placement"){
+    const p=getPl(id); if(!p){ closeEdit(); return; }
+    const a=p.article||{}; const photo=p.image_url||a.image_url||"";
+    $("#editTitle").textContent = "Mise en page — "+(a.headline||"chronique");
+    const wbtns=WEIGHTS.map(([w,l])=>`<button class="ebtn ${p.weight===w?'on':''}" onclick="mWeight('${w}')">${l}</button>`).join("");
+    $("#editBody").innerHTML=`
+      <div class="erow"><div class="lbl">Proéminence</div><div class="ctl">${wbtns}</div></div>
+      <div class="erow"><div class="lbl">Photo</div><div class="ctl">
+        ${photo?`<img class="ethumb" src="${esc2(photo)}">`:`<span class="enote">Photo suggérée par l’auteur si vide.</span>`}
+        <button class="ebtn" onclick="openPhoto('${p.id}')">🖼 Choisir</button>
+        ${p.image_url?`<button class="ebtn danger" onclick="mPhoto('')">Retirer l’override</button>`:""}
+      </div></div>
+      <div class="erow"><div class="lbl">Ordre</div><div class="ctl">
+        <button class="ebtn" onclick="mOrder(-1)">▲ Monter</button>
+        <button class="ebtn" onclick="mOrder(1)">▼ Descendre</button>
+        <span class="enote">dans « ${WLABEL[p.weight]} »</span>
+      </div></div>
+      <div class="erow"><div class="lbl">Publication</div><div class="ctl">
+        ${p.published
+          ? `<button class="ebtn unpub" onclick="mPub(false)">Dépublier</button><span class="enote">Visible dans le journal.</span>`
+          : `<button class="ebtn pub" onclick="mPub(true)">Publier</button><span class="enote">Brouillon — non visible.</span>`}
+      </div></div>
+      <div class="erow"><div class="lbl">Retirer</div><div class="ctl">
+        <button class="ebtn danger" onclick="mRemove()">Retirer de cette édition</button>
+        <button class="ebtn danger" onclick="deleteChronicle('${a.id}')">🗑 Supprimer la chronique</button>
+      </div></div>`;
+  }else{
+    const p=getAp(id); if(!p){ closeEdit(); return; }
+    const a=p.ad||{};
+    $("#editTitle").textContent = "Mise en page — réclame";
+    $("#editBody").innerHTML=`
+      <div class="erow"><div class="lbl">Réclame</div><div class="ctl">
+        ${a.image_url?`<img class="ethumb" src="${esc2(a.image_url)}">`:""}
+        <div><div style="font-weight:700">${esc2(a.title||"(réclame)")}</div><div class="enote">${esc2(catLabel(a.category))} · ${esc2(a.maker||a.advertiser_name||"")}</div></div>
+      </div></div>
+      <div class="erow"><div class="lbl">Ordre</div><div class="ctl">
+        <button class="ebtn" onclick="mOrder(-1)">▲ Monter</button>
+        <button class="ebtn" onclick="mOrder(1)">▼ Descendre</button>
+      </div></div>
+      <div class="erow"><div class="lbl">Publication</div><div class="ctl">
+        ${p.published
+          ? `<button class="ebtn unpub" onclick="mPub(false)">Dépublier</button>`
+          : `<button class="ebtn pub" onclick="mPub(true)">Publier</button>`}
+      </div></div>
+      <div class="erow"><div class="lbl">Contenu</div><div class="ctl">
+        <a class="ebtn link" href="ads.html" target="_blank">Modifier le contenu dans le studio ↗</a>
+        <span class="enote">Le texte et l’image appartiennent à l’annonceur.</span>
+      </div></div>
+      <div class="erow"><div class="lbl">Retirer</div><div class="ctl">
+        <button class="ebtn danger" onclick="mRemove()">Retirer de cette édition</button>
+      </div></div>`;
+  }
+}
+async function afterEdit(){ await load(); reloadPreview(); renderEditBody(); }
+async function mWeight(w){ const p=getPl(currentEdit.id); if(!p) return; try{ await moveArticle(p.id,w,1e9); await afterEdit(); }catch(e){ toast(e.message); } }
+async function mPhoto(url){ try{ await Placements.update(currentEdit.id,{image_url:url}); await afterEdit(); }catch(e){ toast(e.message); } }
+async function mPub(pub){
+  try{
+    if(currentEdit.kind==="placement") await Placements.update(currentEdit.id,{published:pub});
+    else await AdPlacements.update(currentEdit.id,{published:pub});
+    await afterEdit();
+  }catch(e){ toast(e.message); }
+}
+async function mOrder(delta){
+  try{
+    if(currentEdit.kind==="placement"){
+      const p=getPl(currentEdit.id); if(!p) return;
+      const ids=PLACEMENTS.filter(x=>x.weight===p.weight).sort((a,b)=>a.position-b.position).map(x=>x.id);
+      const i=ids.indexOf(p.id); await moveArticle(p.id,p.weight,clamp(i+delta,0,ids.length-1));
+    }else{
+      const p=getAp(currentEdit.id); if(!p) return;
+      const ids=ADPLACEMENTS.slice().sort((a,b)=>a.position-b.position).map(x=>x.id);
+      const i=ids.indexOf(p.id); await moveAd(p.id,clamp(i+delta,0,ids.length-1));
+    }
+    await afterEdit();
+  }catch(e){ toast(e.message); }
+}
+async function mRemove(){
+  const kind=currentEdit.kind, id=currentEdit.id;
+  if(!confirm("Retirer de cette édition ?")) return;
+  try{ if(kind==="placement") await Placements.remove(id); else await AdPlacements.remove(id); closeEdit(); await load(); reloadPreview(); }
   catch(e){ toast(e.message); }
 }
-// photo override via portfolio
+
+/* ── portfolio photo picker (sets the edited placement's image_url) ──── */
 async function openPhoto(id){
-  photoTarget=id; $("#photoModal").style.display="flex";
-  let imgs=[]; try{ imgs=await Portfolio.list(); }catch(e){}
+  photoTarget=id; $("#photoModal").classList.add("open");
+  let imgs=IMAGES; if(!imgs.length){ try{ imgs=await Portfolio.list(); }catch(e){ imgs=[]; } }
   $("#photoGrid").innerHTML =
     `<figure onclick="setPhoto('')"><div style="height:90px;display:flex;align-items:center;justify-content:center;color:#9a907c">✕ aucune</div><figcaption>Retirer la photo</figcaption></figure>`
     + imgs.map(im=>`<figure onclick="setPhoto('${esc2(im.url)}')"><img src="${esc2(im.url)}"><figcaption>${esc2(im.caption||im.uploader_name||"")}</figcaption></figure>`).join("");
 }
-function closePhoto(){ $("#photoModal").style.display="none"; photoTarget=null; }
-async function setPhoto(url){ if(!photoTarget) return; try{ await Placements.update(photoTarget,{image_url:url}); closePhoto(); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
+function closePhoto(){ $("#photoModal").classList.remove("open"); photoTarget=null; }
+async function setPhoto(url){
+  if(!photoTarget) return;
+  try{ await Placements.update(photoTarget,{image_url:url}); closePhoto(); await load(); reloadPreview(); if(currentEdit) renderEditBody(); }
+  catch(e){ toast(e.message); }
+}
+
+// close modals on backdrop click / Escape
+document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{ if(e.target===m){ if(m.id==="photoModal") closePhoto(); else closeEdit(); } }));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#photoModal").classList.contains("open")) closePhoto(); else if(currentEdit) closeEdit(); } });
 
 async function runExport(){
   const s=await Auth.session(); if(!s) return;
@@ -253,10 +551,15 @@ async function boot(){
       <p class="hint">Vous venez d’être nommé éditeur ? <a href="#" onclick="location.reload();return false">Actualisez la page</a>.</p>`); return;
   }
   $("#gate").style.display="none"; $("#hdr").style.display=""; $("#app").style.display="grid";
+  NavUser.render($("#navuser"), {
+    profile: prof, email: s.user.email, role: "editor",
+    roleLabel: () => "Rédacteur en chef", onLogout: signOut,
+  });
   $("#paperName").textContent=PAPER.name||ISSUE;
   $("#openPaper").href=`paper.html?issue=${encodeURIComponent(ISSUE)}`;
   reloadPreview();
   Placements.subscribe(ISSUE, ()=>load());
+  AdPlacements.subscribe(ISSUE, ()=>load());
   await load();
 }
 boot();
