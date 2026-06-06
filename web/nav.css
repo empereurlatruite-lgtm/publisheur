@@ -1,0 +1,209 @@
+/* ============================================================================
+   nav.css — Publisheur shared navigation / header
+   Foxhole "Warden field-press" look: gunmetal bar, steel-blue accents,
+   brass hairlines, stencil labels, stamped-metal buttons.
+   Layered on top of each page's vintage-newspaper identity.
+
+   Loaded AFTER each page's inline <style> so these rules win at equal
+   specificity. Styling only — no markup / id / handler dependencies.
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Saira+Stencil+One&display=swap');
+
+:root{
+  --warden:#1f3a5f;          /* Warden steel-blue (matches L'Écho du Front) */
+  --warden-hi:#2f6d96;       /* hover / lighter steel */
+  --gun-1:#2b3742;           /* gunmetal panel — top of gradient */
+  --gun-2:#19232c;           /* gunmetal panel — bottom of gradient */
+  --plate-1:#37454f;         /* stamped button plate — top */
+  --plate-2:#28333c;         /* stamped button plate — bottom */
+  --brass:#b08d57;           /* brass hairline + rivets (military touch) */
+  --nav-ink:#eadfc9;         /* warm light text on the bar */
+  --nav-edge:#46555f;        /* button edge */
+}
+
+/* ---- The bar itself (all three nav shells unified) ----------------------- */
+header,
+.toolbar{
+  background:linear-gradient(180deg,var(--gun-1),var(--gun-2));
+  color:var(--nav-ink);
+  border-bottom:3px solid var(--warden);
+  /* thin brass hairline above the steel-blue rule + soft drop shadow */
+  box-shadow:0 3px 0 -2px var(--brass), 0 6px 16px rgba(0,0,0,.45);
+  position:relative;
+}
+/* faint riveted-steel texture + top inner highlight */
+header::before,
+.toolbar::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.06),transparent 40%),
+    radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:auto, 4px 4px;
+}
+header > *,
+.toolbar > *{position:relative;z-index:1}
+
+/* ---- Brand / title ------------------------------------------------------- */
+header h1,
+.toolbar b{
+  color:var(--nav-ink);
+  display:inline-flex;align-items:center;gap:.55rem;
+}
+/* tool-page titles get the stencil treatment; small Warden chevron insignia */
+.toolbar b::before,
+header:not(.top) h1::before{
+  content:"";
+  width:.62rem;height:.62rem;flex:none;
+  background:var(--warden-hi);
+  border:1px solid var(--brass);
+  transform:rotate(45deg);            /* a riveted lozenge insignia */
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.25);
+}
+header:not(.top) h1,
+.toolbar b{
+  font-family:"Oswald","Playfair Display",sans-serif;
+  font-weight:700;text-transform:uppercase;letter-spacing:.10em;
+}
+
+/* ---- Buttons & links: stamped metal plates ------------------------------ */
+header a,header button,
+.toolbar a.btn,.toolbar button,
+header.top .news{
+  font-family:"Oswald",system-ui,sans-serif;
+  font-weight:600;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--nav-ink);
+  background:linear-gradient(180deg,var(--plate-1),var(--plate-2));
+  border:1px solid var(--nav-edge);
+  border-radius:3px;                  /* sharp, military — not pill */
+  padding:.42rem .72rem;
+  text-decoration:none;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.35rem;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 1px 2px rgba(0,0,0,.4);
+  transition:background .12s,border-color .12s,transform .05s;
+}
+header a:hover,header button:hover,
+.toolbar a.btn:hover,.toolbar button:hover,
+header.top .news:hover{
+  background:linear-gradient(180deg,var(--warden-hi),var(--warden));
+  border-color:var(--brass);
+  color:#fff;
+}
+header a:active,header button:active,
+.toolbar a.btn:active,.toolbar button:active,
+header.top .news:active{transform:translateY(1px)}
+
+/* ---- Primary CTAs: solid Warden blue with brass edge -------------------- */
+header button.go,header button.primary,
+.toolbar button.primary,
+header .navuser .navlogin,header.top .navuser .navlogin,
+header.top .news[onclick*="openIntro"]{
+  background:linear-gradient(180deg,var(--warden-hi),var(--warden));
+  border-color:var(--brass);
+  color:#fff;font-weight:700;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 1px 3px rgba(0,0,0,.5);
+}
+header button.go:hover,header button.primary:hover,
+.toolbar button.primary:hover{
+  filter:brightness(1.12);border-color:var(--brass);
+}
+
+/* ---- Form controls living in the bar (edition select, search…) --------- */
+header select,.toolbar select,
+header input,.toolbar input{
+  font-family:"Oswald",system-ui,sans-serif;
+  background:linear-gradient(180deg,var(--plate-2),#1f2830);
+  color:var(--nav-ink);border:1px solid var(--nav-edge);border-radius:3px;
+}
+
+/* ---- Account control: a clickable avatar (like most apps) → dropdown ----- */
+.navuser{position:relative;display:inline-flex;align-items:center}
+/* the engraved-portrait disc */
+.navavatar{
+  width:34px;height:34px;flex:none;padding:0;border-radius:50%;overflow:hidden;
+  border:2px solid var(--brass);background:var(--warden);
+  box-shadow:0 1px 3px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.35);
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.navavatar img{width:100%;height:100%;object-fit:cover;display:block;filter:sepia(.30) contrast(1.05) brightness(.98)}
+.navavatar-ph{font-family:"Oswald",system-ui,sans-serif;font-weight:700;font-size:.78rem;
+  letter-spacing:.02em;color:#fff;background:linear-gradient(180deg,var(--warden-hi),var(--warden))}
+
+/* the trigger is just the avatar + caret — no metal-plate chrome */
+header .navtrigger,.toolbar .navtrigger,header.top .navuser .navtrigger{
+  background:none;border:none;box-shadow:none;padding:.1rem;border-radius:999px;
+  display:inline-flex;align-items:center;gap:.18rem;cursor:pointer;transition:transform .05s}
+header .navtrigger:hover .navavatar,.toolbar .navtrigger:hover .navavatar{border-color:#e9c889}
+header .navtrigger:active,.toolbar .navtrigger:active{transform:translateY(1px)}
+.navuser.open .navavatar{border-color:#e9c889;box-shadow:0 0 0 3px rgba(176,141,87,.35)}
+.navcaret{color:var(--nav-ink);opacity:.7;font-size:.7rem;line-height:1;transition:transform .12s}
+.navuser.open .navcaret{transform:rotate(180deg)}
+
+/* the dropdown */
+.navmenu{
+  position:absolute;top:calc(100% + 9px);right:0;z-index:300;min-width:208px;
+  background:linear-gradient(180deg,#2c3742,#1d272f);
+  border:1px solid var(--nav-edge);border-radius:9px;
+  box-shadow:0 2px 0 -1px var(--brass), 0 14px 34px rgba(0,0,0,.55);
+  padding:.4rem;overflow:hidden;
+}
+.navmenu[hidden]{display:none}
+.navmenu::after{ /* little pointer toward the avatar */
+  content:"";position:absolute;top:-6px;right:14px;width:10px;height:10px;
+  background:#2c3742;border-left:1px solid var(--nav-edge);border-top:1px solid var(--nav-edge);
+  transform:rotate(45deg)}
+.navmenu-head{display:flex;align-items:center;gap:.6rem;padding:.5rem .55rem .6rem;
+  border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:.35rem}
+.navavatar-lg{width:42px;height:42px}
+.navmenu-id{min-width:0;display:flex;flex-direction:column;gap:.25rem;align-items:flex-start}
+.navmenu-name{font-family:"Oswald",system-ui,sans-serif;font-weight:600;letter-spacing:.02em;
+  color:var(--nav-ink);font-size:.86rem;max-width:15ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* menu items — flat rows, not metal plates (override the generic header button rule) */
+header .navmenu-item,.toolbar .navmenu-item,header.top .navuser .navmenu-item{
+  display:flex;align-items:center;gap:.5rem;width:100%;text-align:left;
+  background:none;border:none;box-shadow:none;border-radius:6px;
+  font-family:"Oswald",system-ui,sans-serif;font-weight:600;text-transform:none;letter-spacing:.02em;
+  font-size:.84rem;color:var(--nav-ink);padding:.5rem .55rem;cursor:pointer}
+header .navmenu-item:hover,.toolbar .navmenu-item:hover{background:rgba(255,255,255,.08)}
+header .navmenu-logout,.toolbar .navmenu-logout{color:#f0b8b0}
+header .navmenu-logout:hover,.toolbar .navmenu-logout:hover{background:rgba(154,59,52,.55);color:#fff}
+
+/* ---- Status chips ------------------------------------------------------- */
+header .who,.toolbar .who{color:var(--nav-ink);opacity:.75;font-family:"Oswald",system-ui,sans-serif;letter-spacing:.04em}
+header .rolebadge,.toolbar .rolebadge{
+  font-family:"Oswald",system-ui,sans-serif;font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--nav-ink);background:rgba(0,0,0,.25);
+  border:1px solid var(--nav-edge);border-radius:3px;padding:.12rem .42rem;
+}
+
+/* ============================================================================
+   Kiosque masthead (index.html header.top) — keep the big serif nameplate,
+   dress the frame in Warden steel + brass.
+   ============================================================================ */
+header.top{
+  background:linear-gradient(180deg,#1b2733,#10171e);
+  text-align:center;padding:1.6rem 1.2rem 1.3rem;
+  border-bottom:4px double var(--warden);
+  box-shadow:0 4px 0 -2px var(--brass), 0 8px 20px rgba(0,0,0,.5);
+}
+header.top h1{
+  display:block;margin:0;                 /* keep masthead centered, no insignia */
+  font-family:"Playfair Display",serif;font-weight:900;font-size:2.6rem;
+  text-transform:none;letter-spacing:.01em;color:#f3ead6;
+}
+header.top h1::before{content:none}
+header.top .sub{
+  font-family:"Oswald",sans-serif;font-style:normal;font-weight:500;
+  text-transform:uppercase;letter-spacing:.22em;font-size:.72rem;
+  color:var(--brass);opacity:.95;margin-top:.45rem;
+}
+header.top .topright{position:absolute;right:1rem;top:1rem;display:flex;gap:.5rem}
+
+/* ---- Mobile: let the bar wrap gracefully -------------------------------- */
+@media (max-width:640px){
+  header,.toolbar{flex-wrap:wrap;gap:.4rem}
+  header a,header button,
+  .toolbar a.btn,.toolbar button,
+  header.top .news{font-size:.72rem;padding:.38rem .6rem}
+  header.top .topright{position:static;justify-content:center;margin-bottom:.6rem}
+}

@@ -10,12 +10,10 @@
   :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6;}
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-  header{background:#211f1c;color:#f3ead6;display:flex;align-items:center;gap:1rem;padding:.6rem 1.1rem;flex:none}
-  header h1{font-family:"Playfair Display",serif;font-size:1.3rem;margin:0;letter-spacing:.02em}
+  /* header visuals come from shared nav.css; layout stays here */
+  header{display:flex;align-items:center;gap:1rem;padding:.6rem 1.1rem;flex:none}
+  header h1{font-size:1.3rem;margin:0}
   header .grow{flex:1}
-  header .who{font-size:.78rem;opacity:.8}
-  header a,header button{font:inherit;color:#f3ead6;background:#3a3631;border:1px solid #555;border-radius:5px;padding:.4rem .7rem;text-decoration:none;cursor:pointer}
-  header button.primary{background:var(--accent);border-color:#a33;color:#fff;font-weight:600}
 
   main{flex:1;display:grid;grid-template-columns:300px 1fr 1fr;min-height:0}
   .col{min-height:0;overflow:auto;border-right:1px solid var(--line)}
@@ -128,8 +126,21 @@
   .dcard.echo  .dmast{font-family:"Oswald",sans-serif;font-weight:700;text-transform:uppercase;color:#1f3a5f;font-size:1.6rem}
   .dcard .dtag{text-align:center;font-style:italic;color:#7a7060;font-size:.8rem;margin-bottom:.6rem}
   .dcard .dmeta{text-align:center;font-size:.74rem;color:#9a907c;margin-top:auto}
+  .dcard .dstatus{align-self:center;font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;border-radius:999px;padding:.12rem .6rem;margin-bottom:.2rem}
+  .dcard .dstatus.pub{color:#2f6b3f;background:#eef6f0;border:1px solid #bcd6c4}
+  .dcard .dstatus.draft{color:#8a6a1f;background:#f7f0db;border:1px solid #e0d2a8}
+  .dcard .dstatus.load{color:#b3a88f;background:#fff;border:1px dashed #cfc4ab}
+  .dcard .dstats{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin:.3rem 0 .5rem}
+  .dcard .dstat{font-size:.72rem;border:1px solid var(--line);border-radius:999px;padding:.12rem .55rem;background:#fff;color:#6a6253;white-space:nowrap}
+  .dcard .dstat.pub{color:#2f6b3f;border-color:#bcd6c4;background:#eef6f0}
+  .dcard .dstat.prep{color:#8a6a1f;border-color:#e0d2a8;background:#f7f0db}
+  .dcard .dstat.load{color:#b3a88f;border-style:dashed}
+  .dashsub .dpool{display:inline-block;margin-top:.2rem;color:#6a6253}
+  .dashsub .dpool b{color:var(--accent)}
   .dcard .dacts{display:flex;gap:.5rem;margin-top:.7rem}
   .dcard .dacts .open{flex:1;font:inherit;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:.5rem;cursor:pointer;font-weight:600}
+  .dcard .dacts .manage{font:inherit;border:1px solid #c9bda0;background:#fff;color:#6a6253;border-radius:6px;padding:.5rem .6rem;cursor:pointer}
+  .dcard .dacts .manage:hover{background:#f3ecdd;color:var(--ink)}
   .dcard .dacts .del{font:inherit;border:1px solid #d8b6b2;background:#fff;color:#7a1f1a;border-radius:6px;padding:.5rem .6rem;cursor:pointer}
   .dcard.dnew{align-items:center;justify-content:center;text-align:center;border:2px dashed #c9bda0;background:#fffdf7;cursor:pointer;color:#6a6253}
   .dcard.dnew:hover{border-color:var(--accent);color:var(--accent)}
@@ -166,6 +177,7 @@
   .gate .err{color:#ff9b8e;font-size:.82rem;margin-top:.6rem;min-height:1em}
   .gate code{background:#1f1c18;padding:.1rem .3rem;border-radius:4px}
 </style>
+<link rel="stylesheet" href="nav.css">
 </head>
 <body>
 
@@ -185,7 +197,6 @@
       style="font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:5px;padding:.25rem .4rem"></select>
   </label>
   <span class="grow"></span>
-  <span class="who" id="who"></span><span class="rolebadge" id="rolebadge" style="display:none"></span>
   <a href="index.html">📰 Kiosque</a>
   <button id="portfolioLink" onclick="openPortfolio()">🖼 Portfolio</button>
   <a id="adsLink" href="ads.html" style="display:none">📣 Réclames</a>
@@ -194,7 +205,7 @@
   <button onclick="openProfile()">Mon profil</button>
   <button id="newBtn" onclick="newArticle()">+ Article</button>
   <a id="openPaper" href="paper.html" target="_blank">Open full paper ↗</a>
-  <button onclick="doSignOut()">Sign out</button>
+  <span class="navuser" id="navuser"></span>
 </header>
 
 <!-- Editions dashboard (the landing for contributors) -->
@@ -294,14 +305,14 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, configured } = window.Daihbi;
+const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, NavUser, configured } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 let PAPERS = window.DAIHBI_PAPERS || {};
 let MY_MANAGED = [];   // issues this editor owns/co-edits
 let current = null;
 let MYROLE = "reader", MYPROFILE = null, MY_EMAIL = "";
 let PROFMAP = {};   // user id → display name (for "édité par …")
-const ROLE_LABELS = { reader:"Lecteur", writer:"Rédacteur", illustrator:"Illustrateur", editor:"Éditeur", annonceur:"Annonceur" };
+const ROLE_LABELS = { reader:"Lecteur", writer:"Chroniqueur", illustrator:"Illustrateur / Propagandiste", editor:"Rédacteur en chef", annonceur:"Annonceur" };
 const roleLabel = r => ROLE_LABELS[r] || r;
 const nameOf = id => (id && PROFMAP[id]) || (id ? "—" : "");
 
@@ -340,7 +351,7 @@ function loginScreen(msg, mode, preRole){
     ${up ? `
       <input id="display_name" type="text" placeholder="Nom de plume (affiché)" autocomplete="name">
       <div class="rolepick">
-        ${radio("reader","Lecteur")}${radio("writer","Rédacteur")}${radio("illustrator","Illustrateur")}${radio("annonceur","Annonceur")}
+        ${radio("reader","Lecteur")}${radio("writer","Chroniqueur")}${radio("illustrator","Illustrateur / Propagandiste")}${radio("annonceur","Annonceur")}
       </div>
       <select id="clan">${(window.DAIHBI_CLANS||["Indépendant"]).map(c=>`<option>${c}</option>`).join("")}</select>
     ` : ""}
@@ -348,7 +359,8 @@ function loginScreen(msg, mode, preRole){
     <div class="err" id="loginErr">${msg||""}</div>
     ${up
       ? `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">Déjà un compte ? <a href="#" onclick="loginScreen(null,'signin');return false">Se connecter</a>.</p>`
-      : `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">Pas de mot de passe ? <a href="#" onclick="sendLink();return false">Recevoir un lien par e-mail</a>.</p>`}`);
+      : `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">Pas de mot de passe ? <a href="#" onclick="sendLink();return false">Recevoir un lien par e-mail</a>
+           · <a href="#" onclick="Daihbi.AuthModal.openForgot(($('#email')||{}).value);return false">Mot de passe oublié&nbsp;?</a></p>`}`);
   const act = up ? doSignUp : doPasswordLogin;
   const pw=$("#password"); if(pw) pw.addEventListener("keydown",e=>{if(e.key==="Enter")act();});
   const inp=$("#email"); if(inp) inp.addEventListener("keydown",e=>{if(e.key==="Enter")$("#password").focus();});
@@ -382,6 +394,12 @@ async function sendLink(){
   catch(e){ $("#loginErr").textContent=e.message; }
 }
 async function doSignOut(){ await Auth.signOut(); location.reload(); }
+function refreshNavUser(){
+  NavUser.render($("#navuser"), {
+    profile: MYPROFILE, email: MY_EMAIL, role: MYROLE, roleLabel,
+    onLogout: doSignOut, onAvatar: openProfile,
+  });
+}
 
 // ── Form ──────────────────────────────────────────────────────────────────
 function formData(){
@@ -389,6 +407,9 @@ function formData(){
     kicker:F.kicker.value.trim(), headline:F.headline.value.trim()||"Sans titre",
     subhead:F.subhead.value.trim(), byline:F.byline.value.trim(),
     source:F.source.value, image_url:F.image.value.trim(),
+    // Snapshot the author's portrait onto the chronicle so it follows the text
+    // into every paper that runs it (the author owns their byline + face).
+    author_avatar:(MYPROFILE&&MYPROFILE.avatar_url)||"",
     body:F.body.value,
   };
 }
@@ -421,7 +442,7 @@ async function uploadImage(file){
   if(!file) return;
   $("#upstatus").textContent="Envoi de l’image…";
   try{
-    const url=await Media.upload(file);
+    const {url}=await Media.upload(file);
     F.image.value=url; showPreview(url);
     $("#upstatus").textContent="✓ Image ajoutée. N’oubliez pas d’enregistrer.";
   }catch(e){ $("#upstatus").textContent="Erreur : "+e.message; }
@@ -520,24 +541,25 @@ async function uploadAvatar(file){
   if(!file) return;
   $("#profErr").textContent="Envoi…";
   try{
-    const url=await Media.upload(file,"avatars");
+    const {url}=await Media.upload(file,"avatars");
     await Profiles.update({avatar_url:url}); MYPROFILE.avatar_url=url;
     $("#av_wrap").innerHTML=`<img class="avatarprev" src="${escapeHtml(url)}">`;
+    refreshNavUser();
     $("#profErr").textContent="";
   }catch(e){ $("#profErr").textContent="Erreur : "+e.message; }
 }
 async function saveProfile(){
   try{
     const upd=await Profiles.update({ display_name:$("#p_name").value.trim(), clan:$("#p_clan").value });
-    MYPROFILE=upd; $("#who").textContent=upd.display_name||MYPROFILE.display_name||"";
+    MYPROFILE=upd; refreshNavUser();
     hideGate(); toast("Profil enregistré");
   }catch(e){ $("#profErr").textContent="Erreur : "+e.message; }
 }
 function readerGate(){
   showGate(`<h2>Espace lecteur</h2>
-    <p>Votre compte est en <b>Lecteur</b>. La rédaction est réservée aux rédacteurs, illustrateurs et éditeurs.</p>
+    <p>Votre compte est en <b>Lecteur</b>. La rédaction est réservée aux chroniqueurs, illustrateurs et éditeurs.</p>
     <a class="authlink" href="index.html" style="display:block;margin:.6rem 0;color:#e8b9b2">📰 Aller au kiosque →</a>
-    <button onclick="becomeWriter()">Devenir rédacteur</button>
+    <button onclick="becomeWriter()">Devenir chroniqueur</button>
     <p style="margin-top:.6rem;font-size:.85rem"><a href="#" onclick="doSignOut();return false">Se déconnecter</a></p>`);
 }
 async function becomeWriter(){
@@ -553,9 +575,9 @@ function advertiserGate(){
 }
 
 // ── Portfolio (illustrateurs) ───────────────────────────────────────────────
-let pPendingUrl = null;
+let pPendingUrl = null, pPendingMeta = null;
 function openPortfolio(){ $("#pmodal").style.display="flex"; renderPUpload(); loadPGrid(); }
-function closePortfolio(){ $("#pmodal").style.display="none"; pPendingUrl=null; }
+function closePortfolio(){ $("#pmodal").style.display="none"; pPendingUrl=null; pPendingMeta=null; }
 function renderPUpload(){
   const can = (MYROLE==="illustrator"||MYROLE==="editor");
   const u=$("#pUpload"); u.style.display = can ? "flex" : "none";
@@ -569,14 +591,15 @@ function renderPUpload(){
 async function pPickFile(file){
   if(!file) return;
   $("#pStatus").textContent="Envoi…";
-  try{ pPendingUrl = await Media.upload(file,"portfolio"); $("#pStatus").textContent="✓ prête — ajoutez une légende puis « Ajouter »."; }
+  try{ pPendingMeta = await Media.upload(file,"portfolio"); pPendingUrl = pPendingMeta.url; $("#pStatus").textContent="✓ prête — ajoutez une légende puis « Ajouter »."; }
   catch(e){ $("#pStatus").textContent="Erreur : "+e.message; }
 }
 async function addToPortfolio(){
   if(!pPendingUrl){ $("#pStatus").textContent="Choisissez d’abord une image."; return; }
   try{
-    await Portfolio.add({ url:pPendingUrl, caption:($("#pCap")||{}).value||"", clan:(MYPROFILE&&MYPROFILE.clan)||"", uploader_name:(MYPROFILE&&MYPROFILE.display_name)||"" });
-    pPendingUrl=null; if($("#pCap")) $("#pCap").value=""; $("#pStatus").textContent="✓ Ajoutée au portfolio.";
+    await Portfolio.add({ url:pPendingUrl, caption:($("#pCap")||{}).value||"", clan:(MYPROFILE&&MYPROFILE.clan)||"", uploader_name:(MYPROFILE&&MYPROFILE.display_name)||"",
+                          mime:pPendingMeta&&pPendingMeta.mime, bytes:pPendingMeta&&pPendingMeta.bytes, width:pPendingMeta&&pPendingMeta.width, height:pPendingMeta&&pPendingMeta.height });
+    pPendingUrl=null; pPendingMeta=null; if($("#pCap")) $("#pCap").value=""; $("#pStatus").textContent="✓ Ajoutée au portfolio.";
     await loadPGrid();
   }catch(e){ $("#pStatus").textContent="Erreur : "+e.message; }
 }
@@ -647,9 +670,11 @@ async function createJournal(){
     location.href=`board.html?issue=${encodeURIComponent(p.issue)}`;   // lay it out (pull from the pool)
   }catch(e){ $("#jErr").textContent=e.message; }
 }
-function openManageJournal(){
-  const p = Object.assign({issue:ISSUE}, PAPERS[ISSUE]||{});
-  $("#jTitle").textContent="Gérer : "+(p.name||ISSUE);
+let manageIssue = ISSUE;   // which journal the manage modal is editing
+function openManageJournal(issue){
+  manageIssue = issue || ISSUE;
+  const p = Object.assign({issue:manageIssue}, PAPERS[manageIssue]||{});
+  $("#jTitle").textContent="Gérer : "+(p.name||manageIssue);
   $("#jBody").innerHTML = journalForm(p,false)
     + `<div class="jbar"><span class="grow"></span><button class="go" onclick="saveJournal()">Enregistrer le journal</button></div>
        <div id="coeds"></div>`;
@@ -657,13 +682,13 @@ function openManageJournal(){
   loadCoEditors();
 }
 async function saveJournal(){
-  try{ await Papers.update(ISSUE, readJournal(false)); PAPERS=await Papers.map(); reloadPreview();
-    $("#jErr").textContent="✓ Enregistré."; }
+  try{ await Papers.update(manageIssue, readJournal(false)); PAPERS=await Papers.map(); reloadPreview();
+    $("#jErr").textContent="✓ Enregistré."; if($("#dash").style.display!=="none") renderDashboard(); }
   catch(e){ $("#jErr").textContent=e.message; }
 }
 async function loadCoEditors(){
   try{
-    const ids = await Papers.editors(ISSUE);
+    const ids = await Papers.editors(manageIssue);
     const profs = await Profiles.all();
     const byId = Object.fromEntries(profs.map(p=>[p.id,p]));
     const rows = ids.map(id=>{ const pr=byId[id]||{}; return `<div class="coed"><span class="grow">${escapeHtml(pr.display_name||id.slice(0,8))}${id===ME?" (vous)":""}</span>${id===ME?"":`<button onclick="rmCoEditor('${id}')">Retirer</button>`}</div>`; }).join("");
@@ -675,8 +700,8 @@ async function loadCoEditors(){
                :"<div style='font-size:.8rem;color:#7a7060;margin-top:.4rem'>Aucun autre éditeur à ajouter.</div>"}`;
   }catch(e){ $("#coeds").innerHTML=`<div class="jerr">${escapeHtml(e.message)}</div>`; }
 }
-async function addCoEditor(){ try{ await Papers.addEditor(ISSUE,$("#coSel").value); loadCoEditors(); }catch(e){ alert(e.message); } }
-async function rmCoEditor(id){ try{ await Papers.removeEditor(ISSUE,id); loadCoEditors(); }catch(e){ alert(e.message); } }
+async function addCoEditor(){ try{ await Papers.addEditor(manageIssue,$("#coSel").value); loadCoEditors(); }catch(e){ alert(e.message); } }
+async function rmCoEditor(id){ try{ await Papers.removeEditor(manageIssue,id); loadCoEditors(); }catch(e){ alert(e.message); } }
 function closeJournal(){ $("#jmodal").style.display="none"; }
 
 // ── Export print-grade PDF (Scribus via GitHub Action) ──────────────────────
@@ -770,8 +795,7 @@ async function boot(){
   hideGate();
   ME = session.user.id; MY_EMAIL = session.user.email || "";
   $("#hdr").style.display="";
-  $("#who").textContent = MYPROFILE.display_name || MY_EMAIL;
-  $("#rolebadge").textContent = roleLabel(MYROLE); $("#rolebadge").style.display="";
+  refreshNavUser();
   // chronicle workspace: hide paper-specific header controls
   ["editionWrap","manageLink","printLink","openPaper","homeLink"].forEach(id=>{const e=$("#"+id); if(e) e.style.display="none";});
   const nb=$("#newBtn"); if(nb) nb.textContent="✍️ Nouvelle chronique";
@@ -780,8 +804,10 @@ async function boot(){
     $("#adsLink").style.display="";
     $("#journauxLink").style.display=""; $("#chronLink").style.display="";
     try{ PAPERS = await Papers.map(); MY_MANAGED = await Papers.myManaged(); }catch(e){}
+    showJournaux();          // editors land on their newsroom (journaux), not the writing desk
+  } else {
+    showChronicles();
   }
-  showChronicles();
 }
 function showChronicles(){
   $("#dash").style.display="none"; $("#app").style.display=""; $("#app").classList.add("chron");
@@ -792,29 +818,86 @@ function showChronicles(){
 }
 function showJournaux(){ $("#app").style.display="none"; renderDashboard(); }
 function goDashboard(){ showJournaux(); }
-function renderDashboard(){
+let DASH_STATS = {};   // issue → {total, published, latest(ms), lastActivity(ms)}
+let POOL_WAITING = null;   // # chronicles submitted to the shared pool
+const dashStat = is => DASH_STATS[is] || { total:0, published:0, latest:0, lastActivity:0 };
+function fmtDay(ms){ return ms ? new Date(ms).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}) : ""; }
+
+async function renderDashboard(){
   $("#app").style.display="none"; $("#dash").style.display="";
   // hide article-context header controls on the dashboard
   ["homeLink","editionWrap","manageLink","printLink","newBtn","openPaper"].forEach(id=>{const e=$("#"+id); if(e) e.style.display="none";});
   const isEd = MYROLE==="editor";
-  $("#dashTitle").textContent = isEd ? "Mes journaux" : "Choisir un journal";
-  $("#dashSub").textContent = isEd
-    ? "Ouvrez une édition pour écrire et publier, ou créez-en une nouvelle."
-    : "Ouvrez le journal pour lequel vous voulez contribuer.";
   const issues = isEd ? MY_MANAGED.slice() : Object.keys(PAPERS);
-  const cards = issues.map(is => dashCard(is, PAPERS[is] || {name:is}));
-  if(isEd) cards.push(`<div class="dcard dnew" onclick="openCreateJournal()"><div class="dnew-plus">＋</div><div>Créer un journal</div></div>`);
-  $("#dashGrid").innerHTML = cards.length ? cards.join("")
-    : `<div class="dempty">${isEd?"Vous ne gérez encore aucun journal. Cliquez « Créer un journal ».":"Aucun journal disponible pour l’instant."}</div>`;
+  $("#dashTitle").textContent = isEd ? "Mes journaux" : "Choisir un journal";
+  $("#dashSub").innerHTML = isEd ? dashSubHTML() : "Ouvrez le journal pour lequel vous voulez contribuer.";
+  if(!isEd){
+    $("#dashGrid").innerHTML = issues.length
+      ? issues.map(is => dashCard(is, PAPERS[is] || {name:is})).join("")
+      : `<div class="dempty">Aucun journal disponible pour l’instant.</div>`;
+    return;
+  }
+  renderJournalGrid(issues);          // render with whatever stats we have (cached or none yet)
+  await loadDashStats(issues);        // refresh status + dates + pool count…
+  if($("#dash").style.display!=="none"){   // …then re-render, now sorted by publication date
+    $("#dashSub").innerHTML = dashSubHTML();
+    renderJournalGrid(issues);
+  }
 }
-function dashCard(issue, p){
+// Drafts first (newest activity), then published editions newest → oldest.
+function renderJournalGrid(issues){
+  const drafts = issues.filter(is => dashStat(is).published === 0)
+                       .sort((a,b)=> dashStat(b).lastActivity - dashStat(a).lastActivity);
+  const pubs   = issues.filter(is => dashStat(is).published > 0)
+                       .sort((a,b)=> dashStat(b).latest - dashStat(a).latest);
+  const cards = [...drafts, ...pubs].map(is => dashCard(is, PAPERS[is] || {name:is}, DASH_STATS[is]));
+  cards.push(`<div class="dcard dnew" onclick="openCreateJournal()"><div class="dnew-plus">＋</div><div>Créer un journal</div></div>`);
+  $("#dashGrid").innerHTML = cards.join("");
+}
+function dashSubHTML(){
+  const base = "Brouillons d’abord, puis les parutions de la plus récente à la plus ancienne.";
+  if(POOL_WAITING===null) return base;
+  const pool = POOL_WAITING
+    ? `<b>${POOL_WAITING}</b> chronique${POOL_WAITING>1?"s":""} ${POOL_WAITING>1?"attendent":"attend"} dans le pool`
+    : "Le pool est vide pour l’instant";
+  return `${base} <span class="dpool">📥 ${pool}.</span>`;
+}
+async function loadDashStats(issues){
+  try{ POOL_WAITING = (await Chronicles.listPool()).length; }catch(e){ POOL_WAITING=null; }
+  const maxMs = arr => arr.reduce((m,p)=> Math.max(m, +new Date(p.updated_at) || 0), 0);
+  await Promise.all(issues.map(async is=>{
+    try{ const pls = await Placements.forIssue(is);
+      const pubs = pls.filter(p=>p.published);
+      DASH_STATS[is] = { total: pls.length, published: pubs.length,
+        latest: maxMs(pubs), lastActivity: maxMs(pls) };
+    }catch(e){ DASH_STATS[is] = { total:0, published:0, latest:0, lastActivity:0 }; }
+  }));
+}
+function dashStatsHTML(st){
+  if(!st) return `<div class="dstats"><span class="dstat load">…</span></div>`;
+  const prep = Math.max(0, st.total - st.published);
+  return `<div class="dstats">
+    <span class="dstat pub" title="Chroniques publiées (visibles au kiosque)">● ${st.published} publiée${st.published>1?"s":""}</span>
+    <span class="dstat prep" title="Placées dans l’édition, pas encore publiées">○ ${prep} en préparation</span>
+  </div>`;
+}
+function dashStatusHTML(st){
+  if(!st) return `<div class="dstatus load">…</div>`;
+  return st.published > 0
+    ? `<div class="dstatus pub" title="En ligne au kiosque">● Publié${st.latest?` · ${fmtDay(st.latest)}`:""}</div>`
+    : `<div class="dstatus draft" title="Aucune chronique publiée pour l’instant">○ Brouillon</div>`;
+}
+function dashCard(issue, p, st){
   const cls = ({"plate-anton":"anton","plate-echo":"echo"}[p.plate]||"fraktur");
-  return `<div class="dcard ${cls}">
+  return `<div class="dcard ${cls}" data-issue="${escapeHtml(issue)}">
+    ${dashStatusHTML(st)}
     <div class="dmast">${escapeHtml(p.name||issue)}</div>
     ${p.tagline?`<div class="dtag">${escapeHtml(p.tagline)}</div>`:""}
+    ${dashStatsHTML(st)}
     <div class="dmeta">${escapeHtml(p.clan||"")}</div>
     <div class="dacts">
       <button class="open" onclick="openEdition('${issue}')">Mettre en page →</button>
+      <button class="manage" title="Gérer le journal (titre, style, éditeurs)" onclick="openManageJournal('${issue}')">⚙</button>
       <button class="del" title="Supprimer le journal" onclick="deleteEdition('${issue}')">🗑</button>
     </div></div>`;
 }

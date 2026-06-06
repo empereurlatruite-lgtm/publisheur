@@ -98,6 +98,18 @@ def paras(body):
     return [p.strip() for p in body.replace("\r", "").split("\n\n") if p.strip()]
 
 
+def byline_text(a):
+    """The byline line + provenance badge, mirroring paper.html's srcBadge():
+    régiment of origin, or « Rédigé par IA » when the text was AI-generated."""
+    parts = []
+    if a.get("byline"):
+        parts.append("par " + a["byline"])
+    src = (a.get("source") or "").strip()
+    if src:
+        parts.append("Rédigé par IA" if src.lower() in ("ia", "ai") else src)
+    return " · ".join(parts).upper()
+
+
 def fetch_image(url):
     """Download an emblem URL to a temp file; return its path (or None)."""
     if not url:
@@ -220,9 +232,10 @@ def main():
             df = scribus.createText(CX, y, CW, dh)
             add(df, lead["subhead"], "Deck")
             y += dh
-        if lead["byline"]:
+        lead_by = byline_text(lead)
+        if lead_by:
             bf = scribus.createText(CX, y, CW, 5)
-            add(bf, ("par " + lead["byline"]).upper(), "BylineC")
+            add(bf, lead_by, "BylineC")
             y += 5
         y += 1
         rule(CX, y, CX + CW, 0.4, "Hair")
@@ -252,8 +265,9 @@ def main():
         # no kicker, emit one anyway (the section/weight) so spacing holds.
         add(well, (a["kicker"] or a["weight"]).upper(), "KickerL")
         add(well, a["headline"], hstyle)
-        if a["byline"]:
-            add(well, ("par " + a["byline"]).upper(), "BylineL")
+        a_by = byline_text(a)
+        if a_by:
+            add(well, a_by, "BylineL")
         if a["subhead"]:
             add(well, a["subhead"], "Body")
         body_ps = paras(a["body"])

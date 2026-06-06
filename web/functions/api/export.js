@@ -6,6 +6,11 @@
 // Required Pages secret:  GITHUB_TOKEN  (fine-grained PAT, repo Actions: read+write)
 // (SUPABASE_URL / anon key and GH_REPO are public and inlined below; override
 //  via Pages env vars of the same name if you fork.)
+//
+// NOTE: a Pages Function runs server-side and can't read the browser's
+// web/config.js (window.DAIHBI_CONFIG). config.js stays the source of truth —
+// keep the two fallbacks below in sync with it, or set Pages env vars
+// (SUPABASE_URL / SUPABASE_ANON_KEY) so neither copy is authoritative.
 
 const SUPABASE_URL  = "https://atnmzlaiglmkykzryjar.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0bm16bGFpZ2xta3lrenJ5amFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2MTYwNjUsImV4cCI6MjA5NjE5MjA2NX0.Zw07rk3ey-UhZG_Y6-mb1IKYU-gRUIF-E-fCpXr5oW0";

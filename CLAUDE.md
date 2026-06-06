@@ -48,7 +48,7 @@ photo = `placement.image_url || article.image_url`.
   dispatches `publish.yml` to render the print PDF.
 - `supabase/*.sql` — migrations, applied by pasting into the Supabase SQL Editor **in
   order**: `schema → roles → comments → portfolio → ads → papers → revisions →
-  edited_by → pool`.
+  edited_by → pool → transparency → authors → ad_placements → media`.
 
 ## Roles
 `reader` (read anon, comment signed-in) · `writer` / `illustrator` (write chronicles;
