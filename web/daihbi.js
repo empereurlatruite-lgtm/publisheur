@@ -69,25 +69,32 @@ const Auth = {
     if (error) throw error;
     return data; // data.session is non-null when email auto-confirm is on
   },
-  async signOut() {
-    if (db) await db.auth.signOut();
-  },
-  onChange(cb) {
-    if (db) db.auth.onAuthStateChange((_e, session) => cb(session));
-  },
-  /** Email the user a password-reset link (lands back here with a recovery session). */
-  async resetPassword(email) {
+  /** Send a password-recovery email. The link returns to `redirectTo`
+   *  (defaults to editor.html) where the recovery session lets the user
+   *  set a new password via updatePassword(). */
+  async resetPassword(email, redirectTo) {
     if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    // Recovery always lands on editor.html (which hosts the "new password"
+    // screen). Prefer the configured public origin so the mailed link is the
+    // allow-listed prod one even when reset is requested from localhost.
+    const base = String(CFG.SITE_URL || "").replace(/\/+$/, "");
+    const dflt = base ? base + "/editor.html" : new URL("editor.html", location.href).href;
     const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo: authRedirect(),
+      redirectTo: redirectTo || dflt,
     });
     if (error) throw error;
   },
-  /** Set a new password for the user in the *current* (e.g. recovery) session. */
+  /** Set a new password for the currently-authenticated (or recovery) session. */
   async updatePassword(password) {
     if (!db) throw new Error("Supabase not configured (edit web/config.js).");
     const { error } = await db.auth.updateUser({ password });
     if (error) throw error;
+  },
+  async signOut() {
+    if (db) await db.auth.signOut();
+  },
+  onChange(cb) {
+    if (db) db.auth.onAuthStateChange((event, session) => cb(session, event));
   },
   /** Re-send a magic sign-in link (used when a previous link expired). */
   async resendLink(email) {
@@ -770,8 +777,8 @@ const AuthModal = (function () {
   // Auto-react to whatever Supabase put in the URL / fired on this page.
   function init() {
     if (!db) return;
-    // Recovery links: supabase-js parses the token and fires this event.
-    db.auth.onAuthStateChange(ev => { if (ev === "PASSWORD_RECOVERY") openRecovery(); });
+    // Recovery links funnel to editor.html (see Auth.resetPassword), which owns
+    // the "new password" screen — so no global recovery modal is wired here.
     // Errors are left in the URL hash (no event) — e.g. #error_code=otp_expired.
     const h = new URLSearchParams((location.hash || "").replace(/^#/, ""));
     if (h.get("error") || h.get("error_code")) {

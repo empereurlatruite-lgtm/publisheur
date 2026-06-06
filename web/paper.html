@@ -420,6 +420,7 @@ function renderCBox(){
       <input id="cPass" type="password" placeholder="mot de passe">
       <div class="row"><button onclick="cSignIn()">Se connecter</button>
         <button class="ghost" onclick="cSignUp()">Créer un compte lecteur</button></div>
+      <div style="font-size:.85rem;margin-top:.3rem"><a href="#" onclick="cForgot();return false">Mot de passe oublié ?</a></div>
       <div class="err" id="cErr"></div>`;
   }
 }
@@ -441,6 +442,13 @@ async function cSignUp(){
     const d=await Auth.signUp(em,pw,{role:"reader"});
     if(d&&d.session){ await afterAuth(); }
     else { $("#cBox").innerHTML=`<div class="hint">Compte créé ✓ — confirmez le lien dans votre e-mail (ignorez une éventuelle page d'erreur), puis revenez vous connecter.</div>`; }
+  }catch(e){ $("#cErr").textContent=e.message; }
+}
+async function cForgot(){
+  const em=$("#cEmail").value.trim();
+  if(!em){ $("#cErr").textContent="Entrez votre e-mail d'abord."; return; }
+  try{ await Auth.resetPassword(em);
+    $("#cBox").innerHTML=`<div class="hint">Si un compte existe pour <b>${em}</b>, un lien de réinitialisation vient d'y être envoyé. Ouvrez-le sur cet appareil pour choisir un nouveau mot de passe.</div>`;
   }catch(e){ $("#cErr").textContent=e.message; }
 }
 async function cSignOut(){ await Auth.signOut(); await afterAuth(); }
