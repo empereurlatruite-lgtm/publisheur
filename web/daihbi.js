@@ -67,11 +67,27 @@ const Auth = {
     if (error) throw error;
     return data; // data.session is non-null when email auto-confirm is on
   },
+  /** Send a password-recovery email. The link returns to `redirectTo`
+   *  (defaults to editor.html) where the recovery session lets the user
+   *  set a new password via updatePassword(). */
+  async resetPassword(email, redirectTo) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { error } = await db.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectTo || new URL("editor.html", location.href).href,
+    });
+    if (error) throw error;
+  },
+  /** Set a new password for the currently-authenticated (or recovery) session. */
+  async updatePassword(password) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { error } = await db.auth.updateUser({ password });
+    if (error) throw error;
+  },
   async signOut() {
     if (db) await db.auth.signOut();
   },
   onChange(cb) {
-    if (db) db.auth.onAuthStateChange((_e, session) => cb(session));
+    if (db) db.auth.onAuthStateChange((event, session) => cb(session, event));
   },
 };
 

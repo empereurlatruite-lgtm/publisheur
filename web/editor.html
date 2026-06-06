@@ -296,6 +296,9 @@
 const $ = s => document.querySelector(s);
 const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, configured } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
+// Password-recovery deep link lands here as editor.html#…type=recovery.
+// Capture it now: supabase-js consumes & clears the hash asynchronously.
+const RECOVERY = location.hash.includes("type=recovery");
 let PAPERS = window.DAIHBI_PAPERS || {};
 let MY_MANAGED = [];   // issues this editor owns/co-edits
 let current = null;
@@ -348,7 +351,7 @@ function loginScreen(msg, mode, preRole){
     <div class="err" id="loginErr">${msg||""}</div>
     ${up
       ? `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">Déjà un compte ? <a href="#" onclick="loginScreen(null,'signin');return false">Se connecter</a>.</p>`
-      : `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">Pas de mot de passe ? <a href="#" onclick="sendLink();return false">Recevoir un lien par e-mail</a>.</p>`}`);
+      : `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">Pas de mot de passe ? <a href="#" onclick="sendLink();return false">Recevoir un lien par e-mail</a> · <a href="#" onclick="forgotScreen($('#email').value.trim());return false">Mot de passe oublié ?</a></p>`}`);
   const act = up ? doSignUp : doPasswordLogin;
   const pw=$("#password"); if(pw) pw.addEventListener("keydown",e=>{if(e.key==="Enter")act();});
   const inp=$("#email"); if(inp) inp.addEventListener("keydown",e=>{if(e.key==="Enter")$("#password").focus();});
@@ -380,6 +383,46 @@ async function sendLink(){
   if(!email){ $("#loginErr").textContent="Entrez votre e-mail."; return; }
   try{ await Auth.signIn(email); $("#gateCard").innerHTML=`<h2>Vérifiez votre e-mail</h2><p>Lien de connexion envoyé à <b>${escapeHtml(email)}</b>. Ouvrez-le sur cet appareil.</p>`; }
   catch(e){ $("#loginErr").textContent=e.message; }
+}
+// ── Password reset: request a link ───────────────────────────────────────
+function forgotScreen(prefill){
+  showGate(`<h2>Mot de passe oublié</h2>
+    <p style="font-size:.85rem;opacity:.85;margin-bottom:.7rem">Entrez votre e-mail : nous vous enverrons un lien pour choisir un nouveau mot de passe.</p>
+    <input id="email" type="email" placeholder="vous@exemple.com" autocomplete="username" value="${escapeHtml(prefill||"")}" autofocus>
+    <button onclick="doReset()">Envoyer le lien</button>
+    <div class="err" id="loginErr"></div>
+    <p style="margin-top:1rem;font-size:.8rem;opacity:.7"><a href="#" onclick="loginScreen(null,'signin');return false">← Retour à la connexion</a></p>`);
+  const inp=$("#email"); if(inp) inp.addEventListener("keydown",e=>{if(e.key==="Enter")doReset();});
+}
+async function doReset(){
+  const email=$("#email").value.trim();
+  if(!email){ $("#loginErr").textContent="Entrez votre e-mail."; return; }
+  try{
+    await Auth.resetPassword(email);
+    $("#gateCard").innerHTML=`<h2>Vérifiez votre e-mail</h2>
+      <p>Si un compte existe pour <b>${escapeHtml(email)}</b>, un lien de réinitialisation vient d'y être envoyé.</p>
+      <p style="font-size:.85rem;opacity:.85">Ouvrez-le <b>sur cet appareil</b> pour choisir un nouveau mot de passe.</p>`;
+  }catch(e){ $("#loginErr").textContent=e.message; }
+}
+// ── Password reset: set a new one (landed via the recovery link) ──────────
+function recoveryScreen(){
+  showGate(`<h2>Nouveau mot de passe</h2>
+    <p style="font-size:.85rem;opacity:.85;margin-bottom:.7rem">Choisissez un nouveau mot de passe pour votre compte.</p>
+    <input id="newpass" type="password" placeholder="nouveau mot de passe (6+ caractères)" autocomplete="new-password" autofocus>
+    <input id="newpass2" type="password" placeholder="confirmer le mot de passe" autocomplete="new-password">
+    <button onclick="doUpdatePassword()">Enregistrer</button>
+    <div class="err" id="loginErr"></div>`);
+  ["newpass","newpass2"].forEach(id=>{const e=$("#"+id); if(e) e.addEventListener("keydown",ev=>{if(ev.key==="Enter")doUpdatePassword();});});
+}
+async function doUpdatePassword(){
+  const p1=$("#newpass").value, p2=$("#newpass2").value;
+  if(p1.length<6){ $("#loginErr").textContent="Mot de passe : 6 caractères minimum."; return; }
+  if(p1!==p2){ $("#loginErr").textContent="Les deux mots de passe ne correspondent pas."; return; }
+  try{
+    await Auth.updatePassword(p1);
+    $("#gateCard").innerHTML=`<h2>Mot de passe modifié ✓</h2><p>Vous êtes connecté·e. Chargement de votre espace…</p>`;
+    setTimeout(()=>location.replace("editor.html"), 900);  // clean URL (drop the recovery hash), reload as signed-in
+  }catch(e){ $("#loginErr").textContent=e.message; }
 }
 async function doSignOut(){ await Auth.signOut(); location.reload(); }
 
@@ -755,11 +798,16 @@ document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s")
 // ── Boot ───────────────────────────────────────────────────────────────────
 async function boot(){
   if(!configured){ setupNotice(); return; }
+  // Password-recovery deep link: let the user set a new password instead of
+  // silently logging them into the app with the recovery session.
+  if(RECOVERY){ recoveryScreen(); }
+  Auth.onChange((s,event)=>{ if(event==="PASSWORD_RECOVERY") recoveryScreen(); });
+  if(RECOVERY) return;
   const session = await Auth.session();
   if(!session){
     const pr=new URLSearchParams(location.search).get("role");   // from the kiosque intro
     loginScreen(null, pr?"signup":"signin", pr);
-    Auth.onChange(s=>{ if(s) location.reload(); }); return;
+    Auth.onChange((s,event)=>{ if(event==="PASSWORD_RECOVERY"){ recoveryScreen(); return; } if(s) location.reload(); }); return;
   }
   // load profile + role
   MYPROFILE = await Profiles.me();
