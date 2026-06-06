@@ -116,7 +116,8 @@ web/        Site statique (GitHub Pages / Cloudflare Pages)
   functions/api/export.js   Cloudflare Pages Function — déclenche l'export Scribus
 supabase/     Migrations SQL — à coller dans l'éditeur SQL de Supabase, dans l'ordre :
   schema.sql · roles.sql · comments.sql · portfolio.sql · ads.sql ·
-  papers.sql · revisions.sql · edited_by.sql · pool.sql
+  papers.sql · revisions.sql · edited_by.sql · pool.sql ·
+  transparency.sql · authors.sql · ad_placements.sql
 publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements)
 .github/workflows/  pages.yml (déploie web/ sur GitHub Pages) · publish.yml (Scribus en CI)
 ```
@@ -125,7 +126,7 @@ publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements
 
 1. Créez un projet sur [supabase.com](https://supabase.com).
 2. **SQL Editor → New query →** collez chaque fichier de `supabase/` **dans
-   l'ordre** ci-dessus (`schema.sql` d'abord, `pool.sql` en dernier) → **Run**.
+   l'ordre** ci-dessus (`schema.sql` d'abord, `ad_placements.sql` en dernier) → **Run**.
 3. **Authentication → Providers →** activez **Email** (mot de passe ou lien magique).
 4. **Authentication → URL Configuration →** réglez **Site URL** sur l'URL publique
    et ajoutez-la en redirection (sinon les liens magiques retombent sur localhost).
@@ -290,7 +291,8 @@ web/        Static site (GitHub Pages / Cloudflare Pages)
   functions/api/export.js   Cloudflare Pages Function — triggers the Scribus export
 supabase/     SQL migrations — paste into the Supabase SQL editor, in order:
   schema.sql · roles.sql · comments.sql · portfolio.sql · ads.sql ·
-  papers.sql · revisions.sql · edited_by.sql · pool.sql
+  papers.sql · revisions.sql · edited_by.sql · pool.sql ·
+  transparency.sql · authors.sql · ad_placements.sql
 publish/      Scribus publisher (print-grade PDF/PNG, from placements)
 .github/workflows/  pages.yml (deploy web/ to GitHub Pages) · publish.yml (Scribus in CI)
 ```
@@ -299,7 +301,7 @@ publish/      Scribus publisher (print-grade PDF/PNG, from placements)
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. **SQL Editor → New query →** paste each file in `supabase/` **in the order**
-   above (`schema.sql` first, `pool.sql` last) → **Run**.
+   above (`schema.sql` first, `ad_placements.sql` last) → **Run**.
 3. **Authentication → Providers →** enable **Email** (password or magic-link).
 4. **Authentication → URL Configuration →** set **Site URL** to your public URL and
    add it as a redirect (otherwise magic links bounce to localhost).

@@ -12,13 +12,7 @@
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"PT Serif",Georgia,serif}
 
-  header.top{background:#1b1916;color:#f3ead6;padding:1.6rem 1.2rem 1.3rem;text-align:center;border-bottom:4px double #6b6357}
-  header.top h1{font-family:"Playfair Display",serif;font-weight:900;font-size:2.6rem;margin:0;letter-spacing:.01em}
-  header.top .sub{font-family:"Old Standard TT",serif;font-style:italic;opacity:.8;margin-top:.2rem}
-  header.top .topright{position:absolute;right:1rem;top:1rem;display:flex;gap:.5rem}
-  header.top .news{color:#f3ead6;text-decoration:none;font-family:system-ui,sans-serif;cursor:pointer;
-    font-size:.8rem;border:1px solid #5a534a;border-radius:6px;padding:.4rem .7rem;background:#2c2924}
-  header.top .news:hover{background:#3a3631}
+  /* header.top (masthead) styled by shared nav.css */
   /* intro / role-chooser modal */
   .introm{position:fixed;inset:0;z-index:60;background:rgba(20,18,16,.82);display:flex;align-items:center;justify-content:center;padding:1.2rem}
   .introc{position:relative;background:#211f1c;color:#f3ead6;border:1px solid #5a534a;border-radius:14px;max-width:560px;width:100%;padding:1.8rem 1.8rem 1.4rem;text-align:center;font-family:system-ui,sans-serif}
@@ -47,9 +41,22 @@
   .grid{max-width:1200px;margin:0 auto;padding:1.6rem 1rem 3rem;display:grid;
     grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.4rem}
 
-  .card{background:var(--paper);border:1px solid #d8cdb2;box-shadow:0 6px 22px rgba(0,0,0,.45);
+  .card{position:relative;background:var(--paper);border:1px solid #d8cdb2;box-shadow:0 6px 22px rgba(0,0,0,.45);
     display:flex;flex-direction:column;overflow:hidden;transition:transform .12s,box-shadow .12s}
   .card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.55)}
+  .card.fresh{border-color:#b9554c;box-shadow:0 6px 22px rgba(122,31,26,.35)}
+  /* diagonal "hot off the press" corner ribbon (clipped by the card's overflow) */
+  .ribbon{position:absolute;top:15px;right:-40px;width:150px;transform:rotate(45deg);z-index:3;
+    pointer-events:none;text-align:center;background:var(--accent);color:#fff;
+    font-family:"Oswald",sans-serif;font-weight:700;font-size:.6rem;letter-spacing:.14em;
+    text-transform:uppercase;padding:.3rem 0;box-shadow:0 2px 7px rgba(0,0,0,.4);
+    text-shadow:0 1px 1px rgba(0,0,0,.3)}
+  .card.echo .ribbon{background:#1f3a5f}
+  /* freshness flag in the meta row */
+  .flag-new{display:inline-flex;align-items:center;gap:.25rem;background:var(--accent);color:#fff;
+    border-radius:4px;padding:.1rem .4rem;font-family:"Oswald",sans-serif;font-weight:700;
+    font-size:.6rem;letter-spacing:.06em;text-transform:uppercase}
+  .card.echo .flag-new{background:#1f3a5f}
   .card .preview{padding:1.2rem 1.2rem .9rem;border-bottom:2px solid var(--rule);
     background-image:radial-gradient(rgba(120,100,70,.06) 1px,transparent 1px);background-size:3px 3px}
   .card .ears{display:flex;justify-content:space-between;font-family:"Old Standard TT",serif;font-size:.6rem;
@@ -76,13 +83,15 @@
   .state{grid-column:1/-1;text-align:center;color:#cdc4b2;padding:3rem 1rem;font-style:italic}
   footer{ text-align:center;color:#8a8170;font-family:system-ui,sans-serif;font-size:.75rem;padding:1.5rem}
 </style>
+<link rel="stylesheet" href="nav.css">
 </head>
 <body>
 
 <header class="top">
   <div class="topright">
-    <button class="news" onclick="openIntro()">✋ Rejoindre</button>
-    <a class="news" href="editor.html">✎ Espace rédaction</a>
+    <button class="news" id="joinBtn" onclick="openIntro()">✋ Rejoindre</button>
+    <a class="news" id="redacLink" href="editor.html">✎ Espace rédaction</a>
+    <span class="navuser" id="navuser"></span>
   </div>
   <h1>Le Kiosque</h1>
   <div class="sub">La presse Warden francophone — propulsée par Publisheur</div>
@@ -97,12 +106,12 @@
       Lisez librement ; pour contribuer, dites-nous qui vous êtes :</p>
     <div class="introroles">
       <button onclick="chooseRole('reader')"><span class="ic">📖</span><b>Lecteur</b><span class="d">Lire &amp; commenter</span></button>
-      <button onclick="chooseRole('writer')"><span class="ic">✍️</span><b>Rédacteur</b><span class="d">Écrire des articles</span></button>
-      <button onclick="chooseRole('illustrator')"><span class="ic">🎨</span><b>Illustrateur</b><span class="d">Fournir des visuels</span></button>
+      <button onclick="chooseRole('writer')"><span class="ic">✍️</span><b>Chroniqueur</b><span class="d">Écrire des chroniques</span></button>
+      <button onclick="chooseRole('illustrator')"><span class="ic">🎨</span><b>Illustrateur / Propagandiste</b><span class="d">Visuels &amp; affiches</span></button>
       <button onclick="chooseRole('annonceur')"><span class="ic">📣</span><b>Annonceur</b><span class="d">Publier des réclames</span></button>
     </div>
     <p class="introskip"><a href="#" onclick="closeIntro();return false">Juste parcourir le kiosque →</a></p>
-    <p class="intronote">Éditeur en chef d’un journal ? Inscrivez-vous comme rédacteur ; un éditeur vous donnera les droits (ou vous créerez votre journal).</p>
+    <p class="intronote">Rédacteur en chef d’un journal ? Inscrivez-vous comme chroniqueur ; un rédacteur en chef vous donnera les droits (ou vous créerez votre journal).</p>
   </div>
 </div>
 
@@ -124,7 +133,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { db, esc, configured, Papers } = window.Daihbi;
+const { db, esc, configured, Papers, Auth, Profiles, NavUser, AuthModal } = window.Daihbi;
 let PAPERS = window.DAIHBI_PAPERS || {};
 const plateClass = p => ({"plate-anton":"anton","plate-echo":"echo"}[p] || "fraktur");
 const WRANK = {lead:0,major:1,minor:2,brief:3};
@@ -158,7 +167,23 @@ async function fetchEditions(){
   }
   // most recently updated first; empty editions last
   eds.sort((a,b)=> (b.latest?.getTime()||0) - (a.latest?.getTime()||0));
-  return eds;
+  return collapseByNewspaper(eds);
+}
+
+// One card per newspaper (same masthead) — keep its most recent edition.
+// `eds` arrives newest-first, so the first edition seen for a masthead is the
+// freshest; later editions of that paper are folded into its `editions` count.
+function newspaperKey(ed){ return (ed.paper?.name || ed.issue || "").trim().toLowerCase(); }
+function collapseByNewspaper(eds){
+  const seen = new Map();
+  for(const ed of eds){
+    const key = newspaperKey(ed);
+    const head = seen.get(key);
+    if(head){ head.editions++; continue; }
+    ed.editions = 1;
+    seen.set(key, ed);
+  }
+  return [...seen.values()];
 }
 
 function sameDay(a,b){ return a&&b && a.toDateString()===b.toDateString(); }
@@ -173,17 +198,21 @@ function passesText(ed){
   return (ed.paper.name+" "+(ed.paper.tagline||"")+" "+(ed.lead?.headline||"")).toLowerCase().includes(q);
 }
 
+function isFresh(ed){ return !!ed.latest && sameDay(ed.latest, new Date()); }
+
 function cardHTML(ed){
   const p=ed.paper, cls=plateClass(p.plate);
   const ear=p.ear||["","",""];
   const lead=ed.lead;
+  const fresh=isFresh(ed);
   const teaser = ed.count ? `
     <div class="teaser">
       ${lead?.kicker?`<div class="kick">${esc(lead.kicker)}</div>`:""}
       <div class="lead">${esc(lead?.headline||"")}</div>
       ${lead?.subhead?`<div class="deck">${esc(lead.subhead)}</div>`:""}
     </div>` : `<div class="teaser"><div class="lead">À paraître</div></div>`;
-  return `<article class="card ${cls} ${ed.count?"":"empty"}">
+  return `<article class="card ${cls} ${ed.count?"":"empty"} ${fresh?"fresh":""}">
+    ${fresh?`<div class="ribbon" title="Mise à jour aujourd’hui">🔥 Tout chaud</div>`:""}
     <a href="paper.html?issue=${encodeURIComponent(ed.issue)}" style="text-decoration:none;color:inherit">
       <div class="preview">
         <div class="ears"><span>${ear[0]||""}</span><span>${ear[2]||""}</span></div>
@@ -193,7 +222,8 @@ function cardHTML(ed){
       </div>
     </a>
     <div class="meta">
-      <span>${ed.count? `${ed.count} article${ed.count>1?"s":""}` : `<span class="badge">vide</span>`}${ed.latest?` · ${fmtDate(ed.latest)}`:""}</span>
+      ${fresh?`<span class="flag-new">🔥 Nouveau · aujourd’hui</span>`:""}
+      <span>${ed.count? `${ed.count} article${ed.count>1?"s":""}` : `<span class="badge">vide</span>`}${ed.latest?` · ${fresh?"":"édition du "}${fmtDate(ed.latest)}`:""}</span>
       <span class="grow"></span>
       <a class="read" href="paper.html?issue=${encodeURIComponent(ed.issue)}">Lire →</a>
     </div>
@@ -232,11 +262,37 @@ function chooseRole(role){
   location.href="editor.html?role="+encodeURIComponent(role);   // writer | illustrator
 }
 
+// account control in the masthead: avatar + logout when signed in, an obvious
+// « Se connecter » button when not.
+const ROLE_LABELS={reader:"Lecteur",writer:"Chroniqueur",illustrator:"Illustrateur",editor:"Rédacteur en chef",annonceur:"Annonceur"};
+async function initAccount(){
+  const join=$("#joinBtn"), redac=$("#redacLink"), nav=$("#navuser");
+  try{
+    const session = await Auth.session();
+    if(session){
+      const profile = await Profiles.me();
+      if(join) join.style.display="none";              // already aboard
+      if(redac){ redac.style.display=""; redac.textContent="✎ Rédaction"; }
+      NavUser.render(nav, {
+        profile, email:session.user.email, role:(profile&&profile.role)||"reader",
+        roleLabel:r=>ROLE_LABELS[r]||r,
+        onLogout: async()=>{ await Auth.signOut(); location.reload(); },
+      });
+    } else {
+      if(redac) redac.style.display="none";             // « Se connecter » covers entering
+      NavUser.render(nav, { onLogin: () => AuthModal.openLogin({ onSuccess: () => location.reload() }) });
+    }
+  }catch(e){ /* anonymous kiosque still works without the account control */ }
+}
+
 (async function boot(){
   if(!configured){ $("#grid").innerHTML = `<div class="state">Pas encore connecté.<br>Ajoutez vos clés Supabase dans <code>config.js</code>.</div>`; return; }
+  initAccount();
   // first visit → show the intro (the « Rejoindre » button reopens it anytime)
   let seen=false; try{ seen=!!localStorage.getItem("daihbi_intro_seen"); }catch(e){}
-  if(!seen) openIntro();
+  // …but not when arriving from an auth email — AuthModal owns the screen then.
+  const fromAuth=/error|type=recovery|access_token/.test(location.hash||"");
+  if(!seen && !fromAuth) openIntro();
   wireFilters();
   try{ PAPERS = await Papers.map(); }catch(e){ /* keep papers.js */ }
   try{ EDITIONS = await fetchEditions(); render(); }
