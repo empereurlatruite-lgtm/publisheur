@@ -187,31 +187,31 @@
 </div>
 
 <header style="display:none" id="hdr">
-  <h1>Publisheur <span style="opacity:.6;font-size:.8rem;font-family:system-ui">· Rédaction</span></h1>
-  <button id="chronLink" style="display:none" onclick="showChronicles()">✍️ Mes chroniques</button>
-  <button id="journauxLink" style="display:none" onclick="showJournaux()">📰 Mes journaux</button>
-  <button id="homeLink" style="display:none" onclick="goDashboard()">🏠 Mes journaux</button>
+  <h1>Publisheur <span style="opacity:.6;font-size:.8rem;font-family:system-ui" data-i18n="ed.headerSub">· Rédaction</span></h1>
+  <button id="chronLink" style="display:none" onclick="showChronicles()" data-i18n="ed.navChron">✍️ Mes chroniques</button>
+  <button id="journauxLink" style="display:none" onclick="showJournaux()" data-i18n="ed.navJournaux">📰 Mes journaux</button>
+  <button id="homeLink" style="display:none" onclick="goDashboard()" data-i18n="ed.navHome">🏠 Mes journaux</button>
   <label id="editionWrap" style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;opacity:.85">
-    Édition
+    <span data-i18n="ed.edition">Édition</span>
     <select id="editionSel" onchange="switchEdition(this.value)"
       style="font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:5px;padding:.25rem .4rem"></select>
   </label>
   <span class="grow"></span>
-  <a href="index.html">📰 Kiosque</a>
-  <button id="portfolioLink" onclick="openPortfolio()">🖼 Portfolio</button>
-  <a id="adsLink" href="ads.html" style="display:none">📣 Réclames</a>
-  <button id="manageLink" style="display:none" onclick="openManageJournal()">⚙ Gérer le journal</button>
-  <button id="printLink" style="display:none" onclick="runExport()">🖨 PDF imprimable</button>
-  <button onclick="openProfile()">Mon profil</button>
-  <button id="newBtn" onclick="newArticle()">+ Article</button>
-  <a id="openPaper" href="paper.html" target="_blank">Open full paper ↗</a>
+  <a href="index.html" data-i18n="ed.navKiosk">📰 Kiosque</a>
+  <button id="portfolioLink" onclick="openPortfolio()" data-i18n="ed.navPortfolio">🖼 Portfolio</button>
+  <a id="adsLink" href="ads.html" style="display:none" data-i18n="ed.navAds">📣 Réclames</a>
+  <button id="manageLink" style="display:none" onclick="openManageJournal()" data-i18n="ed.navManage">⚙ Gérer le journal</button>
+  <button id="printLink" style="display:none" onclick="runExport()" data-i18n="ed.navPrint">🖨 PDF imprimable</button>
+  <button onclick="openProfile()" data-i18n="ed.navProfile">Mon profil</button>
+  <button id="newBtn" onclick="newArticle()" data-i18n="ed.navNewBtn">+ Article</button>
+  <a id="openPaper" href="paper.html" target="_blank" data-i18n="ed.openFullPaper">Open full paper ↗</a>
   <span class="navuser" id="navuser"></span>
 </header>
 
 <!-- Editions dashboard (the landing for contributors) -->
 <main style="display:none" id="dash">
   <div class="dashwrap">
-    <div class="dashhead"><h2 class="dashtitle" id="dashTitle">Mes journaux</h2>
+    <div class="dashhead"><h2 class="dashtitle" id="dashTitle" data-i18n="ed.dashTitleEditor">Mes journaux</h2>
       <p class="dashsub" id="dashSub"></p></div>
     <div class="dashgrid" id="dashGrid"></div>
   </div>
@@ -220,13 +220,13 @@
 <main style="display:none" id="app">
   <div class="col" id="list">
     <div class="listtop">
-      <div class="listhead"><span class="grow">Mes chroniques</span><span id="listcount" style="font-weight:400;color:#7a7060;font-size:.78rem"></span></div>
+      <div class="listhead"><span class="grow" data-i18n="ed.listTitle">Mes chroniques</span><span id="listcount" style="font-weight:400;color:#7a7060;font-size:.78rem"></span></div>
       <div class="listfilter">
-        <input type="search" id="listq" placeholder="Filtrer par titre ou auteur…" oninput="setQuery(this.value)">
+        <input type="search" id="listq" placeholder="Filtrer par titre ou auteur…" data-i18n-ph="ed.listSearchPh" oninput="setQuery(this.value)">
         <div class="whochips">
-          <button class="wchip on" data-who="all"    onclick="setWho('all')">Tous</button>
-          <button class="wchip"    data-who="mine"   onclick="setWho('mine')">Moi</button>
-          <button class="wchip"    data-who="others" onclick="setWho('others')">Autres</button>
+          <button class="wchip on" data-who="all"    onclick="setWho('all')" data-i18n="ed.whoAll">Tous</button>
+          <button class="wchip"    data-who="mine"   onclick="setWho('mine')" data-i18n="ed.whoMine">Moi</button>
+          <button class="wchip"    data-who="others" onclick="setWho('others')" data-i18n="ed.whoOthers">Autres</button>
         </div>
       </div>
     </div>
@@ -234,40 +234,41 @@
   </div>
 
   <div class="col" id="form">
-    <div class="row"><label>Surtitre (kicker)</label><input id="f_kicker" placeholder="ex. DÉPÊCHE DU FRONT"></div>
-    <div class="row"><label>Titre</label><input id="f_headline" class="head" placeholder="Le titre de votre chronique"></div>
-    <div class="row"><label>Chapô / sous-titre</label><input id="f_subhead" placeholder="Résumé en une ligne"></div>
+    <div class="row"><label data-i18n="ed.kicker">Surtitre (kicker)</label><input id="f_kicker" placeholder="ex. DÉPÊCHE DU FRONT" data-i18n-ph="ed.kickerPh"></div>
+    <div class="row"><label data-i18n="ed.headline">Titre</label><input id="f_headline" class="head" placeholder="Le titre de votre chronique" data-i18n-ph="ed.headlinePh"></div>
+    <div class="row"><label data-i18n="ed.subhead">Chapô / sous-titre</label><input id="f_subhead" placeholder="Résumé en une ligne" data-i18n-ph="ed.subheadPh"></div>
     <div class="twocol">
-      <div class="row"><label>Signature</label><input id="f_byline" placeholder="Votre nom de plume"></div>
-      <div class="row"><label>De quel régiment ? (transparence)</label><select id="f_source"></select></div>
+      <div class="row"><label data-i18n="ed.byline">Signature</label><input id="f_byline" placeholder="Votre nom de plume" data-i18n-ph="ed.bylinePh"></div>
+      <div class="row"><label data-i18n="ed.source">De quel régiment ? (transparence)</label><select id="f_source"></select></div>
     </div>
+    <div class="row"><label data-i18n="ed.lang">Langue de la chronique</label><select id="f_lang"></select></div>
     <div class="row">
-      <label>Photo suggérée (optionnel) — l’éditeur décidera de la mise en page</label>
+      <label data-i18n="ed.photoLabel">Photo suggérée (optionnel) — l’éditeur décidera de la mise en page</label>
       <div id="dropzone" class="dropzone">
         <div class="dzrow">
-          <input id="f_image" placeholder="https://…  ou glissez/téléversez une photo" oninput="showPreview(this.value)">
-          <button type="button" class="dzbtn" onclick="document.querySelector('#f_file').click()">📷 Téléverser</button>
-          <button type="button" class="dzbtn" onclick="openPortfolio(true)">🖼 Portfolio</button>
+          <input id="f_image" placeholder="https://…  ou glissez/téléversez une photo" data-i18n-ph="ed.imagePh" oninput="showPreview(this.value)">
+          <button type="button" class="dzbtn" onclick="document.querySelector('#f_file').click()" data-i18n="ed.uploadBtn">📷 Téléverser</button>
+          <button type="button" class="dzbtn" onclick="openPortfolio(true)" data-i18n="ed.portfolioBtn">🖼 Portfolio</button>
           <input id="f_file" type="file" accept="image/*" style="display:none" onchange="onPickFile(this.files[0])">
         </div>
-        <div class="dzhint">Glissez une image ici, ou collez une URL.</div>
+        <div class="dzhint" data-i18n="ed.dzhint">Glissez une image ici, ou collez une URL.</div>
         <div class="imgwrap" id="imgwrap" style="display:none">
           <img id="f_preview" alt="">
-          <button type="button" class="imgx" title="Retirer l’image" onclick="clearImage()">✕</button>
+          <button type="button" class="imgx" title="Retirer l’image" data-i18n-title="ed.removeImage" onclick="clearImage()">✕</button>
         </div>
         <div class="upstatus" id="upstatus"></div>
       </div>
     </div>
-    <div class="row"><label>Body</label>
-      <textarea id="f_body" placeholder="Write the article. Blank line = new paragraph. **bold**, *italic*."></textarea>
-      <div class="hint">Blank line = new paragraph · <code>**bold**</code> · <code>*italic*</code></div>
+    <div class="row"><label data-i18n="ed.bodyLabel">Body</label>
+      <textarea id="f_body" placeholder="Write the article. Blank line = new paragraph. **bold**, *italic*." data-i18n-ph="ed.bodyPh"></textarea>
+      <div class="hint" data-i18n-html="ed.bodyHint">Blank line = new paragraph · <code>**bold**</code> · <code>*italic*</code></div>
     </div>
     <div class="formbar" id="formbar"></div>
-    <div class="hint"><span id="savedAt"></span><a href="#" id="histLink" style="display:none;margin-left:.6rem;color:var(--accent)" onclick="openHistory();return false">🕘 Historique des révisions</a></div>
+    <div class="hint"><span id="savedAt"></span><a href="#" id="histLink" style="display:none;margin-left:.6rem;color:var(--accent)" onclick="openHistory();return false" data-i18n="ed.histLink">🕘 Historique des révisions</a></div>
   </div>
 
   <div class="col" id="preview">
-    <div class="pvhead">Live preview <span class="grow"></span><button onclick="reloadPreview()" style="font:inherit;border:1px solid var(--line);background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer">↻</button></div>
+    <div class="pvhead"><span data-i18n="ed.livePreview">Live preview</span> <span class="grow"></span><button onclick="reloadPreview()" style="font:inherit;border:1px solid var(--line);background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer">↻</button></div>
     <iframe id="pv" src="paper.html"></iframe>
   </div>
 </main>
@@ -277,7 +278,7 @@
 <!-- Portfolio modal -->
 <div class="pmodal" id="pmodal" style="display:none">
   <div class="pcard">
-    <div class="phead"><b>Portfolio des illustrateurs</b><span class="grow"></span><button class="px" onclick="closePortfolio()">✕</button></div>
+    <div class="phead"><b data-i18n="ed.portfolioTitle">Portfolio des illustrateurs</b><span class="grow"></span><button class="px" onclick="closePortfolio()">✕</button></div>
     <div class="pupload" id="pUpload"></div>
     <div class="pgrid" id="pGrid"></div>
   </div>
@@ -286,7 +287,7 @@
 <!-- Journal (edition) create/manage modal -->
 <div class="pmodal" id="jmodal" style="display:none">
   <div class="pcard" style="max-width:620px">
-    <div class="phead"><b id="jTitle">Journal</b><span class="grow"></span><button class="px" onclick="closeJournal()">✕</button></div>
+    <div class="phead"><b id="jTitle" data-i18n="ed.journal">Journal</b><span class="grow"></span><button class="px" onclick="closeJournal()">✕</button></div>
     <div class="jbody" id="jBody"></div>
   </div>
 </div>
@@ -294,7 +295,7 @@
 <!-- Revision history modal -->
 <div class="pmodal" id="hmodal" style="display:none">
   <div class="pcard" style="max-width:680px">
-    <div class="phead"><b>Historique des révisions</b><span class="grow"></span><button class="px" onclick="closeHistory()">✕</button></div>
+    <div class="phead"><b data-i18n="ed.histTitle">Historique des révisions</b><span class="grow"></span><button class="px" onclick="closeHistory()">✕</button></div>
     <div class="jbody" id="hList"></div>
   </div>
 </div>
@@ -302,11 +303,426 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="papers.js"></script>
+<script src="themes.js"></script>
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, NavUser, configured } = window.Daihbi;
+const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, NavUser, configured, I18n, Prefs } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
+
+I18n.register({
+  fr: {
+    // header / nav
+    "ed.headerSub": "· Rédaction",
+    "ed.navChron": "✍️ Mes chroniques",
+    "ed.navJournaux": "📰 Mes journaux",
+    "ed.navHome": "🏠 Mes journaux",
+    "ed.edition": "Édition",
+    "ed.navKiosk": "📰 Kiosque",
+    "ed.navPortfolio": "🖼 Portfolio",
+    "ed.navAds": "📣 Réclames",
+    "ed.navManage": "⚙ Gérer le journal",
+    "ed.navPrint": "🖨 PDF imprimable",
+    "ed.navProfile": "Mon profil",
+    "ed.navNewBtn": "+ Article",
+    "ed.newChronicle": "✍️ Nouvelle chronique",
+    "ed.openFullPaper": "Ouvrir le journal complet ↗",
+    // list pane
+    "ed.listTitle": "Mes chroniques",
+    "ed.listSearchPh": "Filtrer par titre ou auteur…",
+    "ed.whoAll": "Tous",
+    "ed.whoMine": "Moi",
+    "ed.whoOthers": "Autres",
+    "ed.listEmpty": "Aucune chronique. Cliquez « + Chronique ».",
+    "ed.loadError": "Erreur de chargement : {msg}",
+    // form
+    "ed.kicker": "Surtitre (kicker)",
+    "ed.kickerPh": "ex. DÉPÊCHE DU FRONT",
+    "ed.headline": "Titre",
+    "ed.headlinePh": "Le titre de votre chronique",
+    "ed.subhead": "Chapô / sous-titre",
+    "ed.subheadPh": "Résumé en une ligne",
+    "ed.byline": "Signature",
+    "ed.bylinePh": "Votre nom de plume",
+    "ed.source": "De quel régiment ? (transparence)",
+    "ed.lang": "Langue de la chronique",
+    "ed.regimentDefault": "— régiment —",
+    "ed.photoLabel": "Photo suggérée (optionnel) — l’éditeur décidera de la mise en page",
+    "ed.imagePh": "https://…  ou glissez/téléversez une photo",
+    "ed.uploadBtn": "📷 Téléverser",
+    "ed.portfolioBtn": "🖼 Portfolio",
+    "ed.dzhint": "Glissez une image ici, ou collez une URL.",
+    "ed.removeImage": "Retirer l’image",
+    "ed.bodyLabel": "Body",
+    "ed.bodyPh": "Rédigez l’article. Ligne vide = nouveau paragraphe. **gras**, *italique*.",
+    "ed.bodyHint": "Ligne vide = nouveau paragraphe · <code>**gras**</code> · <code>*italique*</code>",
+    "ed.histLink": "🕘 Historique des révisions",
+    "ed.livePreview": "Aperçu en direct",
+    "ed.savedAt": "Modifié le {when}",
+    "ed.savedAtBy": "Modifié le {when} par {who}",
+    // form bar / status
+    "ed.delete": "Supprimer",
+    "ed.draft": "Brouillon",
+    "ed.submitToPool": "Soumettre au pool",
+    "ed.newChronicleLbl": "Nouvelle chronique",
+    // toasts / confirms
+    "ed.submittedToast": "Soumise au pool ✓ — un éditeur peut la mettre en page.",
+    "ed.savedToast": "Enregistrée ✓",
+    "ed.error": "Erreur : {msg}",
+    "ed.confirmDelete": "Supprimer cette chronique ?",
+    "ed.deletedToast": "Supprimée",
+    "ed.uploading": "Envoi de l’image…",
+    "ed.uploaded": "✓ Image ajoutée. N’oubliez pas d’enregistrer.",
+    "ed.pleaseLogin": "Connectez-vous.",
+    // gate: setup / login / signup
+    "ed.setupTitle": "Presque prêt",
+    "ed.setupDesc": "Connectez votre projet Supabase : ouvrez <code>web/config.js</code> et collez votre <b>URL du projet</b> et votre <b>clé anon</b> (Supabase → Settings → API), puis rechargez.",
+    "ed.signIn": "Se connecter",
+    "ed.signUp": "Créer un compte",
+    "ed.emailPh": "vous@exemple.com",
+    "ed.pwSignupPh": "choisir un mot de passe (6+ caractères)",
+    "ed.pwPh": "mot de passe",
+    "ed.displayNamePh": "Nom de plume (affiché)",
+    "ed.createAccountBtn": "Créer le compte",
+    "ed.alreadyAccount": "Déjà un compte ?",
+    "ed.noPassword": "Pas de mot de passe ?",
+    "ed.magicLink": "Recevoir un lien par e-mail",
+    "ed.forgotQ": "Mot de passe oublié ?",
+    "ed.enterEmailPw": "Entrez votre e-mail et votre mot de passe.",
+    "ed.enterEmailPwSignup": "Entrez un e-mail et un mot de passe.",
+    "ed.pwMin6": "Mot de passe : 6 caractères minimum.",
+    "ed.accountCreated": "Compte créé ✓",
+    "ed.confirmSent": "Un e-mail de confirmation a été envoyé à <b>{email}</b>.",
+    "ed.confirmHint": "Cliquez le lien — <b>même si la page affiche une erreur</b>, votre compte est validé. Revenez ensuite ici et {link} avec votre mot de passe.",
+    "ed.confirmHintLink": "connectez-vous",
+    "ed.enterEmail": "Entrez votre e-mail.",
+    "ed.checkEmail": "Vérifiez votre e-mail",
+    "ed.linkSent": "Lien de connexion envoyé à <b>{email}</b>. Ouvrez-le sur cet appareil.",
+    // forgot password
+    "ed.forgotTitle": "Mot de passe oublié",
+    "ed.forgotDesc": "Entrez votre e-mail : nous vous enverrons un lien pour choisir un nouveau mot de passe.",
+    "ed.sendLink": "Envoyer le lien",
+    "ed.backToLogin": "← Retour à la connexion",
+    "ed.resetSent": "Si un compte existe pour <b>{email}</b>, un lien de réinitialisation vient d'y être envoyé.",
+    "ed.resetHint": "Ouvrez-le <b>sur cet appareil</b> pour choisir un nouveau mot de passe.",
+    // recovery
+    "ed.recoveryTitle": "Nouveau mot de passe",
+    "ed.recoveryDesc": "Choisissez un nouveau mot de passe pour votre compte.",
+    "ed.newPwPh": "nouveau mot de passe (6+ caractères)",
+    "ed.confirmPwPh": "confirmer le mot de passe",
+    "ed.save": "Enregistrer",
+    "ed.pwMismatch": "Les deux mots de passe ne correspondent pas.",
+    "ed.pwChanged": "Mot de passe modifié ✓",
+    "ed.pwChangedDesc": "Vous êtes connecté·e. Chargement de votre espace…",
+    // profile
+    "ed.profileTitle": "Mon profil",
+    "ed.changeAvatar": "📷 Changer l’avatar",
+    "ed.displayNamePlain": "Nom de plume",
+    "ed.close": "Fermer",
+    "ed.sending": "Envoi…",
+    "ed.profileSaved": "Profil enregistré",
+    // portfolio
+    "ed.portfolioTitle": "Portfolio des illustrateurs",
+    "ed.pickImage": "📷 Choisir une image",
+    "ed.captionPh": "Légende (optionnelle)",
+    "ed.addToPortfolio": "Ajouter au portfolio",
+    "ed.portfolioReady": "✓ prête — ajoutez une légende puis « Ajouter ».",
+    "ed.pickImageFirst": "Choisissez d’abord une image.",
+    "ed.portfolioAdded": "✓ Ajoutée au portfolio.",
+    "ed.portfolioUnavailable": "Portfolio indisponible.",
+    "ed.by": "par {name}",
+    "ed.use": "Utiliser",
+    "ed.removeTitle": "Supprimer",
+    "ed.portfolioEmpty": "Aucune image pour l’instant.",
+    "ed.portfolioEmptyAdd": " Ajoutez-en une ci-dessus.",
+    "ed.imageAddedToArticle": "Image ajoutée à l’article — enregistrez.",
+    "ed.confirmRemovePortfolio": "Retirer cette image du portfolio ?",
+    // journal create / manage
+    "ed.journal": "Journal",
+    "ed.jName": "Nom du journal",
+    "ed.jNamePh": "L’Étendard du 8e",
+    "ed.jIssue": "Identifiant (URL, sans espaces)",
+    "ed.jIssuePh": "etendard-8e",
+    "ed.jTagline": "Sous-titre",
+    "ed.jTaglinePh": "Devise du journal",
+    "ed.jPlate": "Style du titre",
+    "ed.plateFraktur": "Gothique (fraktur)",
+    "ed.plateAnton": "Condensé (Anton)",
+    "ed.plateEcho": "Sobre (navy/Oswald)",
+    "ed.jClan": "Régiment",
+    "ed.jTheme": "Style du journal",
+    "ed.jThemeHint": "— palette, typographie & texture, vues par tous les lecteurs",
+    "ed.jEar": "Bandeau (gauche · centre · droite)",
+    "ed.jEarLeft": "gauche",
+    "ed.jEarCenter": "centre",
+    "ed.jEarRight": "droite",
+    "ed.jSlogans": "Slogans de pied (séparés par « | »)",
+    "ed.jSlogansPh": "Vive les Wardens | …",
+    "ed.jEmblemLeft": "Emblème gauche (URL)",
+    "ed.jEmblemRight": "Emblème droit (URL)",
+    "ed.createJournalTitle": "Créer un journal",
+    "ed.createJournalBtn": "Créer le journal",
+    "ed.manageJournalTitle": "Gérer : {name}",
+    "ed.saveJournalBtn": "Enregistrer le journal",
+    "ed.jGiveName": "Donnez un nom.",
+    "ed.jGiveIssue": "Donnez un identifiant (lettres/chiffres/tirets).",
+    "ed.jIssueExists": "Cet identifiant existe déjà.",
+    "ed.jSaved": "✓ Enregistré.",
+    "ed.coeditors": "Éditeurs du journal",
+    "ed.you": " (vous)",
+    "ed.remove": "Retirer",
+    "ed.add": "Ajouter",
+    "ed.noOtherEditor": "Aucun autre éditeur à ajouter.",
+    // export
+    "ed.exportStarted": "Export imprimable lancé…",
+    "ed.exportLayout": "Scribus met en page le PDF… (~1–2 min)",
+    "ed.exportTokenHint": "Erreur : {msg} (export disponible une fois le token GitHub configuré)",
+    "ed.pdfReady": "PDF imprimable prêt ✓",
+    "ed.pdfSoon": "PDF bientôt prêt — réessayez « PDF imprimable » dans 1 min.",
+    // revision history
+    "ed.histTitle": "Historique des révisions",
+    "ed.loading": "Chargement…",
+    "ed.revUntitled": "(sans titre)",
+    "ed.revEmpty": "(vide)",
+    "ed.restoreBtn": "↩ Restaurer ce texte",
+    "ed.noRevisions": "Aucune révision encore. L’historique se remplit à chaque enregistrement modifiant le texte.",
+    "ed.confirmRestore": "Restaurer ce texte ? La version actuelle sera conservée dans l’historique.",
+    "ed.revisionRestored": "Révision restaurée ✓",
+    // dashboard
+    "ed.dashTitleEditor": "Mes journaux",
+    "ed.dashTitleChoose": "Choisir un journal",
+    "ed.dashSubChoose": "Ouvrez le journal pour lequel vous voulez contribuer.",
+    "ed.dashEmpty": "Aucun journal disponible pour l’instant.",
+    "ed.dashSubBase": "Brouillons d’abord, puis les parutions de la plus récente à la plus ancienne.",
+    "ed.poolWaitingOne": "<b>{n}</b> chronique attend dans le pool",
+    "ed.poolWaitingMany": "<b>{n}</b> chroniques attendent dans le pool",
+    "ed.poolEmpty": "Le pool est vide pour l’instant",
+    "ed.dashSubPool": "{base} <span class=\"dpool\">📥 {pool}.</span>",
+    "ed.statPubTitle": "Chroniques publiées (visibles au kiosque)",
+    "ed.statPubOne": "● {n} publiée",
+    "ed.statPubMany": "● {n} publiées",
+    "ed.statPrepTitle": "Placées dans l’édition, pas encore publiées",
+    "ed.statPrep": "○ {n} en préparation",
+    "ed.statusOnlineTitle": "En ligne au kiosque",
+    "ed.statusPublished": "● Publié",
+    "ed.statusPublishedDate": "● Publié · {date}",
+    "ed.statusNonePubTitle": "Aucune chronique publiée pour l’instant",
+    "ed.statusDraft": "○ Brouillon",
+    "ed.openLayout": "Mettre en page →",
+    "ed.manageJournalTip": "Gérer le journal (titre, style, éditeurs)",
+    "ed.deleteJournalTip": "Supprimer le journal",
+    "ed.createJournalCard": "Créer un journal",
+    "ed.confirmDeleteJournal": "Supprimer le journal « {name} » ?\nLe titre disparaît du kiosque ; les articles déjà écrits restent en base.",
+    "ed.journalDeleted": "Journal supprimé",
+    "ed.deleteRefused": "Suppression refusée (seul le propriétaire peut supprimer) : {msg}",
+  },
+  en: {
+    // header / nav
+    "ed.headerSub": "· Newsroom",
+    "ed.navChron": "✍️ My chronicles",
+    "ed.navJournaux": "📰 My papers",
+    "ed.navHome": "🏠 My papers",
+    "ed.edition": "Edition",
+    "ed.navKiosk": "📰 Kiosk",
+    "ed.navPortfolio": "🖼 Portfolio",
+    "ed.navAds": "📣 Ads",
+    "ed.navManage": "⚙ Manage paper",
+    "ed.navPrint": "🖨 Printable PDF",
+    "ed.navProfile": "My profile",
+    "ed.navNewBtn": "+ Article",
+    "ed.newChronicle": "✍️ New chronicle",
+    "ed.openFullPaper": "Open full paper ↗",
+    // list pane
+    "ed.listTitle": "My chronicles",
+    "ed.listSearchPh": "Filter by title or author…",
+    "ed.whoAll": "All",
+    "ed.whoMine": "Mine",
+    "ed.whoOthers": "Others",
+    "ed.listEmpty": "No chronicles yet. Click “+ Chronicle”.",
+    "ed.loadError": "Load error: {msg}",
+    // form
+    "ed.kicker": "Kicker",
+    "ed.kickerPh": "e.g. DISPATCH FROM THE FRONT",
+    "ed.headline": "Headline",
+    "ed.headlinePh": "Your chronicle’s headline",
+    "ed.subhead": "Standfirst / subhead",
+    "ed.subheadPh": "One-line summary",
+    "ed.byline": "Byline",
+    "ed.bylinePh": "Your pen name",
+    "ed.source": "Which regiment? (transparency)",
+    "ed.lang": "Chronicle language",
+    "ed.regimentDefault": "— regiment —",
+    "ed.photoLabel": "Suggested photo (optional) — the editor decides the layout",
+    "ed.imagePh": "https://…  or drag/upload a photo",
+    "ed.uploadBtn": "📷 Upload",
+    "ed.portfolioBtn": "🖼 Portfolio",
+    "ed.dzhint": "Drag an image here, or paste a URL.",
+    "ed.removeImage": "Remove image",
+    "ed.bodyLabel": "Body",
+    "ed.bodyPh": "Write the article. Blank line = new paragraph. **bold**, *italic*.",
+    "ed.bodyHint": "Blank line = new paragraph · <code>**bold**</code> · <code>*italic*</code>",
+    "ed.histLink": "🕘 Revision history",
+    "ed.livePreview": "Live preview",
+    "ed.savedAt": "Edited {when}",
+    "ed.savedAtBy": "Edited {when} by {who}",
+    // form bar / status
+    "ed.delete": "Delete",
+    "ed.draft": "Draft",
+    "ed.submitToPool": "Submit to the pool",
+    "ed.newChronicleLbl": "New chronicle",
+    // toasts / confirms
+    "ed.submittedToast": "Submitted to the pool ✓ — an editor can lay it out.",
+    "ed.savedToast": "Saved ✓",
+    "ed.error": "Error: {msg}",
+    "ed.confirmDelete": "Delete this chronicle?",
+    "ed.deletedToast": "Deleted",
+    "ed.uploading": "Uploading image…",
+    "ed.uploaded": "✓ Image added. Don’t forget to save.",
+    "ed.pleaseLogin": "Please sign in.",
+    // gate: setup / login / signup
+    "ed.setupTitle": "Almost there",
+    "ed.setupDesc": "Connect your Supabase project: open <code>web/config.js</code> and paste your <b>Project URL</b> and <b>anon key</b> (Supabase → Settings → API), then reload.",
+    "ed.signIn": "Sign in",
+    "ed.signUp": "Create account",
+    "ed.emailPh": "you@example.com",
+    "ed.pwSignupPh": "choose a password (6+ characters)",
+    "ed.pwPh": "password",
+    "ed.displayNamePh": "Pen name (shown)",
+    "ed.createAccountBtn": "Create account",
+    "ed.alreadyAccount": "Already have an account?",
+    "ed.noPassword": "No password?",
+    "ed.magicLink": "Get a link by email",
+    "ed.forgotQ": "Forgot password?",
+    "ed.enterEmailPw": "Enter your email and password.",
+    "ed.enterEmailPwSignup": "Enter an email and a password.",
+    "ed.pwMin6": "Password: 6 characters minimum.",
+    "ed.accountCreated": "Account created ✓",
+    "ed.confirmSent": "A confirmation email has been sent to <b>{email}</b>.",
+    "ed.confirmHint": "Click the link — <b>even if the page shows an error</b>, your account is validated. Then come back here and {link} with your password.",
+    "ed.confirmHintLink": "sign in",
+    "ed.enterEmail": "Enter your email.",
+    "ed.checkEmail": "Check your email",
+    "ed.linkSent": "Sign-in link sent to <b>{email}</b>. Open it on this device.",
+    // forgot password
+    "ed.forgotTitle": "Forgot password",
+    "ed.forgotDesc": "Enter your email: we’ll send you a link to choose a new password.",
+    "ed.sendLink": "Send the link",
+    "ed.backToLogin": "← Back to sign in",
+    "ed.resetSent": "If an account exists for <b>{email}</b>, a reset link has just been sent to it.",
+    "ed.resetHint": "Open it <b>on this device</b> to choose a new password.",
+    // recovery
+    "ed.recoveryTitle": "New password",
+    "ed.recoveryDesc": "Choose a new password for your account.",
+    "ed.newPwPh": "new password (6+ characters)",
+    "ed.confirmPwPh": "confirm password",
+    "ed.save": "Save",
+    "ed.pwMismatch": "The two passwords do not match.",
+    "ed.pwChanged": "Password changed ✓",
+    "ed.pwChangedDesc": "You are signed in. Loading your workspace…",
+    // profile
+    "ed.profileTitle": "My profile",
+    "ed.changeAvatar": "📷 Change avatar",
+    "ed.displayNamePlain": "Pen name",
+    "ed.close": "Close",
+    "ed.sending": "Sending…",
+    "ed.profileSaved": "Profile saved",
+    // portfolio
+    "ed.portfolioTitle": "Illustrators’ portfolio",
+    "ed.pickImage": "📷 Choose an image",
+    "ed.captionPh": "Caption (optional)",
+    "ed.addToPortfolio": "Add to portfolio",
+    "ed.portfolioReady": "✓ ready — add a caption then “Add”.",
+    "ed.pickImageFirst": "Choose an image first.",
+    "ed.portfolioAdded": "✓ Added to the portfolio.",
+    "ed.portfolioUnavailable": "Portfolio unavailable.",
+    "ed.by": "by {name}",
+    "ed.use": "Use",
+    "ed.removeTitle": "Delete",
+    "ed.portfolioEmpty": "No images yet.",
+    "ed.portfolioEmptyAdd": " Add one above.",
+    "ed.imageAddedToArticle": "Image added to the article — save it.",
+    "ed.confirmRemovePortfolio": "Remove this image from the portfolio?",
+    // journal create / manage
+    "ed.journal": "Paper",
+    "ed.jName": "Paper name",
+    "ed.jNamePh": "The 8th’s Standard",
+    "ed.jIssue": "Identifier (URL, no spaces)",
+    "ed.jIssuePh": "the-standard-8th",
+    "ed.jTagline": "Subtitle",
+    "ed.jTaglinePh": "Paper’s motto",
+    "ed.jPlate": "Masthead style",
+    "ed.plateFraktur": "Gothic (fraktur)",
+    "ed.plateAnton": "Condensed (Anton)",
+    "ed.plateEcho": "Plain (navy/Oswald)",
+    "ed.jClan": "Regiment",
+    "ed.jTheme": "Paper style",
+    "ed.jThemeHint": "— palette, typography & texture, seen by all readers",
+    "ed.jEar": "Banner (left · center · right)",
+    "ed.jEarLeft": "left",
+    "ed.jEarCenter": "center",
+    "ed.jEarRight": "right",
+    "ed.jSlogans": "Footer slogans (separated by “ | ”)",
+    "ed.jSlogansPh": "Long live the Wardens | …",
+    "ed.jEmblemLeft": "Left emblem (URL)",
+    "ed.jEmblemRight": "Right emblem (URL)",
+    "ed.createJournalTitle": "Create a paper",
+    "ed.createJournalBtn": "Create the paper",
+    "ed.manageJournalTitle": "Manage: {name}",
+    "ed.saveJournalBtn": "Save the paper",
+    "ed.jGiveName": "Give it a name.",
+    "ed.jGiveIssue": "Give an identifier (letters/digits/dashes).",
+    "ed.jIssueExists": "This identifier already exists.",
+    "ed.jSaved": "✓ Saved.",
+    "ed.coeditors": "Paper editors",
+    "ed.you": " (you)",
+    "ed.remove": "Remove",
+    "ed.add": "Add",
+    "ed.noOtherEditor": "No other editor to add.",
+    // export
+    "ed.exportStarted": "Printable export started…",
+    "ed.exportLayout": "Scribus is laying out the PDF… (~1–2 min)",
+    "ed.exportTokenHint": "Error: {msg} (export available once the GitHub token is configured)",
+    "ed.pdfReady": "Printable PDF ready ✓",
+    "ed.pdfSoon": "PDF almost ready — try “Printable PDF” again in 1 min.",
+    // revision history
+    "ed.histTitle": "Revision history",
+    "ed.loading": "Loading…",
+    "ed.revUntitled": "(untitled)",
+    "ed.revEmpty": "(empty)",
+    "ed.restoreBtn": "↩ Restore this text",
+    "ed.noRevisions": "No revisions yet. The history fills up with every save that changes the text.",
+    "ed.confirmRestore": "Restore this text? The current version will be kept in the history.",
+    "ed.revisionRestored": "Revision restored ✓",
+    // dashboard
+    "ed.dashTitleEditor": "My papers",
+    "ed.dashTitleChoose": "Choose a paper",
+    "ed.dashSubChoose": "Open the paper you want to contribute to.",
+    "ed.dashEmpty": "No paper available yet.",
+    "ed.dashSubBase": "Drafts first, then editions from newest to oldest.",
+    "ed.poolWaitingOne": "<b>{n}</b> chronicle is waiting in the pool",
+    "ed.poolWaitingMany": "<b>{n}</b> chronicles are waiting in the pool",
+    "ed.poolEmpty": "The pool is empty for now",
+    "ed.dashSubPool": "{base} <span class=\"dpool\">📥 {pool}.</span>",
+    "ed.statPubTitle": "Published chronicles (visible at the kiosk)",
+    "ed.statPubOne": "● {n} published",
+    "ed.statPubMany": "● {n} published",
+    "ed.statPrepTitle": "Placed in the edition, not yet published",
+    "ed.statPrep": "○ {n} in preparation",
+    "ed.statusOnlineTitle": "Online at the kiosk",
+    "ed.statusPublished": "● Published",
+    "ed.statusPublishedDate": "● Published · {date}",
+    "ed.statusNonePubTitle": "No chronicle published yet",
+    "ed.statusDraft": "○ Draft",
+    "ed.openLayout": "Lay out →",
+    "ed.manageJournalTip": "Manage paper (title, style, editors)",
+    "ed.deleteJournalTip": "Delete paper",
+    "ed.createJournalCard": "Create a paper",
+    "ed.confirmDeleteJournal": "Delete the paper “{name}”?\nThe title disappears from the kiosk; articles already written stay in the database.",
+    "ed.journalDeleted": "Paper deleted",
+    "ed.deleteRefused": "Deletion refused (only the owner can delete): {msg}",
+  },
+});
+
 // Password-recovery deep link lands here as editor.html#…type=recovery.
 // Capture it now: supabase-js consumes & clears the hash asynchronously.
 const RECOVERY = location.hash.includes("type=recovery");
@@ -315,18 +731,22 @@ let MY_MANAGED = [];   // issues this editor owns/co-edits
 let current = null;
 let MYROLE = "reader", MYPROFILE = null, MY_EMAIL = "";
 let PROFMAP = {};   // user id → display name (for "édité par …")
-const ROLE_LABELS = { reader:"Lecteur", writer:"Chroniqueur", illustrator:"Illustrateur / Propagandiste", editor:"Rédacteur en chef", annonceur:"Annonceur" };
-const roleLabel = r => ROLE_LABELS[r] || r;
+const roleLabel = r => I18n.t("role."+r);
 const nameOf = id => (id && PROFMAP[id]) || (id ? "—" : "");
 
 const F = {
   kicker:$("#f_kicker"), headline:$("#f_headline"), subhead:$("#f_subhead"),
   byline:$("#f_byline"), source:$("#f_source"), image:$("#f_image"),
-  body:$("#f_body"),
+  body:$("#f_body"), lang:$("#f_lang"),
 };
 // régiment options for the provenance/transparency field
-F.source.innerHTML = `<option value="">— régiment —</option>`
+F.source.innerHTML = `<option value="">${I18n.t("ed.regimentDefault")}</option>`
   + (window.DAIHBI_CLANS||[]).map(c=>`<option>${escapeHtml(c)}</option>`).join("");
+// content-language options (no "all": a chronicle is in exactly one language)
+F.lang.innerHTML = I18n.contentOptionsHTML("", false);
+// the composer's default language for a brand-new chronicle (reader pref → UI lang)
+let DEFAULT_LANG = I18n.lang();
+Prefs.contentLang().then(l => { if (l) DEFAULT_LANG = l; }).catch(()=>{});
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
 function escapeHtml(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 
@@ -335,9 +755,8 @@ function showGate(html){ $("#gate").style.display="flex"; $("#gateCard").innerHT
 function hideGate(){ $("#gate").style.display="none"; }
 
 function setupNotice(){
-  showGate(`<h2>Almost there</h2>
-    <p>Connect your Supabase project: open <code>web/config.js</code> and paste your
-    <b>Project URL</b> and <b>anon key</b> (Supabase → Settings → API), then reload.</p>`);
+  showGate(`<h2>${I18n.t("ed.setupTitle")}</h2>
+    <p>${I18n.t("ed.setupDesc")}</p>`);
 }
 function loginScreen(msg, mode, preRole){
   mode = mode || "signin";
@@ -346,92 +765,91 @@ function loginScreen(msg, mode, preRole){
   const radio = (v,l) => `<label><input type="radio" name="role" value="${v}" ${v===r?"checked":""}> ${l}</label>`;
   showGate(`<h2>Publisheur</h2>
     <div class="authtabs">
-      <button class="${up?"":"on"}" onclick="loginScreen(null,'signin')">Se connecter</button>
-      <button class="${up?"on":""}" onclick="loginScreen(null,'signup','${r}')">Créer un compte</button>
+      <button class="${up?"":"on"}" onclick="loginScreen(null,'signin')">${I18n.t("ed.signIn")}</button>
+      <button class="${up?"on":""}" onclick="loginScreen(null,'signup','${r}')">${I18n.t("ed.signUp")}</button>
     </div>
-    <input id="email" type="email" placeholder="vous@exemple.com" autocomplete="username" autofocus>
-    <input id="password" type="password" placeholder="${up?"choisir un mot de passe (6+ caractères)":"mot de passe"}" autocomplete="${up?"new-password":"current-password"}">
+    <input id="email" type="email" placeholder="${I18n.t("ed.emailPh")}" autocomplete="username" autofocus>
+    <input id="password" type="password" placeholder="${up?I18n.t("ed.pwSignupPh"):I18n.t("ed.pwPh")}" autocomplete="${up?"new-password":"current-password"}">
     ${up ? `
-      <input id="display_name" type="text" placeholder="Nom de plume (affiché)" autocomplete="name">
+      <input id="display_name" type="text" placeholder="${I18n.t("ed.displayNamePh")}" autocomplete="name">
       <div class="rolepick">
-        ${radio("reader","Lecteur")}${radio("writer","Chroniqueur")}${radio("illustrator","Illustrateur / Propagandiste")}${radio("annonceur","Annonceur")}
+        ${radio("reader",I18n.t("role.reader"))}${radio("writer",I18n.t("role.writer"))}${radio("illustrator",I18n.t("role.illustrator"))}${radio("annonceur",I18n.t("role.annonceur"))}
       </div>
       <select id="clan">${(window.DAIHBI_CLANS||["Indépendant"]).map(c=>`<option>${c}</option>`).join("")}</select>
     ` : ""}
-    <button onclick="${up?"doSignUp()":"doPasswordLogin()"}">${up?"Créer le compte":"Se connecter"}</button>
+    <button onclick="${up?"doSignUp()":"doPasswordLogin()"}">${up?I18n.t("ed.createAccountBtn"):I18n.t("ed.signIn")}</button>
     <div class="err" id="loginErr">${msg||""}</div>
     ${up
-      ? `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">Déjà un compte ? <a href="#" onclick="loginScreen(null,'signin');return false">Se connecter</a>.</p>`
-      : `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">Pas de mot de passe ? <a href="#" onclick="sendLink();return false">Recevoir un lien par e-mail</a> · <a href="#" onclick="forgotScreen($('#email').value.trim());return false">Mot de passe oublié ?</a></p>`}`);
+      ? `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">${I18n.t("ed.alreadyAccount")} <a href="#" onclick="loginScreen(null,'signin');return false">${I18n.t("ed.signIn")}</a>.</p>`
+      : `<p style="margin-top:1rem;font-size:.8rem;opacity:.7">${I18n.t("ed.noPassword")} <a href="#" onclick="sendLink();return false">${I18n.t("ed.magicLink")}</a> · <a href="#" onclick="forgotScreen($('#email').value.trim());return false">${I18n.t("ed.forgotQ")}</a></p>`}`);
   const act = up ? doSignUp : doPasswordLogin;
   const pw=$("#password"); if(pw) pw.addEventListener("keydown",e=>{if(e.key==="Enter")act();});
   const inp=$("#email"); if(inp) inp.addEventListener("keydown",e=>{if(e.key==="Enter")$("#password").focus();});
 }
 async function doPasswordLogin(){
   const email=$("#email").value.trim(), password=$("#password").value;
-  if(!email||!password){ $("#loginErr").textContent="Entrez votre e-mail et votre mot de passe."; return; }
+  if(!email||!password){ $("#loginErr").textContent=I18n.t("ed.enterEmailPw"); return; }
   try{ await Auth.signInPassword(email,password); /* onChange handler reloads the app */ }
   catch(e){ $("#loginErr").textContent=e.message; }
 }
 async function doSignUp(){
   const email=$("#email").value.trim(), password=$("#password").value;
-  if(!email||!password){ $("#loginErr").textContent="Entrez un e-mail et un mot de passe."; return; }
-  if(password.length<6){ $("#loginErr").textContent="Mot de passe : 6 caractères minimum."; return; }
+  if(!email||!password){ $("#loginErr").textContent=I18n.t("ed.enterEmailPwSignup"); return; }
+  if(password.length<6){ $("#loginErr").textContent=I18n.t("ed.pwMin6"); return; }
   const role=(document.querySelector('input[name="role"]:checked')||{}).value||"reader";
   const clan=($("#clan")||{}).value||"";
   const display_name=($("#display_name")||{}).value.trim()||"";
   try{
     const data = await Auth.signUp(email,password,{role,clan,display_name});
     if(data && data.session){ /* auto-confirmé → onChange recharge l'app */ }
-    else { $("#gateCard").innerHTML=`<h2>Compte créé ✓</h2>
-      <p>Un e-mail de confirmation a été envoyé à <b>${escapeHtml(email)}</b>.</p>
-      <p style="font-size:.85rem;opacity:.85">Cliquez le lien — <b>même si la page affiche une erreur</b>, votre compte est validé.
-      Revenez ensuite ici et <a href="#" onclick="loginScreen(null,'signin');return false">connectez-vous</a> avec votre mot de passe.</p>`; }
+    else { $("#gateCard").innerHTML=`<h2>${I18n.t("ed.accountCreated")}</h2>
+      <p>${I18n.t("ed.confirmSent",{email:escapeHtml(email)})}</p>
+      <p style="font-size:.85rem;opacity:.85">${I18n.t("ed.confirmHint",{link:`<a href="#" onclick="loginScreen(null,'signin');return false">${I18n.t("ed.confirmHintLink")}</a>`})}</p>`; }
   }catch(e){ $("#loginErr").textContent=e.message; }
 }
 async function sendLink(){
   const email=$("#email").value.trim();
-  if(!email){ $("#loginErr").textContent="Entrez votre e-mail."; return; }
-  try{ await Auth.signIn(email); $("#gateCard").innerHTML=`<h2>Vérifiez votre e-mail</h2><p>Lien de connexion envoyé à <b>${escapeHtml(email)}</b>. Ouvrez-le sur cet appareil.</p>`; }
+  if(!email){ $("#loginErr").textContent=I18n.t("ed.enterEmail"); return; }
+  try{ await Auth.signIn(email); $("#gateCard").innerHTML=`<h2>${I18n.t("ed.checkEmail")}</h2><p>${I18n.t("ed.linkSent",{email:escapeHtml(email)})}</p>`; }
   catch(e){ $("#loginErr").textContent=e.message; }
 }
 // ── Password reset: request a link ───────────────────────────────────────
 function forgotScreen(prefill){
-  showGate(`<h2>Mot de passe oublié</h2>
-    <p style="font-size:.85rem;opacity:.85;margin-bottom:.7rem">Entrez votre e-mail : nous vous enverrons un lien pour choisir un nouveau mot de passe.</p>
-    <input id="email" type="email" placeholder="vous@exemple.com" autocomplete="username" value="${escapeHtml(prefill||"")}" autofocus>
-    <button onclick="doReset()">Envoyer le lien</button>
+  showGate(`<h2>${I18n.t("ed.forgotTitle")}</h2>
+    <p style="font-size:.85rem;opacity:.85;margin-bottom:.7rem">${I18n.t("ed.forgotDesc")}</p>
+    <input id="email" type="email" placeholder="${I18n.t("ed.emailPh")}" autocomplete="username" value="${escapeHtml(prefill||"")}" autofocus>
+    <button onclick="doReset()">${I18n.t("ed.sendLink")}</button>
     <div class="err" id="loginErr"></div>
-    <p style="margin-top:1rem;font-size:.8rem;opacity:.7"><a href="#" onclick="loginScreen(null,'signin');return false">← Retour à la connexion</a></p>`);
+    <p style="margin-top:1rem;font-size:.8rem;opacity:.7"><a href="#" onclick="loginScreen(null,'signin');return false">${I18n.t("ed.backToLogin")}</a></p>`);
   const inp=$("#email"); if(inp) inp.addEventListener("keydown",e=>{if(e.key==="Enter")doReset();});
 }
 async function doReset(){
   const email=$("#email").value.trim();
-  if(!email){ $("#loginErr").textContent="Entrez votre e-mail."; return; }
+  if(!email){ $("#loginErr").textContent=I18n.t("ed.enterEmail"); return; }
   try{
     await Auth.resetPassword(email);
-    $("#gateCard").innerHTML=`<h2>Vérifiez votre e-mail</h2>
-      <p>Si un compte existe pour <b>${escapeHtml(email)}</b>, un lien de réinitialisation vient d'y être envoyé.</p>
-      <p style="font-size:.85rem;opacity:.85">Ouvrez-le <b>sur cet appareil</b> pour choisir un nouveau mot de passe.</p>`;
+    $("#gateCard").innerHTML=`<h2>${I18n.t("ed.checkEmail")}</h2>
+      <p>${I18n.t("ed.resetSent",{email:escapeHtml(email)})}</p>
+      <p style="font-size:.85rem;opacity:.85">${I18n.t("ed.resetHint")}</p>`;
   }catch(e){ $("#loginErr").textContent=e.message; }
 }
 // ── Password reset: set a new one (landed via the recovery link) ──────────
 function recoveryScreen(){
-  showGate(`<h2>Nouveau mot de passe</h2>
-    <p style="font-size:.85rem;opacity:.85;margin-bottom:.7rem">Choisissez un nouveau mot de passe pour votre compte.</p>
-    <input id="newpass" type="password" placeholder="nouveau mot de passe (6+ caractères)" autocomplete="new-password" autofocus>
-    <input id="newpass2" type="password" placeholder="confirmer le mot de passe" autocomplete="new-password">
-    <button onclick="doUpdatePassword()">Enregistrer</button>
+  showGate(`<h2>${I18n.t("ed.recoveryTitle")}</h2>
+    <p style="font-size:.85rem;opacity:.85;margin-bottom:.7rem">${I18n.t("ed.recoveryDesc")}</p>
+    <input id="newpass" type="password" placeholder="${I18n.t("ed.newPwPh")}" autocomplete="new-password" autofocus>
+    <input id="newpass2" type="password" placeholder="${I18n.t("ed.confirmPwPh")}" autocomplete="new-password">
+    <button onclick="doUpdatePassword()">${I18n.t("ed.save")}</button>
     <div class="err" id="loginErr"></div>`);
   ["newpass","newpass2"].forEach(id=>{const e=$("#"+id); if(e) e.addEventListener("keydown",ev=>{if(ev.key==="Enter")doUpdatePassword();});});
 }
 async function doUpdatePassword(){
   const p1=$("#newpass").value, p2=$("#newpass2").value;
-  if(p1.length<6){ $("#loginErr").textContent="Mot de passe : 6 caractères minimum."; return; }
-  if(p1!==p2){ $("#loginErr").textContent="Les deux mots de passe ne correspondent pas."; return; }
+  if(p1.length<6){ $("#loginErr").textContent=I18n.t("ed.pwMin6"); return; }
+  if(p1!==p2){ $("#loginErr").textContent=I18n.t("ed.pwMismatch"); return; }
   try{
     await Auth.updatePassword(p1);
-    $("#gateCard").innerHTML=`<h2>Mot de passe modifié ✓</h2><p>Vous êtes connecté·e. Chargement de votre espace…</p>`;
+    $("#gateCard").innerHTML=`<h2>${I18n.t("ed.pwChanged")}</h2><p>${I18n.t("ed.pwChangedDesc")}</p>`;
     setTimeout(()=>location.replace("editor.html"), 900);  // clean URL (drop the recovery hash), reload as signed-in
   }catch(e){ $("#loginErr").textContent=e.message; }
 }
@@ -449,6 +867,7 @@ function formData(){
     kicker:F.kicker.value.trim(), headline:F.headline.value.trim()||"Sans titre",
     subhead:F.subhead.value.trim(), byline:F.byline.value.trim(),
     source:F.source.value, image_url:F.image.value.trim(),
+    lang:F.lang.value || DEFAULT_LANG,
     // Snapshot the author's portrait onto the chronicle so it follows the text
     // into every paper that runs it (the author owns their byline + face).
     author_avatar:(MYPROFILE&&MYPROFILE.avatar_url)||"",
@@ -460,12 +879,15 @@ function fill(a){
   F.kicker.value=a?.kicker||""; F.headline.value=a?.headline||"";
   F.subhead.value=a?.subhead||""; F.byline.value=a?.byline||"";
   F.source.value = a ? (a.source||"") : ((MYPROFILE&&MYPROFILE.clan)||"");   // default to my régiment
+  F.lang.value = (a && a.lang) ? a.lang : DEFAULT_LANG;
   F.image.value=a?.image_url||"";
   F.body.value=a?.body||"";
-  const sl=$("#statusLbl"); if(sl) sl.textContent = a ? statusLabel(a) : "Nouvelle chronique";
+  const sl=$("#statusLbl"); if(sl) sl.textContent = a ? statusLabel(a) : I18n.t("ed.newChronicleLbl");
   $("#delBtn").style.display=a?"":"none";
   $("#savedAt").textContent=a?.updated_at
-    ? "Modifié le "+new Date(a.updated_at).toLocaleString("fr-FR")+(a.last_edited_by?" par "+nameOf(a.last_edited_by):"")
+    ? (a.last_edited_by
+        ? I18n.t("ed.savedAtBy",{when:I18n.fmtDateTime(a.updated_at), who:nameOf(a.last_edited_by)})
+        : I18n.t("ed.savedAt",{when:I18n.fmtDateTime(a.updated_at)}))
     : "";
   $("#histLink").style.display = a ? "" : "none";
   showPreview(a?.image_url||""); $("#upstatus").textContent="";
@@ -482,12 +904,12 @@ function clearImage(){ F.image.value=""; showPreview(""); $("#upstatus").textCon
 function onPickFile(file){ if(file) uploadImage(file); }
 async function uploadImage(file){
   if(!file) return;
-  $("#upstatus").textContent="Envoi de l’image…";
+  $("#upstatus").textContent=I18n.t("ed.uploading");
   try{
     const {url}=await Media.upload(file);
     F.image.value=url; showPreview(url);
-    $("#upstatus").textContent="✓ Image ajoutée. N’oubliez pas d’enregistrer.";
-  }catch(e){ $("#upstatus").textContent="Erreur : "+e.message; }
+    $("#upstatus").textContent=I18n.t("ed.uploaded");
+  }catch(e){ $("#upstatus").textContent=I18n.t("ed.error",{msg:e.message}); }
 }
 function wireDropzone(){
   const dz=$("#dropzone"); if(!dz) return;
@@ -502,7 +924,7 @@ let ME = null;                      // current user's id (set in boot)
 const listFilter = { q:"", who:"all" };   // who: all | mine | others
 
 async function loadList(){
-  try{ ALL = await Chronicles.listMine(); }catch(e){ toast("Load error: "+e.message); return; }
+  try{ ALL = await Chronicles.listMine(); }catch(e){ toast(I18n.t("ed.loadError",{msg:e.message})); return; }
   renderList();
 }
 function setQuery(v){ listFilter.q=v; renderList(); }
@@ -522,7 +944,7 @@ function renderList(){
   const arts = ALL.filter(matchFilter);
   $("#listcount").textContent = `${arts.length}`;
   $("#items").innerHTML = arts.length ? arts.map(itemHTML).join("")
-    : `<div style="padding:1.4rem;color:#8a8070;font-style:italic">Aucune chronique. Cliquez « + Chronique ».</div>`;
+    : `<div style="padding:1.4rem;color:#8a8070;font-style:italic">${I18n.t("ed.listEmpty")}</div>`;
   highlight();
 }
 function itemHTML(a){
@@ -537,7 +959,7 @@ function itemHTML(a){
 async function edit(id){ try{ fill(await Chronicles.get(id)); }catch(e){ toast(e.message); } }
 
 function statusLabel(a){
-  return { draft:"Brouillon", submitted:"Soumise au pool", review:"Soumise au pool", published:"Soumise au pool" }[a.status||"draft"] || (a.status||"draft");
+  return I18n.t("status."+(a.status||"draft"));
 }
 async function saveArticle(action){
   const data=formData();
@@ -547,75 +969,56 @@ async function saveArticle(action){
   try{
     const saved = current==null ? await Chronicles.create(data) : await Chronicles.update(current,data);
     current=saved.id;
-    toast(saved.status==="submitted" ? "Soumise au pool ✓ — un éditeur peut la mettre en page." : "Enregistrée ✓");
+    toast(saved.status==="submitted" ? I18n.t("ed.submittedToast") : I18n.t("ed.savedToast"));
     await loadList(); fill(saved);
-  }catch(e){ toast("Erreur : "+e.message); }
+  }catch(e){ toast(I18n.t("ed.error",{msg:e.message})); }
 }
 async function delArticle(){
   if(current==null) return;
-  if(!confirm("Supprimer cette chronique ?")) return;
-  try{ await Chronicles.remove(current); toast("Supprimée"); newArticle(); await loadList(); }
+  if(!confirm(I18n.t("ed.confirmDelete"))) return;
+  try{ await Chronicles.remove(current); toast(I18n.t("ed.deletedToast")); newArticle(); await loadList(); }
   catch(e){ toast(e.message); }
 }
 function renderFormBar(){
   const bar=$("#formbar"); if(!bar) return;
   bar.innerHTML = `<span class="statuslbl" id="statusLbl"></span><span class="grow"></span>
-    <button class="del" id="delBtn" onclick="delArticle()" style="display:none">Supprimer</button>
-    <button class="save ghost" onclick="saveArticle('draft')">Brouillon</button>
-    <button class="save" onclick="saveArticle('submit')">Soumettre au pool</button>`;
+    <button class="del" id="delBtn" onclick="delArticle()" style="display:none">${I18n.t("ed.delete")}</button>
+    <button class="save ghost" onclick="saveArticle('draft')">${I18n.t("ed.draft")}</button>
+    <button class="save" onclick="saveArticle('submit')">${I18n.t("ed.submitToPool")}</button>`;
 }
 
 // ── Profile ─────────────────────────────────────────────────────────────────
 function openProfile(){
   const p=MYPROFILE||{};
-  showGate(`<h2>Mon profil</h2>
+  showGate(`<h2>${I18n.t("ed.profileTitle")}</h2>
     <div class="rolebadge" style="display:inline-block;margin:.2rem 0 .6rem">${roleLabel(MYROLE)}</div>
     <div class="imgwrap2" id="av_wrap">${p.avatar_url?`<img class="avatarprev" src="${escapeHtml(p.avatar_url)}">`:`<div class="avatarph">—</div>`}</div>
-    <button onclick="document.querySelector('#p_avatar').click()">📷 Changer l’avatar</button>
+    <button onclick="document.querySelector('#p_avatar').click()">${I18n.t("ed.changeAvatar")}</button>
     <input id="p_avatar" type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this.files[0])">
-    <input id="p_name" placeholder="Nom de plume" value="${escapeHtml(p.display_name||"")}">
+    <input id="p_name" placeholder="${I18n.t("ed.displayNamePlain")}" value="${escapeHtml(p.display_name||"")}">
     <select id="p_clan">${(window.DAIHBI_CLANS||[]).map(c=>`<option ${c===p.clan?"selected":""}>${escapeHtml(c)}</option>`).join("")}</select>
     <div class="err" id="profErr"></div>
-    <button onclick="saveProfile()">Enregistrer</button>
-    <p style="margin-top:.7rem;font-size:.85rem"><a href="#" onclick="hideGate();return false">Fermer</a></p>`);
+    <button onclick="saveProfile()">${I18n.t("ed.save")}</button>
+    <p style="margin-top:.7rem;font-size:.85rem"><a href="#" onclick="hideGate();return false">${I18n.t("ed.close")}</a></p>`);
 }
 async function uploadAvatar(file){
   if(!file) return;
-  $("#profErr").textContent="Envoi…";
+  $("#profErr").textContent=I18n.t("ed.sending");
   try{
     const {url}=await Media.upload(file,"avatars");
     await Profiles.update({avatar_url:url}); MYPROFILE.avatar_url=url;
     $("#av_wrap").innerHTML=`<img class="avatarprev" src="${escapeHtml(url)}">`;
     refreshNavUser();
     $("#profErr").textContent="";
-  }catch(e){ $("#profErr").textContent="Erreur : "+e.message; }
+  }catch(e){ $("#profErr").textContent=I18n.t("ed.error",{msg:e.message}); }
 }
 async function saveProfile(){
   try{
     const upd=await Profiles.update({ display_name:$("#p_name").value.trim(), clan:$("#p_clan").value });
     MYPROFILE=upd; refreshNavUser();
-    hideGate(); toast("Profil enregistré");
-  }catch(e){ $("#profErr").textContent="Erreur : "+e.message; }
+    hideGate(); toast(I18n.t("ed.profileSaved"));
+  }catch(e){ $("#profErr").textContent=I18n.t("ed.error",{msg:e.message}); }
 }
-function readerGate(){
-  showGate(`<h2>Espace lecteur</h2>
-    <p>Votre compte est en <b>Lecteur</b>. La rédaction est réservée aux chroniqueurs, illustrateurs et éditeurs.</p>
-    <a class="authlink" href="index.html" style="display:block;margin:.6rem 0;color:#e8b9b2">📰 Aller au kiosque →</a>
-    <button onclick="becomeWriter()">Devenir chroniqueur</button>
-    <p style="margin-top:.6rem;font-size:.85rem"><a href="#" onclick="doSignOut();return false">Se déconnecter</a></p>`);
-}
-async function becomeWriter(){
-  try{ await Profiles.update({role:"writer"}); location.reload(); }
-  catch(e){ alert(e.message); }
-}
-function advertiserGate(){
-  showGate(`<h2>Espace annonceur</h2>
-    <p>Bienvenue ! Créez vos réclames dans le studio publicitaire ; un éditeur les validera puis elles paraîtront dans le journal.</p>
-    <a class="authlink" href="ads.html" style="display:block;margin:.6rem 0;font-weight:600;color:#e8b9b2">📣 Ouvrir le studio publicitaire →</a>
-    <a class="authlink" href="index.html" style="display:block;margin:.4rem 0;color:#e8b9b2">📰 Voir le kiosque</a>
-    <p style="margin-top:.6rem;font-size:.85rem"><a href="#" onclick="doSignOut();return false">Se déconnecter</a></p>`);
-}
-
 // ── Portfolio (illustrateurs) ───────────────────────────────────────────────
 let pPendingUrl = null, pPendingMeta = null;
 function openPortfolio(){ $("#pmodal").style.display="flex"; renderPUpload(); loadPGrid(); }
@@ -624,72 +1027,81 @@ function renderPUpload(){
   const can = (MYROLE==="illustrator"||MYROLE==="editor");
   const u=$("#pUpload"); u.style.display = can ? "flex" : "none";
   if(can) u.innerHTML = `
-    <button onclick="document.querySelector('#pFile').click()">📷 Choisir une image</button>
+    <button onclick="document.querySelector('#pFile').click()">${I18n.t("ed.pickImage")}</button>
     <input id="pFile" type="file" accept="image/*" style="display:none" onchange="pPickFile(this.files[0])">
-    <input id="pCap" type="text" placeholder="Légende (optionnelle)">
-    <button class="go" onclick="addToPortfolio()">Ajouter au portfolio</button>
+    <input id="pCap" type="text" placeholder="${I18n.t("ed.captionPh")}">
+    <button class="go" onclick="addToPortfolio()">${I18n.t("ed.addToPortfolio")}</button>
     <span id="pStatus" style="font-size:.78rem;color:#6a6253"></span>`;
 }
 async function pPickFile(file){
   if(!file) return;
-  $("#pStatus").textContent="Envoi…";
-  try{ pPendingMeta = await Media.upload(file,"portfolio"); pPendingUrl = pPendingMeta.url; $("#pStatus").textContent="✓ prête — ajoutez une légende puis « Ajouter »."; }
-  catch(e){ $("#pStatus").textContent="Erreur : "+e.message; }
+  $("#pStatus").textContent=I18n.t("ed.sending");
+  try{ pPendingMeta = await Media.upload(file,"portfolio"); pPendingUrl = pPendingMeta.url; $("#pStatus").textContent=I18n.t("ed.portfolioReady"); }
+  catch(e){ $("#pStatus").textContent=I18n.t("ed.error",{msg:e.message}); }
 }
 async function addToPortfolio(){
-  if(!pPendingUrl){ $("#pStatus").textContent="Choisissez d’abord une image."; return; }
+  if(!pPendingUrl){ $("#pStatus").textContent=I18n.t("ed.pickImageFirst"); return; }
   try{
     await Portfolio.add({ url:pPendingUrl, caption:($("#pCap")||{}).value||"", clan:(MYPROFILE&&MYPROFILE.clan)||"", uploader_name:(MYPROFILE&&MYPROFILE.display_name)||"",
                           mime:pPendingMeta&&pPendingMeta.mime, bytes:pPendingMeta&&pPendingMeta.bytes, width:pPendingMeta&&pPendingMeta.width, height:pPendingMeta&&pPendingMeta.height });
-    pPendingUrl=null; pPendingMeta=null; if($("#pCap")) $("#pCap").value=""; $("#pStatus").textContent="✓ Ajoutée au portfolio.";
+    pPendingUrl=null; pPendingMeta=null; if($("#pCap")) $("#pCap").value=""; $("#pStatus").textContent=I18n.t("ed.portfolioAdded");
     await loadPGrid();
-  }catch(e){ $("#pStatus").textContent="Erreur : "+e.message; }
+  }catch(e){ $("#pStatus").textContent=I18n.t("ed.error",{msg:e.message}); }
 }
 async function loadPGrid(){
-  let imgs=[]; try{ imgs=await Portfolio.list(); }catch(e){ $("#pGrid").innerHTML=`<div class="pempty">Portfolio indisponible.<br>${escapeHtml(e.message)}</div>`; return; }
+  let imgs=[]; try{ imgs=await Portfolio.list(); }catch(e){ $("#pGrid").innerHTML=`<div class="pempty">${I18n.t("ed.portfolioUnavailable")}<br>${escapeHtml(e.message)}</div>`; return; }
   $("#pGrid").innerHTML = imgs.length ? imgs.map(im=>{
     const own = im.uploader_id===ME || MYROLE==="editor";
     return `<div class="pcell">
       <img src="${escapeHtml(im.url)}" alt="">
       ${im.caption?`<div class="cap">${escapeHtml(im.caption)}</div>`:""}
-      <div class="by">par ${escapeHtml(im.uploader_name||"?")}${im.clan?" · "+escapeHtml(im.clan):""}</div>
+      <div class="by">${I18n.t("ed.by",{name:escapeHtml(im.uploader_name||"?")})}${im.clan?" · "+escapeHtml(im.clan):""}</div>
       <div class="pacts">
-        <button class="use" onclick="usePortfolioImage('${escapeHtml(im.url)}')">Utiliser</button>
-        ${own?`<button class="rm" title="Supprimer" onclick="removePortfolioImage('${im.id}')">✕</button>`:""}
+        <button class="use" onclick="usePortfolioImage('${escapeHtml(im.url)}')">${I18n.t("ed.use")}</button>
+        ${own?`<button class="rm" title="${I18n.t("ed.removeTitle")}" onclick="removePortfolioImage('${im.id}')">✕</button>`:""}
       </div></div>`;
-  }).join("") : `<div class="pempty">Aucune image pour l’instant.${(MYROLE==="illustrator"||MYROLE==="editor")?" Ajoutez-en une ci-dessus.":""}</div>`;
+  }).join("") : `<div class="pempty">${I18n.t("ed.portfolioEmpty")}${(MYROLE==="illustrator"||MYROLE==="editor")?I18n.t("ed.portfolioEmptyAdd"):""}</div>`;
 }
-function usePortfolioImage(url){ F.image.value=url; showPreview(url); closePortfolio(); toast("Image ajoutée à l’article — enregistrez."); }
-async function removePortfolioImage(id){ if(!confirm("Retirer cette image du portfolio ?"))return; try{ await Portfolio.remove(id); await loadPGrid(); }catch(e){ alert(e.message); } }
+function usePortfolioImage(url){ F.image.value=url; showPreview(url); closePortfolio(); toast(I18n.t("ed.imageAddedToArticle")); }
+async function removePortfolioImage(id){ if(!confirm(I18n.t("ed.confirmRemovePortfolio")))return; try{ await Portfolio.remove(id); await loadPGrid(); }catch(e){ alert(e.message); } }
 
 // ── Journaux : créer / gérer une édition ────────────────────────────────────
 function journalForm(p, isNew){
-  const plates=[["plate-fraktur","Gothique (fraktur)"],["plate-anton","Condensé (Anton)"],["plate-echo","Sobre (navy/Oswald)"]];
+  const plates=[["plate-fraktur",I18n.t("ed.plateFraktur")],["plate-anton",I18n.t("ed.plateAnton")],["plate-echo",I18n.t("ed.plateEcho")]];
+  const themes=Object.entries(window.DAIHBI_THEMES||{classic:{label:"Classique"}});
+  const curTheme=p.theme||"classic";
   return `
-    <label>Nom du journal</label><input id="j_name" value="${escapeHtml(p.name||"")}" placeholder="L’Étendard du 8e">
-    ${isNew?`<label>Identifiant (URL, sans espaces)</label><input id="j_issue" value="" placeholder="etendard-8e">`:""}
-    <label>Sous-titre</label><input id="j_tagline" value="${escapeHtml(p.tagline||"")}" placeholder="Devise du journal">
+    <label>${I18n.t("ed.jName")}</label><input id="j_name" value="${escapeHtml(p.name||"")}" placeholder="${I18n.t("ed.jNamePh")}">
+    ${isNew?`<label>${I18n.t("ed.jIssue")}</label><input id="j_issue" value="" placeholder="${I18n.t("ed.jIssuePh")}">`:""}
+    <label>${I18n.t("ed.jTagline")}</label><input id="j_tagline" value="${escapeHtml(p.tagline||"")}" placeholder="${I18n.t("ed.jTaglinePh")}">
     <div class="two">
-      <div><label>Style du titre</label><select id="j_plate">${plates.map(([v,l])=>`<option value="${v}" ${((p.plate||"plate-fraktur")===v)?"selected":""}>${l}</option>`).join("")}</select></div>
-      <div><label>Régiment</label><select id="j_clan">${(window.DAIHBI_CLANS||[]).map(c=>`<option ${c===p.clan?"selected":""}>${escapeHtml(c)}</option>`).join("")}</select></div>
+      <div><label>${I18n.t("ed.jPlate")}</label><select id="j_plate">${plates.map(([v,l])=>`<option value="${v}" ${((p.plate||"plate-fraktur")===v)?"selected":""}>${l}</option>`).join("")}</select></div>
+      <div><label>${I18n.t("ed.jClan")}</label><select id="j_clan">${(window.DAIHBI_CLANS||[]).map(c=>`<option ${c===p.clan?"selected":""}>${escapeHtml(c)}</option>`).join("")}</select></div>
     </div>
-    <label>Bandeau (gauche · centre · droite)</label>
+    <label>${I18n.t("ed.jTheme")} <span style="font-weight:400;color:#8a8170">${I18n.t("ed.jThemeHint")}</span></label>
+    <select id="j_theme" onchange="updateThemeNote()">${themes.map(([v,t])=>`<option value="${v}" ${(curTheme===v)?"selected":""}>${escapeHtml(t.label||v)}</option>`).join("")}</select>
+    <div id="j_theme_note" style="font-size:.8rem;color:#8a8170;margin:.25rem 0 .2rem"></div>
+    <label>${I18n.t("ed.jEar")}</label>
     <div class="two" style="grid-template-columns:1fr 1fr 1fr">
-      <input id="j_ear0" value="${escapeHtml((p.ear&&p.ear[0])||"")}" placeholder="gauche">
-      <input id="j_ear1" value="${escapeHtml((p.ear&&p.ear[1])||"")}" placeholder="centre">
-      <input id="j_ear2" value="${escapeHtml((p.ear&&p.ear[2])||"")}" placeholder="droite">
+      <input id="j_ear0" value="${escapeHtml((p.ear&&p.ear[0])||"")}" placeholder="${I18n.t("ed.jEarLeft")}">
+      <input id="j_ear1" value="${escapeHtml((p.ear&&p.ear[1])||"")}" placeholder="${I18n.t("ed.jEarCenter")}">
+      <input id="j_ear2" value="${escapeHtml((p.ear&&p.ear[2])||"")}" placeholder="${I18n.t("ed.jEarRight")}">
     </div>
-    <label>Slogans de pied (séparés par « | »)</label>
-    <input id="j_slogans" value="${escapeHtml((p.slogans||[]).join(" | "))}" placeholder="Vive les Wardens | …">
+    <label>${I18n.t("ed.jSlogans")}</label>
+    <input id="j_slogans" value="${escapeHtml((p.slogans||[]).join(" | "))}" placeholder="${I18n.t("ed.jSlogansPh")}">
     <div class="two">
-      <div><label>Emblème gauche (URL)</label><input id="j_eleft" value="${escapeHtml(p.emblemLeft||"")}" placeholder="https://…"></div>
-      <div><label>Emblème droit (URL)</label><input id="j_eright" value="${escapeHtml(p.emblemRight||"")}" placeholder="https://…"></div>
+      <div><label>${I18n.t("ed.jEmblemLeft")}</label><input id="j_eleft" value="${escapeHtml(p.emblemLeft||"")}" placeholder="https://…"></div>
+      <div><label>${I18n.t("ed.jEmblemRight")}</label><input id="j_eright" value="${escapeHtml(p.emblemRight||"")}" placeholder="https://…"></div>
     </div>
     <div class="jerr" id="jErr"></div>`;
 }
+function updateThemeNote(){
+  const sel=$("#j_theme"), note=$("#j_theme_note"); if(!sel||!note) return;
+  const t=(window.DAIHBI_THEMES||{})[sel.value]; note.textContent=(t&&t.note)||"";
+}
 function readJournal(isNew){
   return { issue: isNew ? $("#j_issue").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") : ISSUE,
-    name:$("#j_name").value.trim(), tagline:$("#j_tagline").value.trim(), plate:$("#j_plate").value, clan:$("#j_clan").value,
+    name:$("#j_name").value.trim(), tagline:$("#j_tagline").value.trim(), plate:$("#j_plate").value, theme:$("#j_theme").value, clan:$("#j_clan").value,
     ear:[$("#j_ear0").value.trim(),$("#j_ear1").value.trim(),$("#j_ear2").value.trim()],
     slogans:$("#j_slogans").value.split("|").map(s=>s.trim()).filter(Boolean),
     emblemLeft:$("#j_eleft").value.trim(), emblemRight:$("#j_eright").value.trim() };
@@ -698,15 +1110,16 @@ function openCreateJournal(){
   // a ready-made template so the editor isn't starting from a blank page
   const tmpl = { plate:"plate-fraktur", ear:["Édition du Front", "", "Warden"],
     slogans:["Vive les Wardens"], clan:(MYPROFILE&&MYPROFILE.clan)||"" };
-  $("#jTitle").textContent="Créer un journal";
-  $("#jBody").innerHTML = journalForm(tmpl,true) + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">Créer le journal</button></div>`;
+  $("#jTitle").textContent=I18n.t("ed.createJournalTitle");
+  $("#jBody").innerHTML = journalForm(tmpl,true) + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">${I18n.t("ed.createJournalBtn")}</button></div>`;
+  updateThemeNote();
   $("#jmodal").style.display="flex";
 }
 async function createJournal(){
   const p=readJournal(true);
-  if(!p.name){ $("#jErr").textContent="Donnez un nom."; return; }
-  if(!p.issue){ $("#jErr").textContent="Donnez un identifiant (lettres/chiffres/tirets)."; return; }
-  if(PAPERS[p.issue]){ $("#jErr").textContent="Cet identifiant existe déjà."; return; }
+  if(!p.name){ $("#jErr").textContent=I18n.t("ed.jGiveName"); return; }
+  if(!p.issue){ $("#jErr").textContent=I18n.t("ed.jGiveIssue"); return; }
+  if(PAPERS[p.issue]){ $("#jErr").textContent=I18n.t("ed.jIssueExists"); return; }
   try{
     await Papers.create(p);
     location.href=`board.html?issue=${encodeURIComponent(p.issue)}`;   // lay it out (pull from the pool)
@@ -716,16 +1129,17 @@ let manageIssue = ISSUE;   // which journal the manage modal is editing
 function openManageJournal(issue){
   manageIssue = issue || ISSUE;
   const p = Object.assign({issue:manageIssue}, PAPERS[manageIssue]||{});
-  $("#jTitle").textContent="Gérer : "+(p.name||manageIssue);
+  $("#jTitle").textContent=I18n.t("ed.manageJournalTitle",{name:(p.name||manageIssue)});
   $("#jBody").innerHTML = journalForm(p,false)
-    + `<div class="jbar"><span class="grow"></span><button class="go" onclick="saveJournal()">Enregistrer le journal</button></div>
+    + `<div class="jbar"><span class="grow"></span><button class="go" onclick="saveJournal()">${I18n.t("ed.saveJournalBtn")}</button></div>
        <div id="coeds"></div>`;
+  updateThemeNote();
   $("#jmodal").style.display="flex";
   loadCoEditors();
 }
 async function saveJournal(){
   try{ await Papers.update(manageIssue, readJournal(false)); PAPERS=await Papers.map(); reloadPreview();
-    $("#jErr").textContent="✓ Enregistré."; if($("#dash").style.display!=="none") renderDashboard(); }
+    $("#jErr").textContent=I18n.t("ed.jSaved"); if($("#dash").style.display!=="none") renderDashboard(); }
   catch(e){ $("#jErr").textContent=e.message; }
 }
 async function loadCoEditors(){
@@ -733,13 +1147,13 @@ async function loadCoEditors(){
     const ids = await Papers.editors(manageIssue);
     const profs = await Profiles.all();
     const byId = Object.fromEntries(profs.map(p=>[p.id,p]));
-    const rows = ids.map(id=>{ const pr=byId[id]||{}; return `<div class="coed"><span class="grow">${escapeHtml(pr.display_name||id.slice(0,8))}${id===ME?" (vous)":""}</span>${id===ME?"":`<button onclick="rmCoEditor('${id}')">Retirer</button>`}</div>`; }).join("");
+    const rows = ids.map(id=>{ const pr=byId[id]||{}; return `<div class="coed"><span class="grow">${escapeHtml(pr.display_name||id.slice(0,8))}${id===ME?I18n.t("ed.you"):""}</span>${id===ME?"":`<button onclick="rmCoEditor('${id}')">${I18n.t("ed.remove")}</button>`}</div>`; }).join("");
     const addable = profs.filter(p=>p.role==="editor" && !ids.includes(p.id));
     const addOpts = addable.map(p=>`<option value="${p.id}">${escapeHtml(p.display_name||p.id.slice(0,8))}</option>`).join("");
-    $("#coeds").innerHTML = `<label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;margin:.8rem 0 .2rem;font-weight:600">Éditeurs du journal</label>
+    $("#coeds").innerHTML = `<label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;margin:.8rem 0 .2rem;font-weight:600">${I18n.t("ed.coeditors")}</label>
       ${rows||"<div class='coed'>—</div>"}
-      ${addOpts?`<div class="jbar"><select id="coSel" style="flex:1;padding:.5rem;border:1px solid #c9bda0;border-radius:6px">${addOpts}</select><button onclick="addCoEditor()">Ajouter</button></div>`
-               :"<div style='font-size:.8rem;color:#7a7060;margin-top:.4rem'>Aucun autre éditeur à ajouter.</div>"}`;
+      ${addOpts?`<div class="jbar"><select id="coSel" style="flex:1;padding:.5rem;border:1px solid #c9bda0;border-radius:6px">${addOpts}</select><button onclick="addCoEditor()">${I18n.t("ed.add")}</button></div>`
+               :`<div style='font-size:.8rem;color:#7a7060;margin-top:.4rem'>${I18n.t("ed.noOtherEditor")}</div>`}`;
   }catch(e){ $("#coeds").innerHTML=`<div class="jerr">${escapeHtml(e.message)}</div>`; }
 }
 async function addCoEditor(){ try{ await Papers.addEditor(manageIssue,$("#coSel").value); loadCoEditors(); }catch(e){ alert(e.message); } }
@@ -748,17 +1162,17 @@ function closeJournal(){ $("#jmodal").style.display="none"; }
 
 // ── Export print-grade PDF (Scribus via GitHub Action) ──────────────────────
 async function runExport(){
-  const s = await Auth.session(); if(!s){ toast("Connectez-vous."); return; }
-  toast("Export imprimable lancé…");
+  const s = await Auth.session(); if(!s){ toast(I18n.t("ed.pleaseLogin")); return; }
+  toast(I18n.t("ed.exportStarted"));
   try{
     const res = await fetch("/api/export", { method:"POST",
       headers:{ "content-type":"application/json", "Authorization":"Bearer "+s.access_token },
       body: JSON.stringify({ issue: ISSUE }) });
     const data = await res.json().catch(()=>({}));
-    if(!res.ok){ toast("Erreur : "+(data.error||res.status)); return; }
-    toast("Scribus met en page le PDF… (~1–2 min)");
+    if(!res.ok){ toast(I18n.t("ed.error",{msg:(data.error||res.status)})); return; }
+    toast(I18n.t("ed.exportLayout"));
     pollExport(data.pdf);
-  }catch(e){ toast("Erreur : "+e.message+" (export disponible une fois le token GitHub configuré)"); }
+  }catch(e){ toast(I18n.t("ed.exportTokenHint",{msg:e.message})); }
 }
 function pollExport(pdfUrl){
   let tries=0;
@@ -766,37 +1180,37 @@ function pollExport(pdfUrl){
     tries++;
     try{
       const r = await fetch(pdfUrl+"?t="+Date.now(), { cache:"no-store" });
-      if(r.ok){ clearInterval(iv); toast("PDF imprimable prêt ✓"); window.open(pdfUrl,"_blank"); return; }
+      if(r.ok){ clearInterval(iv); toast(I18n.t("ed.pdfReady")); window.open(pdfUrl,"_blank"); return; }
     }catch(e){}
-    if(tries>=30){ clearInterval(iv); toast("PDF bientôt prêt — réessayez « PDF imprimable » dans 1 min."); }
+    if(tries>=30){ clearInterval(iv); toast(I18n.t("ed.pdfSoon")); }
   }, 6000);
 }
 
 // ── Historique des révisions ────────────────────────────────────────────────
 async function openHistory(){
   if(current==null) return;
-  $("#hmodal").style.display="flex"; $("#hList").innerHTML="<div style='padding:1rem;color:#7a7060'>Chargement…</div>";
+  $("#hmodal").style.display="flex"; $("#hList").innerHTML=`<div style='padding:1rem;color:#7a7060'>${I18n.t("ed.loading")}</div>`;
   try{
     const revs = await Revisions.list(current);
     $("#hList").innerHTML = revs.length ? revs.map(r=>{
       const who=nameOf(r.edited_by||r.author_id)||"?";
       const body=(r.body||""); const ex=body.slice(0,160)+(body.length>160?"…":"");
       return `<div class="revrow">
-        <div class="revmeta"><b>${escapeHtml(r.headline||"(sans titre)")}</b>
-          <span>${new Date(r.created_at).toLocaleString("fr-FR")} · ${escapeHtml(who)} · ${escapeHtml(statusLabel(r))}</span></div>
-        <div class="revexcerpt">${escapeHtml(ex)||"<i>(vide)</i>"}</div>
-        <div class="revacts"><button onclick='restoreRevision(${JSON.stringify(r).replace(/'/g,"&#39;")})'>↩ Restaurer ce texte</button></div>
+        <div class="revmeta"><b>${escapeHtml(r.headline||I18n.t("ed.revUntitled"))}</b>
+          <span>${I18n.fmtDateTime(r.created_at)} · ${escapeHtml(who)} · ${escapeHtml(statusLabel(r))}</span></div>
+        <div class="revexcerpt">${escapeHtml(ex)||`<i>${I18n.t("ed.revEmpty")}</i>`}</div>
+        <div class="revacts"><button onclick='restoreRevision(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${I18n.t("ed.restoreBtn")}</button></div>
       </div>`;
-    }).join("") : `<div style="padding:1.2rem;color:#7a7060;font-style:italic">Aucune révision encore. L’historique se remplit à chaque enregistrement modifiant le texte.</div>`;
+    }).join("") : `<div style="padding:1.2rem;color:#7a7060;font-style:italic">${I18n.t("ed.noRevisions")}</div>`;
   }catch(e){ $("#hList").innerHTML=`<div class="jerr" style="padding:1rem">${escapeHtml(e.message)}</div>`; }
 }
 function closeHistory(){ $("#hmodal").style.display="none"; }
 async function restoreRevision(r){
-  if(!confirm("Restaurer ce texte ? La version actuelle sera conservée dans l’historique."))return;
+  if(!confirm(I18n.t("ed.confirmRestore")))return;
   try{
     const saved = await Chronicles.update(current, { kicker:r.kicker||"", headline:r.headline||"", subhead:r.subhead||"",
       byline:r.byline||"", body:r.body||"", image_url:r.image_url||"" });
-    fill(saved); await loadList(); closeHistory(); toast("Révision restaurée ✓");
+    fill(saved); await loadList(); closeHistory(); toast(I18n.t("ed.revisionRestored"));
   }catch(e){ alert(e.message); }
 }
 function reloadPreview(){ /* chronicle workspace has no paper preview */ }
@@ -821,6 +1235,7 @@ document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s")
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 async function boot(){
+  I18n.apply(document);   // translate static chrome + set <html lang>
   if(!configured){ setupNotice(); return; }
   // Password-recovery deep link: let the user set a new password instead of
   // silently logging them into the app with the recovery session.
@@ -836,8 +1251,8 @@ async function boot(){
   // load profile + role
   MYPROFILE = await Profiles.me();
   MYROLE = (MYPROFILE && MYPROFILE.role) || "reader";
-  if(MYROLE === "annonceur"){ advertiserGate(); return; }   // ad studio coming soon
-  if(!["writer","illustrator","editor"].includes(MYROLE)){ readerGate(); return; }  // readers → kiosque
+  I18n.adoptProfile(MYPROFILE);
+  // Anyone signed in can write a chronicle — no role gate (editors still publish).
   // signed in as a contributor
   hideGate();
   ME = session.user.id; MY_EMAIL = session.user.email || "";
@@ -845,7 +1260,9 @@ async function boot(){
   refreshNavUser();
   // chronicle workspace: hide paper-specific header controls
   ["editionWrap","manageLink","printLink","openPaper","homeLink"].forEach(id=>{const e=$("#"+id); if(e) e.style.display="none";});
-  const nb=$("#newBtn"); if(nb) nb.textContent="✍️ Nouvelle chronique";
+  const nb=$("#newBtn"); if(nb) nb.textContent=I18n.t("ed.newChronicle");
+  // advertisers (and editors) keep quick access to the ad studio
+  if(MYROLE==="annonceur"||MYROLE==="editor"){ const al=$("#adsLink"); if(al) al.style.display=""; }
   try{ const ps=await Profiles.all(); PROFMAP=Object.fromEntries(ps.map(p=>[p.id, p.display_name||""])); }catch(e){}
   if(MYROLE==="editor"){
     $("#adsLink").style.display="";
@@ -868,7 +1285,7 @@ function goDashboard(){ showJournaux(); }
 let DASH_STATS = {};   // issue → {total, published, latest(ms), lastActivity(ms)}
 let POOL_WAITING = null;   // # chronicles submitted to the shared pool
 const dashStat = is => DASH_STATS[is] || { total:0, published:0, latest:0, lastActivity:0 };
-function fmtDay(ms){ return ms ? new Date(ms).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}) : ""; }
+function fmtDay(ms){ return ms ? I18n.fmtDate(ms,{day:"numeric",month:"long",year:"numeric"}) : ""; }
 
 async function renderDashboard(){
   $("#app").style.display="none"; $("#dash").style.display="";
@@ -876,12 +1293,12 @@ async function renderDashboard(){
   ["homeLink","editionWrap","manageLink","printLink","newBtn","openPaper"].forEach(id=>{const e=$("#"+id); if(e) e.style.display="none";});
   const isEd = MYROLE==="editor";
   const issues = isEd ? MY_MANAGED.slice() : Object.keys(PAPERS);
-  $("#dashTitle").textContent = isEd ? "Mes journaux" : "Choisir un journal";
-  $("#dashSub").innerHTML = isEd ? dashSubHTML() : "Ouvrez le journal pour lequel vous voulez contribuer.";
+  $("#dashTitle").textContent = isEd ? I18n.t("ed.dashTitleEditor") : I18n.t("ed.dashTitleChoose");
+  $("#dashSub").innerHTML = isEd ? dashSubHTML() : I18n.t("ed.dashSubChoose");
   if(!isEd){
     $("#dashGrid").innerHTML = issues.length
       ? issues.map(is => dashCard(is, PAPERS[is] || {name:is})).join("")
-      : `<div class="dempty">Aucun journal disponible pour l’instant.</div>`;
+      : `<div class="dempty">${I18n.t("ed.dashEmpty")}</div>`;
     return;
   }
   renderJournalGrid(issues);          // render with whatever stats we have (cached or none yet)
@@ -898,16 +1315,16 @@ function renderJournalGrid(issues){
   const pubs   = issues.filter(is => dashStat(is).published > 0)
                        .sort((a,b)=> dashStat(b).latest - dashStat(a).latest);
   const cards = [...drafts, ...pubs].map(is => dashCard(is, PAPERS[is] || {name:is}, DASH_STATS[is]));
-  cards.push(`<div class="dcard dnew" onclick="openCreateJournal()"><div class="dnew-plus">＋</div><div>Créer un journal</div></div>`);
+  cards.push(`<div class="dcard dnew" onclick="openCreateJournal()"><div class="dnew-plus">＋</div><div>${I18n.t("ed.createJournalCard")}</div></div>`);
   $("#dashGrid").innerHTML = cards.join("");
 }
 function dashSubHTML(){
-  const base = "Brouillons d’abord, puis les parutions de la plus récente à la plus ancienne.";
+  const base = I18n.t("ed.dashSubBase");
   if(POOL_WAITING===null) return base;
   const pool = POOL_WAITING
-    ? `<b>${POOL_WAITING}</b> chronique${POOL_WAITING>1?"s":""} ${POOL_WAITING>1?"attendent":"attend"} dans le pool`
-    : "Le pool est vide pour l’instant";
-  return `${base} <span class="dpool">📥 ${pool}.</span>`;
+    ? I18n.t(POOL_WAITING>1?"ed.poolWaitingMany":"ed.poolWaitingOne",{n:POOL_WAITING})
+    : I18n.t("ed.poolEmpty");
+  return I18n.t("ed.dashSubPool",{base, pool});
 }
 async function loadDashStats(issues){
   try{ POOL_WAITING = (await Chronicles.listPool()).length; }catch(e){ POOL_WAITING=null; }
@@ -924,15 +1341,15 @@ function dashStatsHTML(st){
   if(!st) return `<div class="dstats"><span class="dstat load">…</span></div>`;
   const prep = Math.max(0, st.total - st.published);
   return `<div class="dstats">
-    <span class="dstat pub" title="Chroniques publiées (visibles au kiosque)">● ${st.published} publiée${st.published>1?"s":""}</span>
-    <span class="dstat prep" title="Placées dans l’édition, pas encore publiées">○ ${prep} en préparation</span>
+    <span class="dstat pub" title="${I18n.t("ed.statPubTitle")}">${I18n.t(st.published>1?"ed.statPubMany":"ed.statPubOne",{n:st.published})}</span>
+    <span class="dstat prep" title="${I18n.t("ed.statPrepTitle")}">${I18n.t("ed.statPrep",{n:prep})}</span>
   </div>`;
 }
 function dashStatusHTML(st){
   if(!st) return `<div class="dstatus load">…</div>`;
   return st.published > 0
-    ? `<div class="dstatus pub" title="En ligne au kiosque">● Publié${st.latest?` · ${fmtDay(st.latest)}`:""}</div>`
-    : `<div class="dstatus draft" title="Aucune chronique publiée pour l’instant">○ Brouillon</div>`;
+    ? `<div class="dstatus pub" title="${I18n.t("ed.statusOnlineTitle")}">${st.latest?I18n.t("ed.statusPublishedDate",{date:fmtDay(st.latest)}):I18n.t("ed.statusPublished")}</div>`
+    : `<div class="dstatus draft" title="${I18n.t("ed.statusNonePubTitle")}">${I18n.t("ed.statusDraft")}</div>`;
 }
 function dashCard(issue, p, st){
   const cls = ({"plate-anton":"anton","plate-echo":"echo"}[p.plate]||"fraktur");
@@ -943,18 +1360,19 @@ function dashCard(issue, p, st){
     ${dashStatsHTML(st)}
     <div class="dmeta">${escapeHtml(p.clan||"")}</div>
     <div class="dacts">
-      <button class="open" onclick="openEdition('${issue}')">Mettre en page →</button>
-      <button class="manage" title="Gérer le journal (titre, style, éditeurs)" onclick="openManageJournal('${issue}')">⚙</button>
-      <button class="del" title="Supprimer le journal" onclick="deleteEdition('${issue}')">🗑</button>
+      <button class="open" onclick="openEdition('${issue}')">${I18n.t("ed.openLayout")}</button>
+      <button class="manage" title="${I18n.t("ed.manageJournalTip")}" onclick="openManageJournal('${issue}')">⚙</button>
+      <button class="del" title="${I18n.t("ed.deleteJournalTip")}" onclick="deleteEdition('${issue}')">🗑</button>
     </div></div>`;
 }
 function openEdition(issue){ location.href = "board.html?issue="+encodeURIComponent(issue); }
 async function deleteEdition(issue){
   const nm = (PAPERS[issue]&&PAPERS[issue].name)||issue;
-  if(!confirm(`Supprimer le journal « ${nm} » ?\nLe titre disparaît du kiosque ; les articles déjà écrits restent en base.`)) return;
-  try{ await Papers.remove(issue); MY_MANAGED = await Papers.myManaged(); PAPERS = await Papers.map(); renderDashboard(); toast("Journal supprimé"); }
-  catch(e){ alert("Suppression refusée (seul le propriétaire peut supprimer) : "+e.message); }
+  if(!confirm(I18n.t("ed.confirmDeleteJournal",{name:nm}))) return;
+  try{ await Papers.remove(issue); MY_MANAGED = await Papers.myManaged(); PAPERS = await Papers.map(); renderDashboard(); toast(I18n.t("ed.journalDeleted")); }
+  catch(e){ alert(I18n.t("ed.deleteRefused",{msg:e.message})); }
 }
+document.addEventListener("daihbi:langchange", ()=>{ I18n.apply(document); });
 boot();
 </script>
 </body>

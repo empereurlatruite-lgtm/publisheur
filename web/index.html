@@ -31,7 +31,9 @@
 
   .filters{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:center;
     padding:.8rem 1rem;background:#211f1c;color:#eee;font-family:system-ui,sans-serif;font-size:.85rem;box-shadow:0 2px 8px rgba(0,0,0,.4)}
-  .filters input[type=search],.filters input[type=date]{font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:6px;padding:.4rem .6rem}
+  .filters input[type=search],.filters input[type=date],.filters select{font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:6px;padding:.4rem .6rem}
+  .filters select#langfilter{cursor:pointer}
+  .filters select#langfilter option{background:#211f1c;color:#f3ead6}
   .filters input[type=search]{min-width:14rem}
   .chip{font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:999px;padding:.35rem .8rem;cursor:pointer}
   .chip:hover{background:#3a3631}
@@ -79,6 +81,9 @@
   .card .read:hover{filter:brightness(1.1)}
   .card.empty .lead{opacity:.5}
   .badge{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;background:#e7dcc2;color:#6a5;border:1px solid #cbbfa3;border-radius:4px;padding:.1rem .35rem;color:var(--muted)}
+  .card .meta .langs{display:inline-flex;gap:.2rem}
+  .lbadge{font-family:"Oswald",system-ui,sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.06em;
+    background:#1f3a5f;color:#fff;border-radius:3px;padding:.08rem .3rem}
 
   .state{grid-column:1/-1;text-align:center;color:#cdc4b2;padding:3rem 1rem;font-style:italic}
   footer{ text-align:center;color:#8a8170;font-family:system-ui,sans-serif;font-size:.75rem;padding:1.5rem}
@@ -89,43 +94,44 @@
 
 <header class="top">
   <div class="topright">
-    <button class="news" id="joinBtn" onclick="openIntro()">✋ Rejoindre</button>
-    <a class="news" id="redacLink" href="editor.html">✎ Espace rédaction</a>
+    <button class="news" id="joinBtn" onclick="openIntro()" data-i18n="kiosk.join">✋ Rejoindre</button>
+    <a class="news" id="redacLink" href="editor.html" data-i18n="kiosk.newsroom">✎ Espace rédaction</a>
     <span class="navuser" id="navuser"></span>
   </div>
-  <h1>Le Kiosque</h1>
-  <div class="sub">La presse Warden francophone — propulsée par Publisheur</div>
+  <h1 data-i18n="kiosk.title">Le Kiosque</h1>
+  <div class="sub" data-i18n="kiosk.tagline">La presse Warden — propulsée par Publisheur</div>
 </header>
 
 <!-- Intro / role-chooser modal -->
 <div class="introm" id="introm" style="display:none">
   <div class="introc">
-    <button class="introx" onclick="closeIntro()">✕</button>
-    <h2>Bienvenue au Kiosque</h2>
-    <p class="introlead">La presse <b>Warden francophone</b> — écrite et mise en page <b>ensemble</b>.
+    <button class="introx" onclick="closeIntro()" aria-label="Close" data-i18n-aria="auth.close">✕</button>
+    <h2 data-i18n="kiosk.introTitle">Bienvenue au Kiosque</h2>
+    <p class="introlead" data-i18n-html="kiosk.introLead">La presse <b>Warden</b> — écrite et mise en page <b>ensemble</b>.
       Lisez librement ; pour contribuer, dites-nous qui vous êtes :</p>
     <div class="introroles">
-      <button onclick="chooseRole('reader')"><span class="ic">📖</span><b>Lecteur</b><span class="d">Lire &amp; commenter</span></button>
-      <button onclick="chooseRole('writer')"><span class="ic">✍️</span><b>Chroniqueur</b><span class="d">Écrire des chroniques</span></button>
-      <button onclick="chooseRole('illustrator')"><span class="ic">🎨</span><b>Illustrateur / Propagandiste</b><span class="d">Visuels &amp; affiches</span></button>
-      <button onclick="chooseRole('annonceur')"><span class="ic">📣</span><b>Annonceur</b><span class="d">Publier des réclames</span></button>
+      <button onclick="chooseRole('reader')"><span class="ic">📖</span><b data-i18n="role.reader">Lecteur</b><span class="d" data-i18n="kiosk.roleReaderD">Lire &amp; commenter</span></button>
+      <button onclick="chooseRole('writer')"><span class="ic">✍️</span><b data-i18n="role.writer">Chroniqueur</b><span class="d" data-i18n="kiosk.roleWriterD">Écrire des chroniques</span></button>
+      <button onclick="chooseRole('illustrator')"><span class="ic">🎨</span><b data-i18n="role.illustrator">Illustrateur / Propagandiste</b><span class="d" data-i18n="kiosk.roleIlloD">Visuels &amp; affiches</span></button>
+      <button onclick="chooseRole('annonceur')"><span class="ic">📣</span><b data-i18n="role.annonceur">Annonceur</b><span class="d" data-i18n="kiosk.roleAdD">Publier des réclames</span></button>
     </div>
-    <p class="introskip"><a href="#" onclick="closeIntro();return false">Juste parcourir le kiosque →</a></p>
-    <p class="intronote">Rédacteur en chef d’un journal ? Inscrivez-vous comme chroniqueur ; un rédacteur en chef vous donnera les droits (ou vous créerez votre journal).</p>
+    <p class="introskip"><a href="#" onclick="closeIntro();return false" data-i18n="kiosk.justBrowse">Juste parcourir le kiosque →</a></p>
+    <p class="intronote" data-i18n="kiosk.introNote">N’importe qui peut écrire une chronique — connectez-vous et lancez-vous ; un rédacteur en chef la mettra en page.</p>
   </div>
 </div>
 
 <div class="filters">
-  <input type="search" id="q" placeholder="Rechercher un journal, un titre…">
-  <button class="chip on" data-range="all">Tout</button>
-  <button class="chip" data-range="today">Aujourd’hui</button>
-  <button class="chip" data-range="7">7 jours</button>
-  <input type="date" id="day" title="Filtrer par jour">
+  <input type="search" id="q" placeholder="Rechercher un journal, un titre…" data-i18n-ph="kiosk.searchPh">
+  <button class="chip on" data-range="all" data-i18n="kiosk.all">Tout</button>
+  <button class="chip" data-range="today" data-i18n="kiosk.today">Aujourd’hui</button>
+  <button class="chip" data-range="7" data-i18n="kiosk.days7">7 jours</button>
+  <input type="date" id="day" title="Filtrer par jour" data-i18n-title="kiosk.filterByDay">
+  <select id="langfilter" class="chip" title="Filtrer par langue" data-i18n-title="kiosk.filterByLang"></select>
   <span class="count" id="count"></span>
 </div>
 
-<div class="grid" id="grid"><div class="state">Ouverture du kiosque…</div></div>
-<footer>Publisheur · presse collaborative Warden</footer>
+<div class="grid" id="grid"><div class="state" data-i18n="kiosk.opening">Ouverture du kiosque…</div></div>
+<footer data-i18n="kiosk.footer">Publisheur · presse collaborative Warden</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
@@ -133,27 +139,74 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { db, esc, configured, Papers, Auth, Profiles, NavUser, AuthModal } = window.Daihbi;
+const { db, esc, configured, Papers, Auth, Profiles, NavUser, AuthModal, I18n, Prefs } = window.Daihbi;
+
+I18n.register({
+  fr: {
+    "kiosk.join":"✋ Rejoindre","kiosk.newsroom":"✎ Espace rédaction","kiosk.newsroomShort":"✎ Rédaction",
+    "kiosk.title":"Le Kiosque","kiosk.tagline":"La presse Warden — propulsée par Publisheur",
+    "kiosk.introTitle":"Bienvenue au Kiosque",
+    "kiosk.introLead":"La presse <b>Warden</b> — écrite et mise en page <b>ensemble</b>. Lisez librement ; pour contribuer, dites-nous qui vous êtes :",
+    "kiosk.roleReaderD":"Lire & commenter","kiosk.roleWriterD":"Écrire des chroniques",
+    "kiosk.roleIlloD":"Visuels & affiches","kiosk.roleAdD":"Publier des réclames",
+    "kiosk.justBrowse":"Juste parcourir le kiosque →",
+    "kiosk.introNote":"N’importe qui peut écrire une chronique — connectez-vous et lancez-vous ; un rédacteur en chef la mettra en page.",
+    "kiosk.searchPh":"Rechercher un journal, un titre…","kiosk.all":"Tout","kiosk.today":"Aujourd’hui",
+    "kiosk.days7":"7 jours","kiosk.filterByDay":"Filtrer par jour","kiosk.filterByLang":"Filtrer par langue",
+    "kiosk.opening":"Ouverture du kiosque…","kiosk.footer":"Publisheur · presse collaborative Warden",
+    "kiosk.papers":"{n} journaux","kiosk.paper":"{n} journal",
+    "kiosk.upcoming":"À paraître","kiosk.empty":"vide","kiosk.read":"Lire →",
+    "kiosk.articles":"{n} articles","kiosk.article":"{n} article",
+    "kiosk.updatedToday":"Mise à jour aujourd’hui","kiosk.hot":"🔥 Tout chaud",
+    "kiosk.newToday":"🔥 Nouveau · aujourd’hui","kiosk.editionOf":"édition du ",
+    "kiosk.noPapers":"Aucun journal pour ce filtre.","kiosk.notConnected":"Pas encore connecté.",
+    "kiosk.addKeys":"Ajoutez vos clés Supabase dans","kiosk.loadFail":"Impossible de charger le kiosque.",
+  },
+  en: {
+    "kiosk.join":"✋ Join","kiosk.newsroom":"✎ Newsroom","kiosk.newsroomShort":"✎ Newsroom",
+    "kiosk.title":"The Newsstand","kiosk.tagline":"The Warden press — powered by Publisheur",
+    "kiosk.introTitle":"Welcome to the Newsstand",
+    "kiosk.introLead":"The <b>Warden</b> press — written and laid out <b>together</b>. Read freely; to contribute, tell us who you are:",
+    "kiosk.roleReaderD":"Read & comment","kiosk.roleWriterD":"Write chronicles",
+    "kiosk.roleIlloD":"Visuals & posters","kiosk.roleAdD":"Publish ads",
+    "kiosk.justBrowse":"Just browse the newsstand →",
+    "kiosk.introNote":"Anyone can write a chronicle — sign in and go for it; an editor-in-chief will lay it out.",
+    "kiosk.searchPh":"Search a paper, a headline…","kiosk.all":"All","kiosk.today":"Today",
+    "kiosk.days7":"7 days","kiosk.filterByDay":"Filter by day","kiosk.filterByLang":"Filter by language",
+    "kiosk.opening":"Opening the newsstand…","kiosk.footer":"Publisheur · collaborative Warden press",
+    "kiosk.papers":"{n} papers","kiosk.paper":"{n} paper",
+    "kiosk.upcoming":"Coming soon","kiosk.empty":"empty","kiosk.read":"Read →",
+    "kiosk.articles":"{n} articles","kiosk.article":"{n} article",
+    "kiosk.updatedToday":"Updated today","kiosk.hot":"🔥 Hot off the press",
+    "kiosk.newToday":"🔥 New · today","kiosk.editionOf":"edition of ",
+    "kiosk.noPapers":"No paper for this filter.","kiosk.notConnected":"Not connected yet.",
+    "kiosk.addKeys":"Add your Supabase keys to","kiosk.loadFail":"Could not load the newsstand.",
+  },
+});
+
 let PAPERS = window.DAIHBI_PAPERS || {};
 const plateClass = p => ({"plate-anton":"anton","plate-echo":"echo"}[p] || "fraktur");
 const WRANK = {lead:0,major:1,minor:2,brief:3};
 
-let EDITIONS = [];           // [{issue, paper, count, latest(Date), lead}]
-let filter = { q:"", range:"all", day:"" };
+let EDITIONS = [];           // [{issue, paper, count, latest(Date), lead, langs}]
+let filter = { q:"", range:"all", day:"", lang:"" };
 
-function fmtDate(d){ return d ? d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}) : ""; }
+function fmtDate(d){ return d ? I18n.fmtDate(d,{weekday:"long",day:"numeric",month:"long",year:"numeric"}) : ""; }
 
 async function fetchEditions(){
   // published placements (layout) joined to their chronicle (text)
+  // article:articles(*) (not an explicit column list) so the kiosque keeps
+  // working before the i18n migration adds `lang` — a missing column is simply
+  // absent here, whereas naming it explicitly would 400.
   const { data, error } = await db.from("placements")
-    .select("issue,weight,updated_at,article:articles(kicker,headline,subhead)")
+    .select("issue,weight,updated_at,article:articles(*)")
     .eq("published", true);
   if(error) throw error;
   const byIssue = {};
   for(const p of (data||[])){
     const a = { issue:p.issue, weight:p.weight, updated_at:p.updated_at,
       kicker:(p.article&&p.article.kicker)||"", headline:(p.article&&p.article.headline)||"",
-      subhead:(p.article&&p.article.subhead)||"" };
+      subhead:(p.article&&p.article.subhead)||"", lang:(p.article&&p.article.lang)||"fr" };
     (byIssue[a.issue] ||= []).push(a);
   }
   // union of registry papers and any issue present in the data
@@ -163,7 +216,8 @@ async function fetchEditions(){
     const arts = (byIssue[issue]||[]).slice().sort((a,b)=>(WRANK[a.weight]??9)-(WRANK[b.weight]??9));
     const paper = PAPERS[issue] || { name: issue.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()), tagline:"", plate:"plate-fraktur", ear:["Édition","","Warden"] };
     const latest = arts.reduce((m,a)=>{ const t=new Date(a.updated_at); return t>m?t:m; }, new Date(0));
-    eds.push({ issue, paper, count:arts.length, latest: arts.length?latest:null, lead: arts[0]||null });
+    const langs = [...new Set(arts.map(a=>a.lang||"fr"))];
+    eds.push({ issue, paper, count:arts.length, latest: arts.length?latest:null, lead: arts[0]||null, langs });
   }
   // most recently updated first; empty editions last
   eds.sort((a,b)=> (b.latest?.getTime()||0) - (a.latest?.getTime()||0));
@@ -179,7 +233,7 @@ function collapseByNewspaper(eds){
   for(const ed of eds){
     const key = newspaperKey(ed);
     const head = seen.get(key);
-    if(head){ head.editions++; continue; }
+    if(head){ head.editions++; head.langs = [...new Set([...(head.langs||[]), ...(ed.langs||[])])]; continue; }
     ed.editions = 1;
     seen.set(key, ed);
   }
@@ -197,6 +251,10 @@ function passesText(ed){
   const q=filter.q.trim().toLowerCase(); if(!q) return true;
   return (ed.paper.name+" "+(ed.paper.tagline||"")+" "+(ed.lead?.headline||"")).toLowerCase().includes(q);
 }
+function passesLang(ed){
+  if(!filter.lang) return true;                 // "All languages"
+  return (ed.langs||[]).includes(filter.lang);  // edition has ≥1 chronicle in that language
+}
 
 function isFresh(ed){ return !!ed.latest && sameDay(ed.latest, new Date()); }
 
@@ -210,9 +268,10 @@ function cardHTML(ed){
       ${lead?.kicker?`<div class="kick">${esc(lead.kicker)}</div>`:""}
       <div class="lead">${esc(lead?.headline||"")}</div>
       ${lead?.subhead?`<div class="deck">${esc(lead.subhead)}</div>`:""}
-    </div>` : `<div class="teaser"><div class="lead">À paraître</div></div>`;
+    </div>` : `<div class="teaser"><div class="lead">${esc(I18n.t("kiosk.upcoming"))}</div></div>`;
+  const langBadges = (ed.langs||[]).map(l=>`<span class="lbadge" title="${esc(I18n.langLabel(l))}">${esc(l.toUpperCase())}</span>`).join("");
   return `<article class="card ${cls} ${ed.count?"":"empty"} ${fresh?"fresh":""}">
-    ${fresh?`<div class="ribbon" title="Mise à jour aujourd’hui">🔥 Tout chaud</div>`:""}
+    ${fresh?`<div class="ribbon" title="${esc(I18n.t("kiosk.updatedToday"))}">${esc(I18n.t("kiosk.hot"))}</div>`:""}
     <a href="paper.html?issue=${encodeURIComponent(ed.issue)}" style="text-decoration:none;color:inherit">
       <div class="preview">
         <div class="ears"><span>${ear[0]||""}</span><span>${ear[2]||""}</span></div>
@@ -222,32 +281,47 @@ function cardHTML(ed){
       </div>
     </a>
     <div class="meta">
-      ${fresh?`<span class="flag-new">🔥 Nouveau · aujourd’hui</span>`:""}
-      <span>${ed.count? `${ed.count} article${ed.count>1?"s":""}` : `<span class="badge">vide</span>`}${ed.latest?` · ${fresh?"":"édition du "}${fmtDate(ed.latest)}`:""}</span>
+      ${fresh?`<span class="flag-new">${esc(I18n.t("kiosk.newToday"))}</span>`:""}
+      <span>${ed.count? esc(I18n.t(ed.count>1?"kiosk.articles":"kiosk.article",{n:ed.count})) : `<span class="badge">${esc(I18n.t("kiosk.empty"))}</span>`}${ed.latest?` · ${fresh?"":esc(I18n.t("kiosk.editionOf"))}${fmtDate(ed.latest)}`:""}</span>
+      ${langBadges?`<span class="langs">${langBadges}</span>`:""}
       <span class="grow"></span>
-      <a class="read" href="paper.html?issue=${encodeURIComponent(ed.issue)}">Lire →</a>
+      <a class="read" href="paper.html?issue=${encodeURIComponent(ed.issue)}">${esc(I18n.t("kiosk.read"))}</a>
     </div>
   </article>`;
 }
 
 function render(){
-  const list = EDITIONS.filter(e=>passesText(e)&&passesDate(e));
-  $("#count").textContent = `${list.length} ${list.length>1?"journaux":"journal"}`;
+  const list = EDITIONS.filter(e=>passesText(e)&&passesDate(e)&&passesLang(e));
+  $("#count").textContent = I18n.t(list.length>1?"kiosk.papers":"kiosk.paper",{n:list.length});
   $("#grid").innerHTML = list.length
     ? list.map(cardHTML).join("")
-    : `<div class="state">Aucun journal pour ce filtre.</div>`;
+    : `<div class="state">${esc(I18n.t("kiosk.noPapers"))}</div>`;
+}
+
+// chips are <button data-range> only; the language <select> is excluded.
+function rangeChips(){ return document.querySelectorAll(".chip[data-range]"); }
+
+function populateLangFilter(){
+  const sel = $("#langfilter");
+  sel.innerHTML = I18n.contentOptionsHTML(filter.lang, true);
+  sel.value = filter.lang || "";
 }
 
 function wireFilters(){
   $("#q").addEventListener("input", e=>{ filter.q=e.target.value; render(); });
-  document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
-    document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+  rangeChips().forEach(c=>c.addEventListener("click",()=>{
+    rangeChips().forEach(x=>x.classList.remove("on"));
     c.classList.add("on"); filter.range=c.dataset.range; filter.day=""; $("#day").value=""; render();
   }));
   $("#day").addEventListener("change", e=>{
     filter.day=e.target.value;
-    document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+    rangeChips().forEach(x=>x.classList.remove("on"));
     if(!filter.day){ document.querySelector('.chip[data-range="all"]').classList.add("on"); filter.range="all"; }
+    render();
+  });
+  $("#langfilter").addEventListener("change", e=>{
+    filter.lang=e.target.value;
+    Prefs.setContentLang(filter.lang);   // remember the reader's choice
     render();
   });
 }
@@ -264,7 +338,7 @@ function chooseRole(role){
 
 // account control in the masthead: avatar + logout when signed in, an obvious
 // « Se connecter » button when not.
-const ROLE_LABELS={reader:"Lecteur",writer:"Chroniqueur",illustrator:"Illustrateur",editor:"Rédacteur en chef",annonceur:"Annonceur"};
+const roleLabel = r => I18n.t("role."+r);
 async function initAccount(){
   const join=$("#joinBtn"), redac=$("#redacLink"), nav=$("#navuser");
   try{
@@ -272,10 +346,11 @@ async function initAccount(){
     if(session){
       const profile = await Profiles.me();
       if(join) join.style.display="none";              // already aboard
-      if(redac){ redac.style.display=""; redac.textContent="✎ Rédaction"; }
+      if(redac){ redac.style.display=""; redac.textContent=I18n.t("kiosk.newsroomShort"); }
+      I18n.adoptProfile(profile);
       NavUser.render(nav, {
         profile, email:session.user.email, role:(profile&&profile.role)||"reader",
-        roleLabel:r=>ROLE_LABELS[r]||r,
+        roleLabel,
         onLogout: async()=>{ await Auth.signOut(); location.reload(); },
       });
     } else {
@@ -285,18 +360,27 @@ async function initAccount(){
   }catch(e){ /* anonymous kiosque still works without the account control */ }
 }
 
+// re-translate static chrome and re-render cards/labels when the UI language changes
+document.addEventListener("daihbi:langchange", ()=>{ I18n.apply(document); populateLangFilter(); render(); });
+
 (async function boot(){
-  if(!configured){ $("#grid").innerHTML = `<div class="state">Pas encore connecté.<br>Ajoutez vos clés Supabase dans <code>config.js</code>.</div>`; return; }
+  I18n.apply(document);   // translate static chrome + set <html lang>
+  if(!configured){ $("#grid").innerHTML = `<div class="state">${esc(I18n.t("kiosk.notConnected"))}<br>${esc(I18n.t("kiosk.addKeys"))} <code>config.js</code>.</div>`; return; }
   initAccount();
   // first visit → show the intro (the « Rejoindre » button reopens it anytime)
   let seen=false; try{ seen=!!localStorage.getItem("daihbi_intro_seen"); }catch(e){}
   // …but not when arriving from an auth email — AuthModal owns the screen then.
   const fromAuth=/error|type=recovery|access_token/.test(location.hash||"");
   if(!seen && !fromAuth) openIntro();
+  // restore the reader's saved language preference (guest: localStorage; member: profile)
+  filter.lang = Prefs.contentLangLocal();    // instant default; refined below
+  populateLangFilter();
   wireFilters();
   try{ PAPERS = await Papers.map(); }catch(e){ /* keep papers.js */ }
   try{ EDITIONS = await fetchEditions(); render(); }
-  catch(e){ $("#grid").innerHTML = `<div class="state">Impossible de charger le kiosque.<br>${esc(e.message)}</div>`; }
+  catch(e){ $("#grid").innerHTML = `<div class="state">${esc(I18n.t("kiosk.loadFail"))}<br>${esc(e.message)}</div>`; }
+  // refine from the profile (may override the local default for signed-in users)
+  try{ const pref = await Prefs.contentLang(); if(pref!==filter.lang){ filter.lang=pref; populateLangFilter(); render(); } }catch(e){}
 })();
 </script>
 </body>

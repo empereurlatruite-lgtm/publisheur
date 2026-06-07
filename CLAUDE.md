@@ -48,12 +48,23 @@ photo = `placement.image_url || article.image_url`.
   dispatches `publish.yml` to render the print PDF.
 - `supabase/*.sql` — migrations, applied by pasting into the Supabase SQL Editor **in
   order**: `schema → roles → comments → portfolio → ads → papers → revisions →
-  edited_by → pool → transparency → authors → ad_placements → media`.
+  edited_by → pool → transparency → authors → ad_placements → media → i18n →
+  theme`.
+  (`i18n` adds content `lang` to articles/ads/papers + `preferred_lang`/`ui_lang`
+  to profiles, and opens chronicle writing to any signed-in user — editors still
+  publish. `theme` adds `papers.theme` — the per-edition visual skin the
+  rédacteur en chef picks; theme keys live in `web/themes.js`, applied in
+  `paper.html`. **Required**: until it's run, saving any paper setting fails,
+  since `Papers.update/create` now write the `theme` column.)
 
 ## Roles
 `reader` (read anon, comment signed-in) · `writer` / `illustrator` (write chronicles;
 illustrators also fill the portfolio) · `editor` (lay out + publish their papers;
 scoped by `manages_issue(issue)` / `owns_issue(issue)`) · `annonceur` (ad studio).
+**Since the `i18n` migration, *any* signed-in user can write chronicles AND post
+réclames** (the role labels are now hints, not a write gate); editors still control
+what runs — they publish chronicles and approve ads. Content is multilingual: every
+chronicle/ad/paper has a `lang`; readers filter the kiosque by language.
 
 ## Working rules
 - **Git/GitHub:** committing & pushing IS allowed here (Marcel authed `gh` for this).

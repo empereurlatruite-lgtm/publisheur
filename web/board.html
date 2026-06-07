@@ -14,7 +14,23 @@
   header{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;flex:none}
   header h1{font-size:1.2rem;margin:0}
   header .grow{flex:1}
-  main{display:grid;grid-template-columns:300px 1fr minmax(320px,440px);height:calc(100vh - 52px)}
+  /* preview-as-canvas: the rendered paper fills the page; the edit panel docks right */
+  #app{display:flex;height:calc(100vh - 52px)}
+  #pv.canvas{flex:1;min-width:0;border:none;background:#efe8d6}
+  .dock{flex:0 0 360px;display:none;flex-direction:column;background:var(--panel);border-left:1px solid var(--line);overflow:auto}
+  .dock.open{display:flex}
+  .dock .dh{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:.4rem;padding:.6rem .8rem;
+    background:var(--panel);border-bottom:1px solid var(--line);font-weight:600;font-size:.9rem}
+  .dock .dh .grow{flex:1}
+  .dock .dh .pin,.dock .dh .x{font:inherit;background:#fff;border:1px solid var(--line);border-radius:6px;
+    padding:.2rem .45rem;cursor:pointer;line-height:1}
+  .dock .dh .pin.on{background:var(--accent);border-color:var(--accent);filter:saturate(1.2)}
+  .dock .body{padding:.6rem .8rem 1rem}
+  .dock .dhint{color:#8a8070;font-style:italic;font-size:.85rem;padding:1.2rem .2rem;text-align:center}
+  /* pool overlay sizing (reuses the shared .modal shell) */
+  .poolcard{max-width:420px;width:96vw;height:min(86vh,720px);display:flex;flex-direction:column}
+  .poolwrap{display:flex;flex-direction:column;min-height:0;flex:1}
+  .poolwrap #paletteBody{flex:1;overflow:auto;padding:.5rem 0}
   .col{overflow:auto;border-right:1px solid var(--line)}
   .colhead{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);padding:.6rem .8rem;font-weight:600;font-size:.85rem;z-index:2;display:flex;gap:.5rem;align-items:center}
   .colhead .grow{flex:1}
@@ -51,6 +67,7 @@
   .byav{width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:.3rem;border:1px solid #b9ad90;filter:sepia(.3)}
   .bsrc{display:inline-block;font-size:.62rem;text-transform:uppercase;letter-spacing:.03em;padding:.02rem .35rem;border-radius:999px;border:1px solid #b9ad90;background:#efe7d5;color:#6a6253}
   .bsrc.ai{border-style:dashed;border-color:#9a7f55;color:#7a5a2a}
+  .lbadge{display:inline-block;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:.02rem .32rem;border-radius:999px;border:1px solid #b9ad90;background:#e7eef0;color:#3a5560;vertical-align:middle}
   .empty{color:#8a8070;font-style:italic;padding:1rem .8rem;font-size:.85rem}
 
   /* ── board (center) — drop zones ── */
@@ -59,9 +76,13 @@
   .zonelabel{font-family:"Playfair Display",serif;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:#6a6253;border-bottom:2px solid var(--ink);padding-bottom:.2rem;margin:.5rem 0 .5rem;display:flex;align-items:center;gap:.4rem}
   .zonelabel .n{font-family:system-ui;font-size:.72rem;letter-spacing:0;color:#9a907c}
   .zonelabel.ads{border-bottom-color:#9a7f55;color:#7a5a2a}
-  .dropwrap{min-height:46px;border:1.5px dashed transparent;border-radius:9px;padding:.2rem;transition:border-color .12s,background .12s}
-  .dropwrap.drop-hi{border-color:var(--accent);background:rgba(122,31,26,.06)}
-  .dropwrap .ph{color:#a89e88;font-style:italic;font-size:.8rem;text-align:center;padding:.5rem .2rem}
+  /* always-visible drop targets so it's obvious where chronicles go */
+  .dropwrap{min-height:84px;border:1.5px dashed #c8bca0;border-radius:9px;padding:.35rem;transition:border-color .12s,background .12s;background:rgba(255,255,255,.25)}
+  .dropwrap.drop-hi,.dropwrap.sortable-drag-over{border-color:var(--accent);background:rgba(122,31,26,.06)}
+  .dropwrap .ph{color:#a89e88;font-style:italic;font-size:.8rem;text-align:center;padding:1.1rem .2rem;pointer-events:none}
+  /* SortableJS feedback: the moving card's placeholder + the chosen source */
+  .drag-ghost{opacity:.45;background:rgba(122,31,26,.08);border:1.5px dashed var(--accent)!important}
+  .drag-chosen{cursor:grabbing}
 
   .pcard{background:#fff;border:1px solid var(--line);border-radius:8px;padding:.5rem .6rem;margin-bottom:.5rem;display:flex;gap:.55rem;align-items:flex-start;cursor:grab;position:relative}
   .pcard:active{cursor:grabbing}
@@ -83,7 +104,7 @@
   /* preview (right) */
   #preview{display:flex;flex-direction:column;border-right:none}
   #preview .pvhead{padding:.5rem .8rem;border-bottom:1px solid var(--line);background:var(--panel);font-size:.8rem;color:#6a6253;display:flex;gap:.5rem;align-items:center}
-  #preview iframe{flex:1;border:none;width:100%;background:#6b6357}
+  #preview iframe{flex:1;border:none;width:100%;background:#efe8d6}
 
   /* gate */
   .gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:1.2rem;z-index:50;
@@ -137,50 +158,55 @@
 <link rel="stylesheet" href="nav.css">
 </head>
 <body>
-<div class="gate" id="gate"><div class="gc" id="gc"><div class="brand">📰 Publisheur · Mise en page</div><p>Chargement…</p></div></div>
+<div class="gate" id="gate"><div class="gc" id="gc"><div class="brand">📰 Publisheur · Mise en page</div><p data-i18n="board.loading">Chargement…</p></div></div>
 
 <header id="hdr" style="display:none">
-  <h1>Mise en page · <span id="paperName"></span></h1>
+  <h1><span data-i18n="board.layout">Mise en page</span> · <span id="paperName"></span></h1>
   <span class="grow"></span>
-  <a href="index.html">📰 Kiosque</a>
-  <a href="editor.html">← Mes journaux</a>
-  <a id="openPaper" href="#" target="_blank">Voir la une ↗</a>
-  <button class="go" onclick="runExport()">🖨 PDF imprimable</button>
+  <button class="go" id="addBtn" onclick="openPool()" data-i18n="board.add">＋ Ajouter</button>
+  <a href="index.html" data-i18n="board.kiosk">📰 Kiosque</a>
+  <a href="editor.html" data-i18n="board.myPapers">← Mes journaux</a>
+  <label data-i18n-title="board.themeTitle" style="display:inline-flex;align-items:center;gap:.3rem">🎨 <select id="themeSel" onchange="setBoardTheme(this.value)" style="font:inherit;padding:.2rem .35rem;border-radius:5px;border:1px solid #c9bda0;background:#fff;cursor:pointer"></select></label>
+  <a id="openPaper" href="#" target="_blank" data-i18n="board.viewFront">Voir la une ↗</a>
+  <button class="go" onclick="runExport()" data-i18n="board.printPdf">🖨 PDF imprimable</button>
   <span class="navuser" id="navuser"></span>
 </header>
 
+<!-- the rendered paper IS the canvas: click an article to edit it in the docked panel -->
 <main id="app" style="display:none">
-  <div class="col" id="palette">
-    <div class="ptabs">
-      <button class="ptab on" id="tab-chron" onclick="setTab('chron')">Chroniques <span class="n" id="n-chron"></span></button>
-      <button class="ptab"    id="tab-ads"   onclick="setTab('ads')">Réclames <span class="n" id="n-ads"></span></button>
-      <button class="ptab"    id="tab-img"   onclick="setTab('img')">Images <span class="n" id="n-img"></span></button>
+  <iframe id="pv" class="canvas" src="about:blank" title="Aperçu de la une"></iframe>
+  <aside class="dock" id="editPanel">
+    <div class="dh">
+      <span id="editTitle" data-i18n="board.clickToEdit">Cliquez un article</span>
+      <span class="grow"></span>
+      <button class="pin" id="pinBtn" onclick="togglePin()" title="Épingler" data-i18n-title="board.pin">📌</button>
+      <button class="x" onclick="closeEdit()" data-i18n-aria="auth.close">✕</button>
     </div>
-    <input type="search" id="poolq" placeholder="Rechercher une chronique…" oninput="setPoolQ(this.value)">
-    <div id="paletteBody"></div>
-  </div>
-  <div class="col" id="board">
-    <div class="colhead">La mise en page <span class="grow"></span><span class="hint">glissez ici · double-cliquez pour éditer</span></div>
-    <div id="boardZones"></div>
-  </div>
-  <div class="col" id="preview">
-    <div class="pvhead">Aperçu de la une <span class="grow"></span><button onclick="reloadPreview()" style="font:inherit;border:1px solid var(--line);background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer">↻</button></div>
-    <iframe id="pv" src="about:blank"></iframe>
-  </div>
+    <div class="body" id="editBody"><div class="dhint" data-i18n="board.clickHint">Cliquez un article dans l’aperçu pour le mettre en page.</div></div>
+  </aside>
 </main>
 
-<!-- layout-only edit panel -->
-<div class="modal" id="editModal">
-  <div class="card">
-    <div class="h"><span id="editTitle">Éditer le placement</span><span class="grow"></span><button class="x" onclick="closeEdit()">✕</button></div>
-    <div class="body" id="editBody"></div>
+<!-- pool overlay: + Ajouter → place chronicles / réclames into this edition -->
+<div class="modal" id="poolModal">
+  <div class="card poolcard">
+    <div class="h"><span data-i18n="board.addToEdition">Ajouter à l’édition</span><span class="grow"></span><button class="x" onclick="closePool()" data-i18n-aria="auth.close">✕</button></div>
+    <div class="poolwrap">
+      <div class="ptabs">
+        <button class="ptab on" id="tab-chron" onclick="setTab('chron')"><span data-i18n="board.tabChron">Chroniques</span> <span class="n" id="n-chron"></span></button>
+        <button class="ptab"    id="tab-ads"   onclick="setTab('ads')"><span data-i18n="board.tabAds">Réclames</span> <span class="n" id="n-ads"></span></button>
+        <button class="ptab"    id="tab-img"   onclick="setTab('img')"><span data-i18n="board.tabImg">Images</span> <span class="n" id="n-img"></span></button>
+      </div>
+      <input type="search" id="poolq" data-i18n-ph="board.searchPh" placeholder="Rechercher une chronique…" oninput="setPoolQ(this.value)">
+      <select id="poolLangFilter" data-i18n-title="board.filterByLang" title="Filtrer par langue" onchange="setPoolLang(this.value)" style="font:inherit;padding:.4rem .5rem;border:1px solid var(--line);border-radius:6px;margin:0 .8rem .4rem;width:calc(100% - 1.6rem)"></select>
+      <div id="paletteBody"></div>
+    </div>
   </div>
 </div>
 
 <!-- portfolio photo picker -->
 <div class="modal" id="photoModal">
   <div class="card">
-    <div class="h"><span>Choisir une photo (portfolio)</span><span class="grow"></span><button class="x" onclick="closePhoto()">✕</button></div>
+    <div class="h"><span data-i18n="board.choosePhoto">Choisir une photo (portfolio)</span><span class="grow"></span><button class="x" onclick="closePhoto()" data-i18n-aria="auth.close">✕</button></div>
     <div class="body"><div class="pgrid" id="photoGrid"></div></div>
   </div>
 </div>
@@ -190,19 +216,129 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="papers.js"></script>
+<script src="themes.js"></script>
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Ads, NavUser, configured, esc } = window.Daihbi;
+const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Ads, NavUser, configured, esc, I18n, Prefs } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const WEIGHTS = [["lead","La Une"],["major","Majeurs"],["minor","Mineurs"],["brief","Brèves"]];
-const WLABEL = Object.fromEntries(WEIGHTS);
-const catLabel = k => (window.DAIHBI_AD_CAT_LABEL && k) ? window.DAIHBI_AD_CAT_LABEL(k) : "Réclame";
+
+I18n.register({
+  fr: {
+    "board.loading":"Chargement…",
+    "board.layout":"Mise en page","board.kiosk":"📰 Kiosque","board.myPapers":"← Mes journaux",
+    "board.themeTitle":"Style du journal — vu par tous les lecteurs",
+    "board.viewFront":"Voir la une ↗","board.printPdf":"🖨 PDF imprimable",
+    "board.tabChron":"Chroniques","board.tabAds":"Réclames","board.tabImg":"Images",
+    "board.searchPh":"Rechercher une chronique…","board.filterByLang":"Filtrer par langue de contenu",
+    "board.theLayout":"La mise en page","board.layoutHint":"glissez ici · double-cliquez pour éditer",
+    "board.frontPreview":"Aperçu de la une","board.reloadPreview":"Recharger l’aperçu",
+    "board.add":"＋ Ajouter","board.addToEdition":"Ajouter à l’édition",
+    "board.pin":"Épingler le panneau","board.unpin":"Détacher le panneau",
+    "board.clickToEdit":"Cliquez un article","board.clickHint":"Cliquez un article dans l’aperçu pour le mettre en page.",
+    "board.choosePhoto":"Choisir une photo (portfolio)",
+    "board.editPlacement":"Éditer le placement",
+    "board.placePool":"Ajouter en Mineurs","board.place":"＋ Placer",
+    "board.delChronicleTitle":"Supprimer la chronique","board.placeAd":"Placer la réclame",
+    "board.dragOnChron":"Glissez sur une chronique",
+    "board.clickToSetPhoto":"Cliquez pour définir la photo de la chronique en cours d’édition",
+    "board.openCardFirst":"Ouvrez d’abord une chronique (double-clic) pour lui choisir une photo.",
+    "board.emptyChron":"Aucune chronique à placer. Les chroniqueurs soumettent leurs textes au pool.",
+    "board.emptyAds":"Aucune réclame approuvée pour cette édition. Validez-les dans le studio (ads.html).",
+    "board.emptyImg":"Aucune image au portfolio. Les illustrateurs en déposent dans leur espace.",
+    "board.untitled":"(sans titre)","board.anAd":"(réclame)","board.ad":"Réclame",
+    "board.dropChronHere":"Glissez une chronique ici","board.dropAdHere":"Glissez une réclame ici",
+    "board.cardTitle":"Double-cliquez pour éditer · glissez une image pour la photo",
+    "board.adCardTitle":"Double-cliquez pour éditer",
+    "board.layoutChron":"Mise en page — {h}","board.chronicle":"chronique","board.layoutAd":"Mise en page — réclame",
+    "board.prominence":"Proéminence","board.photo":"Photo",
+    "board.photoSuggested":"Photo suggérée par l’auteur si vide.","board.choose":"🖼 Choisir",
+    "board.removeOverride":"Retirer l’override","board.order":"Ordre","board.up":"▲ Monter","board.down":"▼ Descendre",
+    "board.inWeight":"dans « {w} »","board.publication":"Publication",
+    "board.unpublish":"Dépublier","board.visibleInPaper":"Visible dans le journal.",
+    "board.publish":"Publier","board.draftNotVisible":"Brouillon — non visible.",
+    "board.remove":"Retirer","board.removeFromEdition":"Retirer de cette édition",
+    "board.delChronicle":"🗑 Supprimer la chronique",
+    "board.content":"Contenu","board.editInStudio":"Modifier le contenu dans le studio ↗",
+    "board.adOwnedByAdvertiser":"Le texte et l’image appartiennent à l’annonceur.",
+    "board.confirmDelChronicle":"Supprimer définitivement la chronique « {h} » ?\nElle disparaîtra de TOUS les journaux où elle paraît. Action irréversible.",
+    "board.confirmRemove":"Retirer de cette édition ?",
+    "board.chronicleDeleted":"Chronique supprimée","board.refused":"Refusé : {msg} (auteur ou éditeur uniquement)",
+    "board.photoUpdated":"Photo mise à jour","board.removePhoto":"Retirer la photo","board.noPhoto":"✕ aucune",
+    "board.themeSaved":"Style du journal enregistré ✓","board.error":"Erreur : {msg}",
+    "board.exportStarted":"Export imprimable lancé…","board.scribusLaying":"Scribus met en page le PDF… (~1–2 min)",
+    "board.pdfReady":"PDF prêt ✓",
+    "board.notConnected":"Non connecté","board.signinRequired":"Connexion requise",
+    "board.layoutReserved":"La mise en page de <b>« {n} »</b> est réservée à son éditeur en chef.",
+    "board.signinJoin":"Se connecter · Rejoindre",
+    "board.editorOnly":"Réservé à l’éditeur en chef",
+    "board.onlyEditor":"Seul l’éditeur en chef de <b>« {n} »</b> peut en faire la mise en page.",
+    "board.readPaper":"📰 Lire le journal","board.myChronicles":"✍️ Mes chroniques",
+    "board.justNamed":"Vous venez d’être nommé éditeur ? <a href=\"#\" onclick=\"location.reload();return false\">Actualisez la page</a>.",
+  },
+  en: {
+    "board.loading":"Loading…",
+    "board.layout":"Layout","board.kiosk":"📰 Newsstand","board.myPapers":"← My papers",
+    "board.themeTitle":"Paper style — seen by all readers",
+    "board.viewFront":"View the front page ↗","board.printPdf":"🖨 Printable PDF",
+    "board.tabChron":"Chronicles","board.tabAds":"Ads","board.tabImg":"Images",
+    "board.searchPh":"Search a chronicle…","board.filterByLang":"Filter by content language",
+    "board.theLayout":"The layout","board.layoutHint":"drag here · double-click to edit",
+    "board.frontPreview":"Front-page preview","board.reloadPreview":"Reload the preview",
+    "board.add":"＋ Add","board.addToEdition":"Add to the edition",
+    "board.pin":"Pin the panel","board.unpin":"Unpin the panel",
+    "board.clickToEdit":"Click an article","board.clickHint":"Click an article in the preview to lay it out.",
+    "board.choosePhoto":"Choose a photo (portfolio)",
+    "board.editPlacement":"Edit placement",
+    "board.placePool":"Add to Minors","board.place":"＋ Place",
+    "board.delChronicleTitle":"Delete chronicle","board.placeAd":"Place the ad",
+    "board.dragOnChron":"Drag onto a chronicle",
+    "board.clickToSetPhoto":"Click to set the photo of the chronicle you're editing",
+    "board.openCardFirst":"Open a chronicle first (double-click) to choose its photo.",
+    "board.emptyChron":"No chronicle to place. Columnists submit their texts to the pool.",
+    "board.emptyAds":"No approved ad for this edition. Approve them in the studio (ads.html).",
+    "board.emptyImg":"No image in the portfolio. Illustrators drop them in their space.",
+    "board.untitled":"(untitled)","board.anAd":"(ad)","board.ad":"Ad",
+    "board.dropChronHere":"Drag a chronicle here","board.dropAdHere":"Drag an ad here",
+    "board.cardTitle":"Double-click to edit · drag an image for the photo",
+    "board.adCardTitle":"Double-click to edit",
+    "board.layoutChron":"Layout — {h}","board.chronicle":"chronicle","board.layoutAd":"Layout — ad",
+    "board.prominence":"Prominence","board.photo":"Photo",
+    "board.photoSuggested":"Author-suggested photo used if empty.","board.choose":"🖼 Choose",
+    "board.removeOverride":"Remove the override","board.order":"Order","board.up":"▲ Up","board.down":"▼ Down",
+    "board.inWeight":"in “{w}”","board.publication":"Publication",
+    "board.unpublish":"Unpublish","board.visibleInPaper":"Visible in the paper.",
+    "board.publish":"Publish","board.draftNotVisible":"Draft — not visible.",
+    "board.remove":"Remove","board.removeFromEdition":"Remove from this edition",
+    "board.delChronicle":"🗑 Delete chronicle",
+    "board.content":"Content","board.editInStudio":"Edit the content in the studio ↗",
+    "board.adOwnedByAdvertiser":"The text and image belong to the advertiser.",
+    "board.confirmDelChronicle":"Permanently delete the chronicle “{h}”?\nIt will disappear from EVERY paper it runs in. This cannot be undone.",
+    "board.confirmRemove":"Remove from this edition?",
+    "board.chronicleDeleted":"Chronicle deleted","board.refused":"Refused: {msg} (author or editor only)",
+    "board.photoUpdated":"Photo updated","board.removePhoto":"Remove the photo","board.noPhoto":"✕ none",
+    "board.themeSaved":"Paper style saved ✓","board.error":"Error: {msg}",
+    "board.exportStarted":"Printable export started…","board.scribusLaying":"Scribus is laying out the PDF… (~1–2 min)",
+    "board.pdfReady":"PDF ready ✓",
+    "board.notConnected":"Not connected","board.signinRequired":"Sign-in required",
+    "board.layoutReserved":"The layout of <b>“{n}”</b> is reserved for its editor-in-chief.",
+    "board.signinJoin":"Sign in · Join",
+    "board.editorOnly":"Reserved for the editor-in-chief",
+    "board.onlyEditor":"Only the editor-in-chief of <b>“{n}”</b> can lay it out.",
+    "board.readPaper":"📰 Read the paper","board.myChronicles":"✍️ My chronicles",
+    "board.justNamed":"Just been named editor? <a href=\"#\" onclick=\"location.reload();return false\">Refresh the page</a>.",
+  },
+});
+
+const WEIGHTS = [["lead"],["major"],["minor"],["brief"]].map(([w])=>[w, ()=>I18n.t("weight."+w)]);
+const wLabel = w => I18n.t("weight."+w);
+const catLabel = k => (window.DAIHBI_AD_CAT_LABEL && k) ? window.DAIHBI_AD_CAT_LABEL(k) : I18n.t("board.ad");
 
 let PAPER={}, PLACEMENTS=[], ADPLACEMENTS=[], POOL=[], ADS=[], IMAGES=[];
-let poolQ="", tab="chron", photoTarget=null, currentEdit=null;
-let DRAG=null;   // {kind, id?|i?} during a drag
+let poolQ="", poolLang="", tab="chron", photoTarget=null, currentEdit=null;
+const rowLang = r => (r && r.lang) ? String(r.lang) : "fr";
+const langBadge = r => `<span class="lbadge">${esc2(rowLang(r).toUpperCase())}</span>`;
 
 const clamp=(n,lo,hi)=>Math.max(lo,Math.min(n,hi));
 const getPl = id => PLACEMENTS.find(p=>p.id===id);
@@ -215,8 +351,29 @@ function srcTag(a){
 }
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1800); }
 function showGate(h){ $("#gate").style.display="flex"; $("#gc").innerHTML=`<div class="brand">📰 Publisheur · Mise en page</div>`+h; }
-function previewURL(){ return `paper.html?issue=${encodeURIComponent(ISSUE)}&_=${Date.now()}`; }
+function previewURL(){
+  // pass the edition theme explicitly so the preview shows what readers get,
+  // not a stale personal pick saved in this browser's localStorage.
+  const t = (PAPER && PAPER.theme) ? `&theme=${encodeURIComponent(PAPER.theme)}` : "";
+  // embed=1 → clean, scaled, chrome-free front page; all=1 → show drafts + make each
+  // article clickable (it messages us back to open the edit panel).
+  return `paper.html?issue=${encodeURIComponent(ISSUE)}${t}&embed=1&all=1&_=${Date.now()}`;
+}
 function reloadPreview(){ $("#pv").src=previewURL(); }
+function populateThemeSel(){
+  const sel=$("#themeSel"); if(!sel) return;
+  const themes=window.DAIHBI_THEMES||{classic:{label:"Classique"}};
+  sel.innerHTML=Object.entries(themes).map(([k,t])=>`<option value="${k}">${esc(t.label||k)}</option>`).join("");
+  sel.value=(PAPER&&PAPER.theme)||"classic";
+}
+async function setBoardTheme(v){
+  try{
+    await Papers.update(ISSUE,{theme:v});   // RLS: owner / co-éditeur only
+    if(PAPER) PAPER.theme=v;
+    reloadPreview();                         // instant: the une re-renders in the chosen style
+    toast(I18n.t("board.themeSaved"));
+  }catch(e){ toast(I18n.t("board.error",{msg:e.message})); }
+}
 async function signOut(){ await Auth.signOut(); location.href="editor.html"; }
 
 async function load(){
@@ -228,150 +385,74 @@ async function load(){
     try{ ADPLACEMENTS = await AdPlacements.forIssue(ISSUE); }catch(e){ ADPLACEMENTS=[]; }
     try{ ADS         = await Ads.listApproved(ISSUE); }catch(e){ ADS=[]; }
     try{ IMAGES      = await Portfolio.list(); }catch(e){ IMAGES=[]; }
-  }catch(e){ toast("Erreur : "+e.message); return; }
+  }catch(e){ toast(I18n.t("board.error",{msg:e.message})); return; }
   render();
   if(currentEdit) renderEditBody();
 }
 function setPoolQ(v){ poolQ=v; Chronicles.listPool(poolQ).then(p=>{ POOL=p; renderPalette(); }); }
+function setPoolLang(v){ poolLang=v||""; Prefs.setContentLang(poolLang); renderPalette(); }
+function populatePoolLangFilter(){ const sel=$("#poolLangFilter"); if(sel){ sel.innerHTML=I18n.contentOptionsHTML(poolLang,true); sel.value=poolLang||""; } }
 
 /* ── render ──────────────────────────────────────────────────────────── */
-function render(){ renderPalette(); renderBoard(); }
+// The board no longer renders zones — the iframe preview is the canvas. render()
+// only refreshes the pool overlay's available-items list.
+function render(){ renderPalette(); }
 
 function setTab(t){ tab=t; document.querySelectorAll(".ptab").forEach(b=>b.classList.remove("on")); $("#tab-"+t).classList.add("on"); $("#poolq").style.display = t==="chron"?"":"none"; renderPalette(); }
 
 function renderPalette(){
   const placedArt = new Set(PLACEMENTS.map(p=>p.article_id));
   const placedAd  = new Set(ADPLACEMENTS.map(p=>p.ad_id));
-  const availChron = POOL.filter(a=>!placedArt.has(a.id));
-  const availAds   = ADS.filter(a=>!placedAd.has(a.id));
+  const langOK = a => !poolLang || rowLang(a)===poolLang;
+  const availChron = POOL.filter(a=>!placedArt.has(a.id) && langOK(a));
+  const availAds   = ADS.filter(a=>!placedAd.has(a.id) && langOK(a));
   $("#n-chron").textContent = availChron.length||"";
   $("#n-ads").textContent   = availAds.length||"";
   $("#n-img").textContent   = IMAGES.length||"";
   const body=$("#paletteBody");
   if(tab==="chron"){
     body.innerHTML = availChron.length ? availChron.map(a=>`
-      <div class="pal" draggable="true" ondragstart='onDragStart(event,{kind:"pool-article",id:"${a.id}"})' ondragend="onDragEnd(event)">
-        ${a.image_url?`<img class="thumb" src="${esc2(a.image_url)}">`:""}
+      <div class="pal" data-kind="pool-article" data-id="${a.id}">
+        ${a.image_url?`<img class="thumb" draggable="false" src="${esc2(a.image_url)}">`:""}
         <div class="info">
-          <div class="t">${esc2(a.headline||"(sans titre)")}</div>
-          <div class="by">${a.author_avatar?`<img class="byav" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")}${srcTag(a)}</div>
+          <div class="t">${esc2(a.headline||I18n.t("board.untitled"))}</div>
+          <div class="by">${a.author_avatar?`<img class="byav" draggable="false" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")} ${langBadge(a)}${srcTag(a)}</div>
           <div class="acts">
-            <button onclick="quickAdd('${a.id}')" title="Ajouter en Mineurs">＋ Placer</button>
-            <button class="pdel" title="Supprimer la chronique" onclick="deleteChronicle('${a.id}')">🗑</button>
+            <button onclick="quickAdd('${a.id}')" title="${esc2(I18n.t("board.placePool"))}">${esc2(I18n.t("board.place"))}</button>
+            <button class="pdel" title="${esc2(I18n.t("board.delChronicleTitle"))}" onclick="deleteChronicle('${a.id}')">🗑</button>
           </div>
         </div>
-      </div>`).join("") : `<div class="empty">Aucune chronique à placer. Les chroniqueurs soumettent leurs textes au pool.</div>`;
+      </div>`).join("") : `<div class="empty">${esc2(I18n.t("board.emptyChron"))}</div>`;
   } else if(tab==="ads"){
     body.innerHTML = availAds.length ? availAds.map(a=>`
-      <div class="pal" draggable="true" ondragstart='onDragStart(event,{kind:"pool-ad",id:"${a.id}"})' ondragend="onDragEnd(event)">
-        ${a.image_url?`<img class="thumb" src="${esc2(a.image_url)}">`:""}
+      <div class="pal" data-kind="pool-ad" data-id="${a.id}">
+        ${a.image_url?`<img class="thumb" draggable="false" src="${esc2(a.image_url)}">`:""}
         <div class="info">
-          <span class="cat">${esc2(catLabel(a.category))}</span>
-          <div class="t">${esc2(a.title||"(réclame)")}</div>
+          <span class="cat">${esc2(catLabel(a.category))}</span> ${langBadge(a)}
+          <div class="t">${esc2(a.title||I18n.t("board.anAd"))}</div>
           <div class="by">${esc2(a.maker||a.advertiser_name||"")}</div>
-          <div class="acts"><button onclick="quickAddAd('${a.id}')" title="Placer la réclame">＋ Placer</button></div>
+          <div class="acts"><button onclick="quickAddAd('${a.id}')" title="${esc2(I18n.t("board.placeAd"))}">${esc2(I18n.t("board.place"))}</button></div>
         </div>
-      </div>`).join("") : `<div class="empty">Aucune réclame approuvée pour cette édition. Validez-les dans le studio (ads.html).</div>`;
+      </div>`).join("") : `<div class="empty">${esc2(I18n.t("board.emptyAds"))}</div>`;
   } else {
     body.innerHTML = IMAGES.length
       ? `<div id="imgGrid">${IMAGES.map((im,i)=>`
-          <figure draggable="true" ondragstart='onDragStart(event,{kind:"image",i:${i}})' ondragend="onDragEnd(event)" title="Glissez sur une chronique">
-            <img src="${esc2(im.url)}">
+          <figure onclick="useImageOnEdit(${i})" title="${esc2(I18n.t("board.clickToSetPhoto"))}">
+            <img draggable="false" src="${esc2(im.url)}">
             <figcaption>${esc2(im.caption||im.uploader_name||"")}</figcaption>
           </figure>`).join("")}</div>`
-      : `<div class="empty">Aucune image au portfolio. Les illustrateurs en déposent dans leur espace.</div>`;
+      : `<div class="empty">${esc2(I18n.t("board.emptyImg"))}</div>`;
   }
 }
 
-function renderBoard(){
-  const zones = WEIGHTS.map(([w,label])=>{
-    const grp = PLACEMENTS.filter(p=>p.weight===w).sort((a,b)=>a.position-b.position);
-    return `<section class="zone">
-      <div class="zonelabel">${label}${grp.length?` <span class="n">· ${grp.length}</span>`:""}</div>
-      <div class="dropwrap" ondragover="onZoneOver(event,'${w}')" ondragleave="onZoneLeave(event)" ondrop="onZoneDrop(event,'${w}')">
-        ${grp.length ? grp.map(pcard).join("") : `<div class="ph">Glissez une chronique ici</div>`}
-      </div>
-    </section>`;
-  }).join("");
-  const ads = ADPLACEMENTS.slice().sort((a,b)=>a.position-b.position);
-  const adZone = `<section class="zone">
-    <div class="zonelabel ads">Réclames${ads.length?` <span class="n">· ${ads.length}</span>`:""}</div>
-    <div class="dropwrap" ondragover="onZoneOver(event,'ads')" ondragleave="onZoneLeave(event)" ondrop="onZoneDrop(event,'ads')">
-      ${ads.length ? ads.map(adcard).join("") : `<div class="ph">Glissez une réclame ici</div>`}
-    </div>
-  </section>`;
-  $("#boardZones").innerHTML = zones + adZone;
-}
+// (The board no longer renders drop-zone cards or uses SortableJS — the iframe
+//  preview is the canvas. Placement ops below are reused by quickAdd + the panel.)
 
-function pcard(p){
-  const a=p.article||{}; const photo = p.image_url || a.image_url || "";
-  return `<div class="pcard ${p.published?'pub':''}" draggable="true"
-      ondragstart='onDragStart(event,{kind:"placement",id:"${p.id}"})' ondragend="onDragEnd(event)"
-      ondragover="onCardOver(event)" ondragleave="onCardLeave(event)" ondrop="onCardDrop(event,'${p.id}')"
-      ondblclick="openEdit('placement','${p.id}')" title="Double-cliquez pour éditer · glissez une image pour la photo">
-    <span class="grip">⠿</span>
-    ${photo?`<img class="thumb" src="${esc2(photo)}">`:""}
-    <div class="info">
-      <div class="t">${esc2(a.headline||"(sans titre)")}</div>
-      <div class="by">${a.author_avatar?`<img class="byav" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")}${srcTag(a)}</div>
-    </div>
-    <span class="dot"></span><span class="editcue">✎</span>
-  </div>`;
-}
-function adcard(p){
-  const a=p.ad||{};
-  return `<div class="pcard adcard ${p.published?'pub':''}" draggable="true"
-      ondragstart='onDragStart(event,{kind:"ad-placement",id:"${p.id}"})' ondragend="onDragEnd(event)"
-      ondblclick="openEdit('ad','${p.id}')" title="Double-cliquez pour éditer">
-    <span class="grip">⠿</span>
-    ${a.image_url?`<img class="thumb" src="${esc2(a.image_url)}">`:""}
-    <div class="info">
-      <span class="cat" style="font-size:.62rem;color:#7a5a2a;text-transform:uppercase">${esc2(catLabel(a.category))}</span>
-      <div class="t">${esc2(a.title||"(réclame)")}</div>
-      <div class="by">${esc2(a.maker||a.advertiser_name||"")}</div>
-    </div>
-    <span class="dot"></span><span class="editcue">✎</span>
-  </div>`;
-}
-
-/* ── drag & drop ─────────────────────────────────────────────────────── */
-function onDragStart(e,payload){ DRAG=payload; e.dataTransfer.effectAllowed="move"; try{e.dataTransfer.setData("text/plain",JSON.stringify(payload));}catch(_){ } e.currentTarget.classList.add("dragging"); }
-function onDragEnd(e){ e.currentTarget.classList.remove("dragging"); clearHi(); DRAG=null; }
-function clearHi(){ document.querySelectorAll(".drop-hi").forEach(el=>el.classList.remove("drop-hi")); document.querySelectorAll(".photo-hi").forEach(el=>el.classList.remove("photo-hi")); }
-function zoneAccepts(zone,kind){ return zone==="ads" ? (kind==="pool-ad"||kind==="ad-placement") : (kind==="pool-article"||kind==="placement"); }
-function onZoneOver(e,zone){ if(DRAG&&zoneAccepts(zone,DRAG.kind)){ e.preventDefault(); e.currentTarget.classList.add("drop-hi"); } }
-function onZoneLeave(e){ e.currentTarget.classList.remove("drop-hi"); }
-// index at which to insert, from pointer Y vs the (non-dragged) cards in the zone
-function dropIndex(wrap,clientY,sel){
-  const cards=[...wrap.querySelectorAll(sel)].filter(c=>!c.classList.contains("dragging"));
-  for(let i=0;i<cards.length;i++){ const r=cards[i].getBoundingClientRect(); if(clientY < r.top+r.height/2) return i; }
-  return cards.length;
-}
-async function onZoneDrop(e,zone){
-  if(!(DRAG&&zoneAccepts(zone,DRAG.kind))) return;
-  e.preventDefault(); const d=DRAG; DRAG=null; clearHi();
-  const wrap=e.currentTarget;
-  try{
-    if(zone==="ads"){
-      const idx=dropIndex(wrap,e.clientY,".adcard");
-      if(d.kind==="pool-ad")      await addAdAt(d.id, idx);
-      else if(d.kind==="ad-placement") await moveAd(d.id, idx);
-    }else{
-      const idx=dropIndex(wrap,e.clientY,".pcard");
-      if(d.kind==="pool-article")  await addArticleAt(d.id, zone, idx);
-      else if(d.kind==="placement") await moveArticle(d.id, zone, idx);
-    }
-    await load(); reloadPreview();
-  }catch(err){ toast(err.message); }
-}
-// image → drop on a chronicle card sets its photo override
-function onCardOver(e){ if(DRAG&&DRAG.kind==="image"){ e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add("photo-hi"); } }
-function onCardLeave(e){ e.currentTarget.classList.remove("photo-hi"); }
-async function onCardDrop(e,placementId){
-  if(!(DRAG&&DRAG.kind==="image")) return;   // other kinds bubble to the zone
-  e.preventDefault(); e.stopPropagation();
-  const url=(IMAGES[DRAG.i]||{}).url||""; DRAG=null; clearHi();
-  try{ await Placements.update(placementId,{image_url:url}); await load(); reloadPreview(); toast("Photo mise à jour"); }
+// Images tab: click a thumbnail to set the currently-open edit card's photo.
+async function useImageOnEdit(i){
+  const im = IMAGES[i]; if(!im) return;
+  if(!currentEdit || currentEdit.kind!=="placement"){ toast(I18n.t("board.openCardFirst")); return; }
+  try{ await Placements.update(currentEdit.id,{image_url:im.url}); await load(); reloadPreview(); renderEditBody(); toast(I18n.t("board.photoUpdated")); }
   catch(err){ toast(err.message); }
 }
 
@@ -405,67 +486,97 @@ async function quickAddAd(adId){ try{ await addAdAt(adId,1e9); await load(); rel
 
 async function deleteChronicle(id){
   const a = (PLACEMENTS.find(p=>p.article_id===id)||{}).article || POOL.find(x=>x.id===id) || {};
-  if(!confirm(`Supprimer définitivement la chronique « ${a.headline||"sans titre"} » ?\nElle disparaîtra de TOUS les journaux où elle paraît. Action irréversible.`)) return;
-  try{ await Chronicles.remove(id); if(currentEdit&&currentEdit.kind==="placement") closeEdit(); await load(); reloadPreview(); toast("Chronique supprimée"); }
-  catch(e){ toast("Refusé : "+e.message+" (auteur ou éditeur uniquement)"); }
+  if(!confirm(I18n.t("board.confirmDelChronicle",{h:a.headline||I18n.t("board.untitled")}))) return;
+  try{ await Chronicles.remove(id); if(currentEdit&&currentEdit.kind==="placement") closeEdit(); await load(); reloadPreview(); toast(I18n.t("board.chronicleDeleted")); }
+  catch(e){ toast(I18n.t("board.refused",{msg:e.message})); }
 }
 
 /* ── edit panel (layout only) ────────────────────────────────────────── */
-function openEdit(kind,id){ currentEdit={kind,id}; $("#editModal").classList.add("open"); renderEditBody(); }
-function closeEdit(){ currentEdit=null; $("#editModal").classList.remove("open"); }
+/* ── pool overlay (+ Ajouter) ─────────────────────────────────────────── */
+function openPool(){ $("#poolModal").classList.add("open"); renderPalette(); populatePoolLangFilter(); I18n.apply($("#poolModal")); }
+function closePool(){ $("#poolModal").classList.remove("open"); }
+
+/* ── edit panel (docked, pinnable) ────────────────────────────────────── */
+let PINNED = false; try{ PINNED = localStorage.getItem("daihbi_board_pin")==="1"; }catch(e){}
+function showDockHint(){ $("#editTitle").textContent = I18n.t("board.clickToEdit");
+  $("#editBody").innerHTML = `<div class="dhint">${esc(I18n.t("board.clickHint"))}</div>`; }
+function applyPinUI(){ const b=$("#pinBtn"); if(b){ b.classList.toggle("on", PINNED); b.title=I18n.t(PINNED?"board.unpin":"board.pin"); } }
+function openEdit(kind,id){
+  currentEdit={kind,id};
+  $("#editPanel").classList.add("open");
+  const found = kind==="placement" ? getPl(id) : getAp(id);
+  if(found){ renderEditBody(); } else { load().then(()=>{ if(currentEdit) renderEditBody(); }); }  // sync if cache is stale
+}
+function closeEdit(){
+  currentEdit=null;
+  if(PINNED){ $("#editPanel").classList.add("open"); showDockHint(); }   // pinned → stay open
+  else { $("#editPanel").classList.remove("open"); }
+}
+function togglePin(){
+  PINNED=!PINNED; try{ localStorage.setItem("daihbi_board_pin", PINNED?"1":"0"); }catch(e){}
+  applyPinUI();
+  if(PINNED && !currentEdit){ $("#editPanel").classList.add("open"); showDockHint(); }
+  else if(!PINNED && !currentEdit){ $("#editPanel").classList.remove("open"); }
+}
+// the preview (iframe) tells us which article was clicked → open its edit panel
+window.addEventListener("message", e=>{
+  if(e.origin!==location.origin) return;
+  const d=e.data||{};
+  if(d.type==="daihbi-edit" && d.pid){ openEdit(d.kind==="ad-placement"?"ad":"placement", d.pid); }
+});
 function renderEditBody(){
   if(!currentEdit) return;
   const {kind,id}=currentEdit;
   if(kind==="placement"){
     const p=getPl(id); if(!p){ closeEdit(); return; }
     const a=p.article||{}; const photo=p.image_url||a.image_url||"";
-    $("#editTitle").textContent = "Mise en page — "+(a.headline||"chronique");
-    const wbtns=WEIGHTS.map(([w,l])=>`<button class="ebtn ${p.weight===w?'on':''}" onclick="mWeight('${w}')">${l}</button>`).join("");
+    $("#editTitle").textContent = I18n.t("board.layoutChron",{h:a.headline||I18n.t("board.chronicle")});
+    const wbtns=WEIGHTS.map(([w])=>`<button class="ebtn ${p.weight===w?'on':''}" onclick="mWeight('${w}')">${esc2(wLabel(w))}</button>`).join("");
     $("#editBody").innerHTML=`
-      <div class="erow"><div class="lbl">Proéminence</div><div class="ctl">${wbtns}</div></div>
-      <div class="erow"><div class="lbl">Photo</div><div class="ctl">
-        ${photo?`<img class="ethumb" src="${esc2(photo)}">`:`<span class="enote">Photo suggérée par l’auteur si vide.</span>`}
-        <button class="ebtn" onclick="openPhoto('${p.id}')">🖼 Choisir</button>
-        ${p.image_url?`<button class="ebtn danger" onclick="mPhoto('')">Retirer l’override</button>`:""}
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.prominence"))}</div><div class="ctl">${wbtns}</div></div>
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.photo"))}</div><div class="ctl">
+        ${photo?`<img class="ethumb" src="${esc2(photo)}">`:`<span class="enote">${esc2(I18n.t("board.photoSuggested"))}</span>`}
+        <button class="ebtn" onclick="openPhoto('${p.id}')">${esc2(I18n.t("board.choose"))}</button>
+        ${p.image_url?`<button class="ebtn danger" onclick="mPhoto('')">${esc2(I18n.t("board.removeOverride"))}</button>`:""}
       </div></div>
-      <div class="erow"><div class="lbl">Ordre</div><div class="ctl">
-        <button class="ebtn" onclick="mOrder(-1)">▲ Monter</button>
-        <button class="ebtn" onclick="mOrder(1)">▼ Descendre</button>
-        <span class="enote">dans « ${WLABEL[p.weight]} »</span>
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.order"))}</div><div class="ctl">
+        <button class="ebtn" onclick="mOrder(-1)">${esc2(I18n.t("board.up"))}</button>
+        <button class="ebtn" onclick="mOrder(1)">${esc2(I18n.t("board.down"))}</button>
+        <span class="enote">${esc2(I18n.t("board.inWeight",{w:wLabel(p.weight)}))}</span>
       </div></div>
-      <div class="erow"><div class="lbl">Publication</div><div class="ctl">
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.publication"))}</div><div class="ctl">
         ${p.published
-          ? `<button class="ebtn unpub" onclick="mPub(false)">Dépublier</button><span class="enote">Visible dans le journal.</span>`
-          : `<button class="ebtn pub" onclick="mPub(true)">Publier</button><span class="enote">Brouillon — non visible.</span>`}
+          ? `<button class="ebtn unpub" onclick="mPub(false)">${esc2(I18n.t("board.unpublish"))}</button><span class="enote">${esc2(I18n.t("board.visibleInPaper"))}</span>`
+          : `<button class="ebtn pub" onclick="mPub(true)">${esc2(I18n.t("board.publish"))}</button><span class="enote">${esc2(I18n.t("board.draftNotVisible"))}</span>`}
       </div></div>
-      <div class="erow"><div class="lbl">Retirer</div><div class="ctl">
-        <button class="ebtn danger" onclick="mRemove()">Retirer de cette édition</button>
-        <button class="ebtn danger" onclick="deleteChronicle('${a.id}')">🗑 Supprimer la chronique</button>
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.remove"))}</div><div class="ctl">
+        <button class="ebtn danger" onclick="mRemove()">${esc2(I18n.t("board.removeFromEdition"))}</button>
+        <button class="ebtn danger" onclick="deleteChronicle('${a.id}')">${esc2(I18n.t("board.delChronicle"))}</button>
       </div></div>`;
   }else{
     const p=getAp(id); if(!p){ closeEdit(); return; }
     const a=p.ad||{};
-    $("#editTitle").textContent = "Mise en page — réclame";
+    $("#editTitle").textContent = I18n.t("board.layoutAd");
     $("#editBody").innerHTML=`
-      <div class="erow"><div class="lbl">Réclame</div><div class="ctl">
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.ad"))}</div><div class="ctl">
         ${a.image_url?`<img class="ethumb" src="${esc2(a.image_url)}">`:""}
-        <div><div style="font-weight:700">${esc2(a.title||"(réclame)")}</div><div class="enote">${esc2(catLabel(a.category))} · ${esc2(a.maker||a.advertiser_name||"")}</div></div>
+        <div><div style="font-weight:700">${esc2(a.title||I18n.t("board.anAd"))}</div><div class="enote">${esc2(catLabel(a.category))} · ${esc2(a.maker||a.advertiser_name||"")}</div></div>
       </div></div>
-      <div class="erow"><div class="lbl">Ordre</div><div class="ctl">
-        <button class="ebtn" onclick="mOrder(-1)">▲ Monter</button>
-        <button class="ebtn" onclick="mOrder(1)">▼ Descendre</button>
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.order"))}</div><div class="ctl">
+        <button class="ebtn" onclick="mOrder(-1)">${esc2(I18n.t("board.up"))}</button>
+        <button class="ebtn" onclick="mOrder(1)">${esc2(I18n.t("board.down"))}</button>
       </div></div>
-      <div class="erow"><div class="lbl">Publication</div><div class="ctl">
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.publication"))}</div><div class="ctl">
         ${p.published
-          ? `<button class="ebtn unpub" onclick="mPub(false)">Dépublier</button>`
-          : `<button class="ebtn pub" onclick="mPub(true)">Publier</button>`}
+          ? `<button class="ebtn unpub" onclick="mPub(false)">${esc2(I18n.t("board.unpublish"))}</button>`
+          : `<button class="ebtn pub" onclick="mPub(true)">${esc2(I18n.t("board.publish"))}</button>`}
       </div></div>
-      <div class="erow"><div class="lbl">Contenu</div><div class="ctl">
-        <a class="ebtn link" href="ads.html" target="_blank">Modifier le contenu dans le studio ↗</a>
-        <span class="enote">Le texte et l’image appartiennent à l’annonceur.</span>
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.content"))}</div><div class="ctl">
+        <a class="ebtn link" href="ads.html" target="_blank">${esc2(I18n.t("board.editInStudio"))}</a>
+        <span class="enote">${esc2(I18n.t("board.adOwnedByAdvertiser"))}</span>
       </div></div>
-      <div class="erow"><div class="lbl">Retirer</div><div class="ctl">
-        <button class="ebtn danger" onclick="mRemove()">Retirer de cette édition</button>
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.remove"))}</div><div class="ctl">
+        <button class="ebtn danger" onclick="mRemove()">${esc2(I18n.t("board.removeFromEdition"))}</button>
       </div></div>`;
   }
 }
@@ -495,7 +606,7 @@ async function mOrder(delta){
 }
 async function mRemove(){
   const kind=currentEdit.kind, id=currentEdit.id;
-  if(!confirm("Retirer de cette édition ?")) return;
+  if(!confirm(I18n.t("board.confirmRemove"))) return;
   try{ if(kind==="placement") await Placements.remove(id); else await AdPlacements.remove(id); closeEdit(); await load(); reloadPreview(); }
   catch(e){ toast(e.message); }
 }
@@ -505,7 +616,7 @@ async function openPhoto(id){
   photoTarget=id; $("#photoModal").classList.add("open");
   let imgs=IMAGES; if(!imgs.length){ try{ imgs=await Portfolio.list(); }catch(e){ imgs=[]; } }
   $("#photoGrid").innerHTML =
-    `<figure onclick="setPhoto('')"><div style="height:90px;display:flex;align-items:center;justify-content:center;color:#9a907c">✕ aucune</div><figcaption>Retirer la photo</figcaption></figure>`
+    `<figure onclick="setPhoto('')"><div style="height:90px;display:flex;align-items:center;justify-content:center;color:#9a907c">${esc2(I18n.t("board.noPhoto"))}</div><figcaption>${esc2(I18n.t("board.removePhoto"))}</figcaption></figure>`
     + imgs.map(im=>`<figure onclick="setPhoto('${esc2(im.url)}')"><img src="${esc2(im.url)}"><figcaption>${esc2(im.caption||im.uploader_name||"")}</figcaption></figure>`).join("");
 }
 function closePhoto(){ $("#photoModal").classList.remove("open"); photoTarget=null; }
@@ -516,52 +627,68 @@ async function setPhoto(url){
 }
 
 // close modals on backdrop click / Escape
-document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{ if(e.target===m){ if(m.id==="photoModal") closePhoto(); else closeEdit(); } }));
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#photoModal").classList.contains("open")) closePhoto(); else if(currentEdit) closeEdit(); } });
+document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{ if(e.target===m){ if(m.id==="photoModal") closePhoto(); else if(m.id==="poolModal") closePool(); } }));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#photoModal").classList.contains("open")) closePhoto(); else if($("#poolModal").classList.contains("open")) closePool(); else if(currentEdit) closeEdit(); } });
 
 async function runExport(){
   const s=await Auth.session(); if(!s) return;
-  toast("Export imprimable lancé…");
+  toast(I18n.t("board.exportStarted"));
   try{
     const res=await fetch("/api/export",{method:"POST",headers:{"content-type":"application/json","Authorization":"Bearer "+s.access_token},body:JSON.stringify({issue:ISSUE})});
     const d=await res.json().catch(()=>({}));
-    if(!res.ok){ toast("Erreur : "+(d.error||res.status)); return; }
-    toast("Scribus met en page le PDF… (~1–2 min)");
-    let n=0; const iv=setInterval(async()=>{ n++; try{ const r=await fetch(d.pdf+"?t="+Date.now(),{cache:"no-store"}); if(r.ok){clearInterval(iv);toast("PDF prêt ✓");window.open(d.pdf,"_blank");} }catch(_){} if(n>=30)clearInterval(iv); },6000);
-  }catch(e){ toast("Erreur : "+e.message); }
+    if(!res.ok){ toast(I18n.t("board.error",{msg:(d.error||res.status)})); return; }
+    toast(I18n.t("board.scribusLaying"));
+    let n=0; const iv=setInterval(async()=>{ n++; try{ const r=await fetch(d.pdf+"?t="+Date.now(),{cache:"no-store"}); if(r.ok){clearInterval(iv);toast(I18n.t("board.pdfReady"));window.open(d.pdf,"_blank");} }catch(_){} if(n>=30)clearInterval(iv); },6000);
+  }catch(e){ toast(I18n.t("board.error",{msg:e.message})); }
 }
 
 async function boot(){
-  if(!configured){ showGate("<h2>Non connecté</h2>"); return; }
+  I18n.apply(document);   // translate static chrome + set <html lang>
+  poolLang = Prefs.contentLangLocal();   // instant default; refined from profile below
+  populatePoolLangFilter();
+  if(!configured){ showGate(`<h2>${esc(I18n.t("board.notConnected"))}</h2>`); return; }
   const s=await Auth.session();
   try{ const pm=await Papers.map(); PAPER=pm[ISSUE]||{name:ISSUE}; }catch(e){ PAPER={name:ISSUE}; }
   const titre = esc(PAPER.name||ISSUE);
-  if(!s){ showGate(`<h2>Connexion requise</h2>
-    <p>La mise en page de <b>« ${titre} »</b> est réservée à son éditeur en chef.</p>
-    <div class="acts"><a class="primary" href="editor.html?role=writer">Se connecter · Rejoindre</a><a href="index.html">📰 Kiosque</a></div>`); return; }
+  if(!s){ showGate(`<h2>${esc(I18n.t("board.signinRequired"))}</h2>
+    <p>${I18n.t("board.layoutReserved",{n:titre})}</p>
+    <div class="acts"><a class="primary" href="editor.html?role=writer">${esc(I18n.t("board.signinJoin"))}</a><a href="index.html" data-i18n="board.kiosk">📰 Kiosque</a></div>`); I18n.apply($("#gc")); return; }
   const prof=await Profiles.me(); const role=(prof&&prof.role)||"reader";
+  I18n.adoptProfile(prof);
+  if(prof && prof.preferred_lang && !Prefs.contentLangLocal()){ poolLang=prof.preferred_lang; populatePoolLangFilter(); }
   let managed=[]; try{ managed=await Papers.myManaged(); }catch(e){}
   if(role!=="editor" || !managed.includes(ISSUE)){
-    showGate(`<h2>Réservé à l’éditeur en chef</h2>
-      <p>Seul l’éditeur en chef de <b>« ${titre} »</b> peut en faire la mise en page.</p>
+    showGate(`<h2>${esc(I18n.t("board.editorOnly"))}</h2>
+      <p>${I18n.t("board.onlyEditor",{n:titre})}</p>
       <div class="acts">
-        <a class="primary" href="paper.html?issue=${encodeURIComponent(ISSUE)}">📰 Lire le journal</a>
-        <a href="editor.html">✍️ Mes chroniques</a>
+        <a class="primary" href="paper.html?issue=${encodeURIComponent(ISSUE)}">${esc(I18n.t("board.readPaper"))}</a>
+        <a href="editor.html">${esc(I18n.t("board.myChronicles"))}</a>
       </div>
-      <p class="hint">Vous venez d’être nommé éditeur ? <a href="#" onclick="location.reload();return false">Actualisez la page</a>.</p>`); return;
+      <p class="hint">${I18n.t("board.justNamed")}</p>`); return;
   }
-  $("#gate").style.display="none"; $("#hdr").style.display=""; $("#app").style.display="grid";
+  $("#gate").style.display="none"; $("#hdr").style.display=""; $("#app").style.display="flex";
   NavUser.render($("#navuser"), {
     profile: prof, email: s.user.email, role: "editor",
-    roleLabel: () => "Rédacteur en chef", onLogout: signOut,
+    roleLabel: () => I18n.t("role.editor"), onLogout: signOut,
   });
   $("#paperName").textContent=PAPER.name||ISSUE;
   $("#openPaper").href=`paper.html?issue=${encodeURIComponent(ISSUE)}`;
+  populateThemeSel();
+  applyPinUI(); if(PINNED){ $("#editPanel").classList.add("open"); showDockHint(); }   // restore pinned dock
   reloadPreview();
-  Placements.subscribe(ISSUE, ()=>load());
-  AdPlacements.subscribe(ISSUE, ()=>load());
+  // another editor's change → refresh our cache + the preview canvas
+  Placements.subscribe(ISSUE, ()=>{ load(); reloadPreview(); });
+  AdPlacements.subscribe(ISSUE, ()=>{ load(); reloadPreview(); });
   await load();
 }
+
+document.addEventListener("daihbi:langchange", ()=>{
+  I18n.apply(document);
+  populatePoolLangFilter();
+  if($("#app").style.display!=="none"){ render(); }
+  if(currentEdit) renderEditBody();
+});
+
 boot();
 </script>
 </body>
