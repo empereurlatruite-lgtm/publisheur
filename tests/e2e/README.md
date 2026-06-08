@@ -48,3 +48,23 @@ python3 tests/e2e/test_i18n.py
 ```
 
 Exit code `0` = all checks pass, `1` = at least one failed.
+
+## `test_login.py` — sign-in surface
+Drives the signed-out sign-in surface (no real account or Supabase round-trip):
+
+- the kiosque masthead "Se connecter" control exists and is **actually
+  clickable** — the full-width `<h1>` nameplate must not paint over it (or over
+  "Rejoindre" / "Espace rédaction") and swallow the click. This is the
+  regression guard for the z-index bug where the button "did nothing";
+- clicking it opens the inline login modal with email + password + a submit
+  button whose handler fires (invalid email → inline error, no navigation), a
+  working sign-up tab, and a "Mot de passe oublié" link that swaps to the
+  reset-request screen;
+- `editor.html`, signed out, shows its login gate with email + password inputs
+  and a "Se connecter" submit button whose handler runs (empty → inline error).
+
+```bash
+python3 tests/e2e/test_login.py
+```
+
+Exit code `0` = all checks pass, `1` = at least one failed.

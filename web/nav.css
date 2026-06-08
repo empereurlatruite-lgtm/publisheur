@@ -108,6 +108,22 @@ header button.go:hover,header button.primary:hover,
   filter:brightness(1.12);border-color:var(--brass);
 }
 
+/* ---- Persistent "home" anchor: the Kiosque, top-left on every page ------ */
+/* Always the first child of the header/toolbar so it sits in the corner,
+   styled as a solid Warden-blue plate so it reads as the home button. */
+header a.navhome,
+.toolbar a.navhome{
+  margin-right:.55rem;
+  background:linear-gradient(180deg,var(--warden-hi),var(--warden));
+  border-color:var(--brass);
+  color:#fff;font-weight:700;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 1px 3px rgba(0,0,0,.5);
+}
+header a.navhome:hover,
+.toolbar a.navhome:hover{
+  filter:brightness(1.12);border-color:var(--brass);color:#fff;
+}
+
 /* ---- Form controls living in the bar (edition select, search…) --------- */
 header select,.toolbar select,
 header input,.toolbar input{
@@ -203,7 +219,10 @@ header.top .sub{
   text-transform:uppercase;letter-spacing:.22em;font-size:.72rem;
   color:var(--brass);opacity:.95;margin-top:.45rem;
 }
-header.top .topright{position:absolute;right:1rem;top:1rem;display:flex;gap:.5rem}
+/* z-index:2 keeps the controls above the full-width nameplate <h1> (which
+   shares z-index:1 via `header > *` and, being a later DOM sibling, would
+   otherwise paint over the buttons and swallow their clicks). */
+header.top .topright{position:absolute;right:1rem;top:1rem;display:flex;gap:.5rem;z-index:2}
 
 /* ---- Mobile: let the bar wrap gracefully -------------------------------- */
 @media (max-width:640px){
