@@ -187,6 +187,7 @@
 </div>
 
 <header style="display:none" id="hdr">
+  <a class="navhome" href="index.html" data-i18n="ed.navKiosk">📰 Kiosque</a>
   <h1>Publisheur <span style="opacity:.6;font-size:.8rem;font-family:system-ui" data-i18n="ed.headerSub">· Rédaction</span></h1>
   <button id="chronLink" style="display:none" onclick="showChronicles()" data-i18n="ed.navChron">✍️ Mes chroniques</button>
   <button id="journauxLink" style="display:none" onclick="showJournaux()" data-i18n="ed.navJournaux">📰 Mes journaux</button>
@@ -197,7 +198,6 @@
       style="font:inherit;background:#2c2924;color:#f3ead6;border:1px solid #555;border-radius:5px;padding:.25rem .4rem"></select>
   </label>
   <span class="grow"></span>
-  <a href="index.html" data-i18n="ed.navKiosk">📰 Kiosque</a>
   <button id="portfolioLink" onclick="openPortfolio()" data-i18n="ed.navPortfolio">🖼 Portfolio</button>
   <a id="adsLink" href="ads.html" style="display:none" data-i18n="ed.navAds">📣 Réclames</a>
   <button id="manageLink" style="display:none" onclick="openManageJournal()" data-i18n="ed.navManage">⚙ Gérer le journal</button>
@@ -300,6 +300,14 @@
   </div>
 </div>
 
+<script>
+  // Capture the password-recovery deep link BEFORE supabase-js loads. Its
+  // detectSessionInUrl consumes & clears the URL during async init (in the
+  // microtask checkpoint right after daihbi.js), which would otherwise race the
+  // RECOVERY read in the app script and silently sign the user in instead of
+  // showing the "choose a new password" screen.
+  window.__RECOVERY__ = (location.hash + location.search).includes("type=recovery");
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="papers.js"></script>
@@ -405,6 +413,7 @@ I18n.register({
     "ed.backToLogin": "← Retour à la connexion",
     "ed.resetSent": "Si un compte existe pour <b>{email}</b>, un lien de réinitialisation vient d'y être envoyé.",
     "ed.resetHint": "Ouvrez-le <b>sur cet appareil</b> pour choisir un nouveau mot de passe.",
+    "ed.resetSpam": "Rien reçu ? Vérifiez vos spams — le lien expire après environ 1 h.",
     // recovery
     "ed.recoveryTitle": "Nouveau mot de passe",
     "ed.recoveryDesc": "Choisissez un nouveau mot de passe pour votre compte.",
@@ -610,6 +619,7 @@ I18n.register({
     "ed.backToLogin": "← Back to sign in",
     "ed.resetSent": "If an account exists for <b>{email}</b>, a reset link has just been sent to it.",
     "ed.resetHint": "Open it <b>on this device</b> to choose a new password.",
+    "ed.resetSpam": "Nothing received? Check your spam folder — the link expires after about 1 h.",
     // recovery
     "ed.recoveryTitle": "New password",
     "ed.recoveryDesc": "Choose a new password for your account.",
@@ -724,8 +734,10 @@ I18n.register({
 });
 
 // Password-recovery deep link lands here as editor.html#…type=recovery.
-// Capture it now: supabase-js consumes & clears the hash asynchronously.
-const RECOVERY = location.hash.includes("type=recovery");
+// The URL is captured by the head script (window.__RECOVERY__) before supabase-js
+// can consume it; RECOVERING is sticky so a stray SIGNED_IN can't reload us into
+// the app once we know we're on the recovery path.
+let RECOVERING = window.__RECOVERY__ === true;
 let PAPERS = window.DAIHBI_PAPERS || {};
 let MY_MANAGED = [];   // issues this editor owns/co-edits
 let current = null;
@@ -830,7 +842,8 @@ async function doReset(){
     await Auth.resetPassword(email);
     $("#gateCard").innerHTML=`<h2>${I18n.t("ed.checkEmail")}</h2>
       <p>${I18n.t("ed.resetSent",{email:escapeHtml(email)})}</p>
-      <p style="font-size:.85rem;opacity:.85">${I18n.t("ed.resetHint")}</p>`;
+      <p style="font-size:.85rem;opacity:.85">${I18n.t("ed.resetHint")}</p>
+      <p style="font-size:.8rem;opacity:.7">${I18n.t("ed.resetSpam")}</p>`;
   }catch(e){ $("#loginErr").textContent=e.message; }
 }
 // ── Password reset: set a new one (landed via the recovery link) ──────────
@@ -1238,15 +1251,16 @@ async function boot(){
   I18n.apply(document);   // translate static chrome + set <html lang>
   if(!configured){ setupNotice(); return; }
   // Password-recovery deep link: let the user set a new password instead of
-  // silently logging them into the app with the recovery session.
-  if(RECOVERY){ recoveryScreen(); }
-  Auth.onChange((s,event)=>{ if(event==="PASSWORD_RECOVERY") recoveryScreen(); });
-  if(RECOVERY) return;
+  // silently logging them into the app with the recovery session. Detected via
+  // the pre-captured URL (RECOVERING) and the PASSWORD_RECOVERY event as backup.
+  Auth.onChange((s,event)=>{ if(event==="PASSWORD_RECOVERY"){ RECOVERING=true; recoveryScreen(); } });
+  if(RECOVERING){ recoveryScreen(); return; }
   const session = await Auth.session();
+  if(RECOVERING) return;   // PASSWORD_RECOVERY fired while we awaited the session
   if(!session){
     const pr=new URLSearchParams(location.search).get("role");   // from the kiosque intro
     loginScreen(null, pr?"signup":"signin", pr);
-    Auth.onChange((s,event)=>{ if(event==="PASSWORD_RECOVERY"){ recoveryScreen(); return; } if(s) location.reload(); }); return;
+    Auth.onChange((s,event)=>{ if(event==="PASSWORD_RECOVERY"){ RECOVERING=true; recoveryScreen(); return; } if(RECOVERING) return; if(s) location.reload(); }); return;
   }
   // load profile + role
   MYPROFILE = await Profiles.me();

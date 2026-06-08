@@ -94,6 +94,7 @@ const STRINGS = {
     "auth.forgotTitle": "Mot de passe oublié",
     "auth.forgotDesc": "Entrez votre adresse ; nous vous enverrons un lien pour réinitialiser votre mot de passe.",
     "auth.sendLink": "Envoyer le lien", "auth.linkSent": "Lien envoyé — vérifiez votre boîte mail.",
+    "auth.linkHint": "Pensez à regarder vos spams. Le lien expire après environ 1 h ; ouvrez-le sur cet appareil.",
     "auth.recoveryTitle": "Nouveau mot de passe",
     "auth.recoveryDesc": "Choisissez un nouveau mot de passe pour votre compte.",
     "auth.newPwPh": "Nouveau mot de passe", "auth.confirmPwPh": "Confirmez le mot de passe",
@@ -143,6 +144,7 @@ const STRINGS = {
     "auth.forgotTitle": "Forgot password",
     "auth.forgotDesc": "Enter your address; we’ll send you a link to reset your password.",
     "auth.sendLink": "Send link", "auth.linkSent": "Link sent — check your inbox.",
+    "auth.linkHint": "Check your spam folder too. The link expires after about 1 h; open it on this device.",
     "auth.recoveryTitle": "New password",
     "auth.recoveryDesc": "Choose a new password for your account.",
     "auth.newPwPh": "New password", "auth.confirmPwPh": "Confirm password",
@@ -932,7 +934,12 @@ const AuthModal = (function () {
     btn.addEventListener("click", async () => {
       if (!validEmail(inp.value)) { msg.className = "dam-msg err"; msg.textContent = I18n.t("auth.invalidEmail"); return; }
       btn.disabled = true; msg.className = "dam-msg"; msg.textContent = I18n.t("auth.sending");
-      try { await Auth.resetPassword(inp.value.trim()); msg.className = "dam-msg ok"; msg.textContent = I18n.t("auth.linkSent"); }
+      try {
+        await Auth.resetPassword(inp.value.trim());
+        msg.className = "dam-msg ok";
+        msg.innerHTML = esc(I18n.t("auth.linkSent")) +
+          `<br><span style="opacity:.85;font-size:.92em">${esc(I18n.t("auth.linkHint"))}</span>`;
+      }
       catch (e) { msg.className = "dam-msg err"; msg.textContent = e.message || I18n.t("err.sendFail"); btn.disabled = false; }
     });
   }
