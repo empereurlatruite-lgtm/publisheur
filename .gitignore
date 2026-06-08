@@ -33,3 +33,6 @@ publish/out/
 # Cloudflare wrangler local state
 .wrangler/
 *.code-workspace
+
+# e2e failure screenshots
+tests/e2e/_failures/

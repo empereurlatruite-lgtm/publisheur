@@ -117,7 +117,13 @@ header input,.toolbar input{
 }
 
 /* ---- Account control: a clickable avatar (like most apps) → dropdown ----- */
-.navuser{position:relative;display:inline-flex;align-items:center}
+.navuser{position:relative;display:inline-flex;align-items:center;gap:.45rem}
+/* interface-language switcher (sits left of the account control) */
+.navlang{font:inherit;font-size:.78rem;background:#2c2924;color:#f3ead6;
+  border:1px solid #5a534a;border-radius:6px;padding:.3rem .45rem;cursor:pointer;
+  font-family:"Oswald",system-ui,sans-serif}
+.navlang:hover{border-color:var(--brass)}
+.navlang option{background:#211f1c;color:#f3ead6}
 /* the engraved-portrait disc */
 .navavatar{
   width:34px;height:34px;flex:none;padding:0;border-radius:50%;overflow:hidden;

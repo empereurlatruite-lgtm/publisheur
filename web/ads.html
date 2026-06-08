@@ -56,27 +56,28 @@
 </head>
 <body>
 
-<div class="gate" id="gate"><div class="gc" id="gc">Chargement…</div></div>
+<div class="gate" id="gate"><div class="gc" id="gc" data-i18n="ads.gateLoading">Chargement…</div></div>
 
 <header id="hdr" style="display:none">
-  <h1>Publisheur <span style="opacity:.6;font-size:.8rem">· Studio publicitaire</span></h1>
+  <h1>Publisheur <span style="opacity:.6;font-size:.8rem">· <span data-i18n="ads.suffix">Studio publicitaire</span></span></h1>
   <span class="grow"></span>
-  <a href="index.html">📰 Kiosque</a>
+  <a href="index.html" data-i18n="ads.kiosk">📰 Kiosque</a>
   <span class="navuser" id="navuser"></span>
 </header>
 
 <main id="app" style="display:none">
   <div class="card" id="formCard">
-    <h2 id="formTitle">Nouvelle réclame</h2>
-    <label>Type de réclame</label><select id="f_category"></select>
-    <label>Titre</label><input id="f_title" placeholder="Ex. Aciéries de la Bleusaille">
-    <label>Fabricant / sponsor / chaîne</label><input id="f_maker" placeholder="Fabricant, régiment, chaîne…">
-    <label>Texte</label><textarea id="f_body" placeholder="Votre message publicitaire…"></textarea>
-    <label>Lien (optionnel)</label><input id="f_link" placeholder="https://… (Discord, boutique…)">
-    <label>Édition ciblée</label><select id="f_issue"></select>
-    <label>Visuel</label>
+    <h2 id="formTitle" data-i18n="ads.formNew">Nouvelle réclame</h2>
+    <label data-i18n="ads.category">Type de réclame</label><select id="f_category"></select>
+    <label data-i18n="ads.title">Titre</label><input id="f_title" placeholder="Ex. Aciéries de la Bleusaille" data-i18n-ph="ads.titlePh">
+    <label data-i18n="ads.maker">Fabricant / sponsor / chaîne</label><input id="f_maker" placeholder="Fabricant, régiment, chaîne…" data-i18n-ph="ads.makerPh">
+    <label data-i18n="ads.body">Texte</label><textarea id="f_body" placeholder="Votre message publicitaire…" data-i18n-ph="ads.bodyPh"></textarea>
+    <label data-i18n="ads.link">Lien (optionnel)</label><input id="f_link" placeholder="https://… (Discord, boutique…)" data-i18n-ph="ads.linkPh">
+    <label data-i18n="ads.issue">Édition ciblée</label><select id="f_issue"></select>
+    <label data-i18n="ads.lang">Langue de la réclame</label><select id="f_lang"></select>
+    <label data-i18n="ads.visual">Visuel</label>
     <div class="dz" id="dz">
-      <div class="bar"><input id="f_image" placeholder="https://… ou téléversez" oninput="prev(this.value)" style="flex:1">
+      <div class="bar"><input id="f_image" placeholder="https://… ou téléversez" oninput="prev(this.value)" style="flex:1" data-i18n-ph="ads.imagePh">
         <button class="ghost" onclick="document.querySelector('#file').click()">📷</button>
         <input id="file" type="file" accept="image/*" style="display:none" onchange="pick(this.files[0])"></div>
       <img id="preview" style="display:none">
@@ -84,16 +85,16 @@
     </div>
     <div class="bar">
       <span class="grow"></span>
-      <button class="ghost" id="delBtn" style="display:none" onclick="delAd()">Supprimer</button>
-      <button class="ghost" onclick="save('draft')">Brouillon</button>
-      <button class="go" onclick="save('review')">Soumettre à un éditeur</button>
+      <button class="ghost" id="delBtn" style="display:none" onclick="delAd()" data-i18n="ads.delete">Supprimer</button>
+      <button class="ghost" onclick="save('draft')" data-i18n="ads.draft">Brouillon</button>
+      <button class="go" onclick="save('review')" data-i18n="ads.submit">Soumettre à un éditeur</button>
     </div>
     <div class="err" id="formErr"></div>
-    <div class="bar"><button class="ghost" onclick="newAd()">+ Nouvelle réclame</button></div>
+    <div class="bar"><button class="ghost" onclick="newAd()" data-i18n="ads.newAd">+ Nouvelle réclame</button></div>
   </div>
 
   <div class="card">
-    <h2 id="listTitle">Mes réclames</h2>
+    <h2 id="listTitle" data-i18n="ads.listMine">Mes réclames</h2>
     <div id="list"></div>
   </div>
 </main>
@@ -104,7 +105,119 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Profiles, Ads, Media, Papers, NavUser, configured, esc } = window.Daihbi;
+const { Auth, Profiles, Ads, Media, Papers, NavUser, configured, esc, I18n, Prefs } = window.Daihbi;
+
+I18n.register({
+  fr: {
+    "ads.suffix":"Studio publicitaire",
+    "ads.kiosk":"📰 Kiosque",
+    "ads.formNew":"Nouvelle réclame",
+    "ads.formEdit":"Modifier la réclame",
+    "ads.category":"Type de réclame",
+    "ads.title":"Titre",
+    "ads.titlePh":"Ex. Aciéries de la Bleusaille",
+    "ads.maker":"Fabricant / sponsor / chaîne",
+    "ads.makerPh":"Fabricant, régiment, chaîne…",
+    "ads.body":"Texte",
+    "ads.bodyPh":"Votre message publicitaire…",
+    "ads.link":"Lien (optionnel)",
+    "ads.linkPh":"https://… (Discord, boutique…)",
+    "ads.issue":"Édition ciblée",
+    "ads.lang":"Langue de la réclame",
+    "ads.visual":"Visuel",
+    "ads.imagePh":"https://… ou téléversez",
+    "ads.delete":"Supprimer",
+    "ads.draft":"Brouillon",
+    "ads.submit":"Soumettre à un éditeur",
+    "ads.newAd":"+ Nouvelle réclame",
+    "ads.listMine":"Mes réclames",
+    "ads.listAll":"Toutes les réclames",
+    "ads.allIssues":"Toutes les éditions",
+    "ads.allEditions":"Toutes éditions",
+    "ads.untitled":"(sans titre)",
+    "ads.edit":"Modifier",
+    "ads.approve":"Approuver",
+    "ads.withdraw":"Retirer",
+    "ads.none":"Aucune réclame pour l’instant.",
+    "ads.needTitle":"Donnez un titre.",
+    "ads.confirmDelete":"Supprimer cette réclame ?",
+    "ads.uploading":"Envoi…",
+    "ads.gateLoading":"Chargement…",
+    "ads.gateTitle":"Studio publicitaire",
+    "ads.gateSignin":"Se connecter",
+    "ads.gateSignup":"Créer un compte annonceur",
+    "ads.gateCreateBtn":"Créer le compte",
+    "ads.backKiosk":"← Retour au kiosque",
+    "ads.forgotQ":"Mot de passe oublié ?",
+    "ads.checkEmailTitle":"Vérifiez votre e-mail",
+    "ads.resetSent":"Si un compte existe pour <b>{em}</b>, un lien de réinitialisation vient d’y être envoyé.",
+    "ads.resetHint":"Ouvrez-le sur cet appareil pour choisir un nouveau mot de passe.",
+    "ads.enterEmailFirst":"Entrez votre e-mail d’abord.",
+    "ads.emailPwShort":"E-mail + mot de passe (6+).",
+    "ads.accountCreated":"Compte créé ✓",
+    "ads.confirmEmailHtml":"Confirmez le lien dans votre e-mail (ignorez une page d’erreur), puis <a href=\"#\" onclick=\"loginScreen('signin');return false\">connectez-vous</a>.",
+    "ads.notConnectedTitle":"Non connecté",
+    "ads.notConfigured":"Ajoutez vos clés Supabase dans config.js.",
+    "ads.reservedTitle":"Réservé aux annonceurs",
+    "ads.reservedDesc":"Votre compte est « {role} ». Le studio publicitaire est réservé aux annonceurs et aux éditeurs.",
+    "ads.signOut":"Se déconnecter",
+  },
+  en: {
+    "ads.suffix":"Ad studio",
+    "ads.kiosk":"📰 Newsstand",
+    "ads.formNew":"New ad",
+    "ads.formEdit":"Edit ad",
+    "ads.category":"Ad type",
+    "ads.title":"Title",
+    "ads.titlePh":"e.g. Bleusaille Steelworks",
+    "ads.maker":"Manufacturer / sponsor / channel",
+    "ads.makerPh":"Manufacturer, regiment, channel…",
+    "ads.body":"Text",
+    "ads.bodyPh":"Your advertising message…",
+    "ads.link":"Link (optional)",
+    "ads.linkPh":"https://… (Discord, shop…)",
+    "ads.issue":"Target edition",
+    "ads.lang":"Ad language",
+    "ads.visual":"Visual",
+    "ads.imagePh":"https://… or upload",
+    "ads.delete":"Delete",
+    "ads.draft":"Draft",
+    "ads.submit":"Submit to an editor",
+    "ads.newAd":"+ New ad",
+    "ads.listMine":"My ads",
+    "ads.listAll":"All ads",
+    "ads.allIssues":"All editions",
+    "ads.allEditions":"All editions",
+    "ads.untitled":"(untitled)",
+    "ads.edit":"Edit",
+    "ads.approve":"Approve",
+    "ads.withdraw":"Withdraw",
+    "ads.none":"No ads yet.",
+    "ads.needTitle":"Give it a title.",
+    "ads.confirmDelete":"Delete this ad?",
+    "ads.uploading":"Uploading…",
+    "ads.gateLoading":"Loading…",
+    "ads.gateTitle":"Ad studio",
+    "ads.gateSignin":"Sign in",
+    "ads.gateSignup":"Create an advertiser account",
+    "ads.gateCreateBtn":"Create the account",
+    "ads.backKiosk":"← Back to the newsstand",
+    "ads.forgotQ":"Forgot password?",
+    "ads.checkEmailTitle":"Check your email",
+    "ads.resetSent":"If an account exists for <b>{em}</b>, a reset link has just been sent there.",
+    "ads.resetHint":"Open it on this device to choose a new password.",
+    "ads.enterEmailFirst":"Enter your email first.",
+    "ads.emailPwShort":"Email + password (6+).",
+    "ads.accountCreated":"Account created ✓",
+    "ads.confirmEmailHtml":"Confirm the link in your email (ignore any error page), then <a href=\"#\" onclick=\"loginScreen('signin');return false\">sign in</a>.",
+    "ads.notConnectedTitle":"Not connected",
+    "ads.notConfigured":"Add your Supabase keys to config.js.",
+    "ads.reservedTitle":"Advertisers only",
+    "ads.reservedDesc":"Your account is “{role}”. The ad studio is reserved for advertisers and editors.",
+    "ads.signOut":"Sign out",
+  },
+});
+
 let PAPERS = window.DAIHBI_PAPERS || {};
 let MYROLE="reader", MYPROFILE=null, ME=null, current=null, pendingImg="";
 
@@ -114,108 +227,126 @@ function hideGate(){ $("#gate").style.display="none"; }
 
 function loginScreen(mode){
   const up = mode==="signup";
-  showGate(`<h2>Studio publicitaire</h2>
-    <div class="authtabs"><button class="${up?"":"on"}" onclick="loginScreen('signin')">Se connecter</button>
-      <button class="${up?"on":""}" onclick="loginScreen('signup')">Créer un compte annonceur</button></div>
-    <input id="g_email" type="email" placeholder="vous@exemple.com">
-    <input id="g_pass" type="password" placeholder="mot de passe">
-    <button class="full" onclick="${up?"doSignUp()":"doSignIn()"}">${up?"Créer le compte":"Se connecter"}</button>
+  showGate(`<h2>${esc2(I18n.t("ads.gateTitle"))}</h2>
+    <div class="authtabs"><button class="${up?"":"on"}" onclick="loginScreen('signin')">${esc2(I18n.t("ads.gateSignin"))}</button>
+      <button class="${up?"on":""}" onclick="loginScreen('signup')">${esc2(I18n.t("ads.gateSignup"))}</button></div>
+    <input id="g_email" type="email" placeholder="${esc2(I18n.t("auth.emailPh"))}">
+    <input id="g_pass" type="password" placeholder="${esc2(I18n.t("auth.pwPh"))}">
+    <button class="full" onclick="${up?"doSignUp()":"doSignIn()"}">${up?esc2(I18n.t("ads.gateCreateBtn")):esc2(I18n.t("ads.gateSignin"))}</button>
     <div class="err" id="gErr"></div>
-    ${up?"":`<p style="margin-top:.7rem;font-size:.85rem"><a href="#" onclick="doForgot();return false">Mot de passe oublié ?</a></p>`}
-    <p style="margin-top:.7rem;font-size:.85rem"><a href="index.html">← Retour au kiosque</a></p>`);
+    ${up?"":`<p style="margin-top:.7rem;font-size:.85rem"><a href="#" onclick="doForgot();return false">${esc2(I18n.t("ads.forgotQ"))}</a></p>`}
+    <p style="margin-top:.7rem;font-size:.85rem"><a href="index.html">${esc2(I18n.t("ads.backKiosk"))}</a></p>`);
 }
 async function doForgot(){
   const em=$("#g_email").value.trim();
-  if(!em){ $("#gErr").textContent="Entrez votre e-mail d'abord."; return; }
+  if(!em){ $("#gErr").textContent=I18n.t("ads.enterEmailFirst"); return; }
   try{ await Auth.resetPassword(em);
-    $("#gc").innerHTML=`<h2>Vérifiez votre e-mail</h2><p>Si un compte existe pour <b>${em}</b>, un lien de réinitialisation vient d'y être envoyé.</p><p style="font-size:.85rem;opacity:.85">Ouvrez-le sur cet appareil pour choisir un nouveau mot de passe.</p>`;
+    $("#gc").innerHTML=`<h2>${esc2(I18n.t("ads.checkEmailTitle"))}</h2><p>${I18n.t("ads.resetSent",{em:esc2(em)})}</p><p style="font-size:.85rem;opacity:.85">${esc2(I18n.t("ads.resetHint"))}</p>`;
   }catch(e){ $("#gErr").textContent=e.message; }
 }
 async function doSignIn(){ try{ await Auth.signInPassword($("#g_email").value.trim(),$("#g_pass").value); boot(); }catch(e){ $("#gErr").textContent=e.message; } }
 async function doSignUp(){
   const em=$("#g_email").value.trim(), pw=$("#g_pass").value;
-  if(!em||pw.length<6){ $("#gErr").textContent="E-mail + mot de passe (6+)."; return; }
+  if(!em||pw.length<6){ $("#gErr").textContent=I18n.t("ads.emailPwShort"); return; }
   try{ const d=await Auth.signUp(em,pw,{role:"annonceur"});
-    if(d&&d.session){ boot(); } else { $("#gc").innerHTML=`<h2>Compte créé ✓</h2><p>Confirmez le lien dans votre e-mail (ignorez une page d'erreur), puis <a href="#" onclick="loginScreen('signin');return false">connectez-vous</a>.</p>`; }
+    if(d&&d.session){ boot(); } else { $("#gc").innerHTML=`<h2>${esc2(I18n.t("ads.accountCreated"))}</h2><p>${I18n.t("ads.confirmEmailHtml")}</p>`; }
   }catch(e){ $("#gErr").textContent=e.message; }
 }
 async function signOut(){ await Auth.signOut(); location.reload(); }
 
 // ── studio ──
 function fillIssues(){
-  $("#f_issue").innerHTML = `<option value="all">Toutes les éditions</option>` +
+  $("#f_issue").innerHTML = `<option value="all">${esc2(I18n.t("ads.allIssues"))}</option>` +
     Object.keys(PAPERS).map(k=>`<option value="${k}">${esc2(PAPERS[k].name||k)}</option>`).join("");
 }
-function fillCategories(){
-  $("#f_category").innerHTML = (window.DAIHBI_AD_CATEGORIES||[]).map(c=>`<option value="${c.key}">${esc2(c.label)}</option>`).join("");
+function fillLangs(){
+  $("#f_lang").innerHTML = I18n.contentOptionsHTML("", false);
 }
-const catLabel = k => (window.DAIHBI_AD_CAT_LABEL ? window.DAIHBI_AD_CAT_LABEL(k) : k);
+function fillCategories(){
+  $("#f_category").innerHTML = (window.DAIHBI_AD_CATEGORIES||[]).map(c=>`<option value="${c.key}">${esc2(I18n.t("adcat."+c.key))}</option>`).join("");
+}
+const catLabel = k => I18n.t("adcat."+k);
 function prev(url){ const p=$("#preview"); if(url){p.src=url;p.style.display="";}else p.style.display="none"; }
-async function pick(file){ if(!file)return; $("#imgErr").textContent="Envoi…"; try{ const up=await Media.upload(file,"ads"); pendingImg=up.url; $("#f_image").value=pendingImg; prev(pendingImg); $("#imgErr").textContent=""; }catch(e){ $("#imgErr").textContent=e.message; } }
-function newAd(){ current=null; $("#formTitle").textContent="Nouvelle réclame";
-  ["f_title","f_maker","f_body","f_link","f_image"].forEach(i=>$("#"+i).value=""); $("#f_issue").value="all"; $("#f_category").value="fabricant"; prev(""); $("#delBtn").style.display="none"; $("#formErr").textContent=""; }
-function editAd(a){ current=a.id; $("#formTitle").textContent="Modifier la réclame";
+async function pick(file){ if(!file)return; $("#imgErr").textContent=I18n.t("ads.uploading"); try{ const up=await Media.upload(file,"ads"); pendingImg=up.url; $("#f_image").value=pendingImg; prev(pendingImg); $("#imgErr").textContent=""; }catch(e){ $("#imgErr").textContent=e.message; } }
+function newAd(){ current=null; $("#formTitle").textContent=I18n.t("ads.formNew");
+  ["f_title","f_maker","f_body","f_link","f_image"].forEach(i=>$("#"+i).value=""); $("#f_issue").value="all"; $("#f_category").value="fabricant";
+  $("#f_lang").value=Prefs.contentLangLocal()||I18n.lang();
+  Prefs.contentLang().then(l=>{ if(l && !current) $("#f_lang").value=l; }).catch(()=>{});
+  prev(""); $("#delBtn").style.display="none"; $("#formErr").textContent=""; }
+function editAd(a){ current=a.id; $("#formTitle").textContent=I18n.t("ads.formEdit");
   $("#f_title").value=a.title||""; $("#f_maker").value=a.maker||""; $("#f_body").value=a.body||"";
   $("#f_link").value=a.link||""; $("#f_image").value=a.image_url||""; $("#f_issue").value=a.issue||"all";
   $("#f_category").value=a.category||"fabricant";
+  $("#f_lang").value=a.lang||(Prefs.contentLangLocal()||I18n.lang());
   prev(a.image_url||""); $("#delBtn").style.display=""; $("#formErr").textContent=""; window.scrollTo(0,0); }
 function adData(){ return { title:$("#f_title").value.trim(), maker:$("#f_maker").value.trim(),
   body:$("#f_body").value.trim(), link:$("#f_link").value.trim(), image_url:$("#f_image").value.trim(),
-  category:$("#f_category").value, issue:$("#f_issue").value, advertiser_name:(MYPROFILE&&MYPROFILE.display_name)||"" }; }
+  category:$("#f_category").value, issue:$("#f_issue").value, lang:$("#f_lang").value||(Prefs.contentLangLocal()||I18n.lang()),
+  advertiser_name:(MYPROFILE&&MYPROFILE.display_name)||"" }; }
 async function save(action){
   const data=adData();
-  if(!data.title){ $("#formErr").textContent="Donnez un titre."; return; }
+  if(!data.title){ $("#formErr").textContent=I18n.t("ads.needTitle"); return; }
   if(MYROLE==="editor"){ data.status = action==="review"?"approved":"draft"; data.approved = action==="review"; }
   else { data.status = action==="review"?"review":"draft"; data.approved=false; }
   try{ const saved = current==null ? await Ads.create(data) : await Ads.update(current,data);
     current=saved.id; $("#delBtn").style.display=""; $("#formErr").textContent="";
-    $("#formTitle").textContent="Modifier la réclame"; await loadList();
+    $("#formTitle").textContent=I18n.t("ads.formEdit"); await loadList();
   }catch(e){ $("#formErr").textContent=e.message; }
 }
-async function delAd(){ if(current==null)return; if(!confirm("Supprimer cette réclame ?"))return;
+async function delAd(){ if(current==null)return; if(!confirm(I18n.t("ads.confirmDelete")))return;
   try{ await Ads.remove(current); newAd(); await loadList(); }catch(e){ $("#formErr").textContent=e.message; } }
 async function approve(id,ok){ try{ await Ads.update(id,{approved:ok, status: ok?"approved":"rejected"}); await loadList(); }catch(e){ alert(e.message); } }
 
 function statusBadge(a){ const s=a.approved?"approved":(a.status||"draft");
-  const lbl={draft:"Brouillon",review:"En attente",approved:"Approuvée",rejected:"Refusée"}[s]||s;
-  return `<span class="st ${s}">${lbl}</span>`; }
+  const lbl=I18n.t("adstatus."+s);
+  return `<span class="st ${s}">${esc2(lbl)}</span>`; }
 
 async function loadList(){
   let ads=[]; try{ ads = MYROLE==="editor" ? await Ads.listAll() : await Ads.listMine(); }
   catch(e){ $("#list").innerHTML=`<div class="err">${esc2(e.message)}</div>`; return; }
-  $("#listTitle").textContent = MYROLE==="editor" ? "Toutes les réclames" : "Mes réclames";
+  $("#listTitle").textContent = MYROLE==="editor" ? I18n.t("ads.listAll") : I18n.t("ads.listMine");
   $("#list").innerHTML = ads.length ? ads.map(a=>`
     <div class="ad">
       ${a.image_url?`<img src="${esc2(a.image_url)}" alt="">`:""}
       <div class="info">
-        <div class="t">${esc2(a.title||"(sans titre)")} ${statusBadge(a)}</div>
-        <div class="m">${esc2(catLabel(a.category))}${a.maker?" · "+esc2(a.maker):""} · ${a.issue==="all"?"Toutes éditions":esc2((PAPERS[a.issue]&&PAPERS[a.issue].name)||a.issue)}${MYROLE==="editor"&&a.advertiser_name?" · "+esc2(a.advertiser_name):""}</div>
+        <div class="t">${esc2(a.title||I18n.t("ads.untitled"))} ${statusBadge(a)}</div>
+        <div class="m">${esc2(catLabel(a.category))}${a.maker?" · "+esc2(a.maker):""} · ${a.issue==="all"?esc2(I18n.t("ads.allEditions")):esc2((PAPERS[a.issue]&&PAPERS[a.issue].name)||a.issue)} · ${esc2(I18n.langLabel(a.lang||"fr"))}${MYROLE==="editor"&&a.advertiser_name?" · "+esc2(a.advertiser_name):""}</div>
         <div class="acts">
-          <button onclick='editAd(${JSON.stringify(a).replace(/'/g,"&#39;")})'>Modifier</button>
-          ${MYROLE==="editor" && !a.approved ? `<button class="ok" onclick="approve('${a.id}',true)">Approuver</button>`:""}
-          ${MYROLE==="editor" && a.approved ? `<button class="no" onclick="approve('${a.id}',false)">Retirer</button>`:""}
+          <button onclick='editAd(${JSON.stringify(a).replace(/'/g,"&#39;")})'>${esc2(I18n.t("ads.edit"))}</button>
+          ${MYROLE==="editor" && !a.approved ? `<button class="ok" onclick="approve('${a.id}',true)">${esc2(I18n.t("ads.approve"))}</button>`:""}
+          ${MYROLE==="editor" && a.approved ? `<button class="no" onclick="approve('${a.id}',false)">${esc2(I18n.t("ads.withdraw"))}</button>`:""}
         </div>
       </div>
-    </div>`).join("") : `<div class="m">Aucune réclame pour l’instant.</div>`;
+    </div>`).join("") : `<div class="m">${esc2(I18n.t("ads.none"))}</div>`;
 }
 
 async function boot(){
-  if(!configured){ showGate("<h2>Non connecté</h2><p>Ajoutez vos clés Supabase dans config.js.</p>"); return; }
+  I18n.apply(document);
+  if(!configured){ showGate(`<h2>${esc2(I18n.t("ads.notConnectedTitle"))}</h2><p>${esc2(I18n.t("ads.notConfigured"))}</p>`); return; }
   const s = await Auth.session();
   if(!s){ const pr=new URLSearchParams(location.search).get("role"); loginScreen(pr?"signup":"signin"); Auth.onChange(x=>{ if(x) boot(); }); return; }
   MYPROFILE = await Profiles.me(); MYROLE=(MYPROFILE&&MYPROFILE.role)||"reader"; ME=s.user.id;
-  if(!["annonceur","editor"].includes(MYROLE)){
-    showGate(`<h2>Réservé aux annonceurs</h2><p>Votre compte est « ${esc2(MYROLE)} ». Le studio publicitaire est réservé aux annonceurs et aux éditeurs.</p>
-      <p style="margin-top:.6rem"><a href="index.html">← Kiosque</a> · <a href="#" onclick="signOut();return false">Se déconnecter</a></p>`); return;
-  }
+  I18n.adoptProfile(MYPROFILE);
+  // Any signed-in user can post a réclame (editors still approve before it runs).
   hideGate(); $("#hdr").style.display=""; $("#app").style.display="";
+  I18n.apply(document);
   NavUser.render($("#navuser"), {
     profile: MYPROFILE, email: s.user.email, role: MYROLE,
-    roleLabel: r => r==="editor" ? "Rédacteur en chef" : "Annonceur", onLogout: signOut,
+    roleLabel: r => I18n.t("role."+r), onLogout: signOut,
   });
   try{ PAPERS = await Papers.map(); }catch(e){}
-  fillIssues(); fillCategories(); newAd(); await loadList();
+  fillIssues(); fillLangs(); fillCategories(); newAd(); await loadList();
 }
+document.addEventListener("daihbi:langchange", ()=>{
+  I18n.apply(document);
+  // re-translate the category <select> labels and the ad list without clobbering
+  // the user's in-progress form selections (lang/issue keep their codes).
+  if($("#app").style.display!=="none"){
+    const cat=$("#f_category").value; fillCategories(); $("#f_category").value=cat;
+    if(current==null){ $("#formTitle").textContent=I18n.t("ads.formNew"); }
+    loadList();
+  }
+});
 boot();
 </script>
 </body>

@@ -5,6 +5,9 @@
 //   name        masthead text
 //   tagline     line under the masthead (optional)
 //   plate       masthead style: plate-fraktur | plate-anton | plate-echo
+//   theme       default paper skin (palette+type+texture), see themes.js:
+//               classic | fujimoto | noir | gazette (optional; readers can
+//               still switch live with the 🎨 picker / ?theme= on paper.html)
 //   ear         three small items in the top bar [left, middle, right] (HTML ok)
 //   slogans     footer slogan bar items (HTML ok); [] → plain colophon
 //   emblemLeft  URL of a crest shown left of the nameplate (full colour, optional)
@@ -49,5 +52,15 @@ window.DAIHBI_PAPERS = {
     plate: "plate-echo",
     ear: ["Numéro 002", "Édition du 4 juin 2026", "Distribution aux forces & citoyens"],
     slogans: ["Tenir la ligne", "Protéger nos foyers", "Pour Callahan !"],
+  },
+  // Brazilian-Portuguese edition — COPOM's naval victory, World-Cup euphoria.
+  // Uses the "brasil" verde-amarela theme (see themes.js + paper.html).
+  "gazeta-copom": {
+    name: "A Gazeta do COPOM",
+    tagline: "Boletim naval Warden — verde e amarelo sobre as águas",
+    plate: "plate-anton",          // bold Anton masthead (matches the brasil theme) in kiosk + paper
+    theme: "brasil",
+    ear: ["Edição do Front", "Pentacampeão dos Mares", "COPOM · Warden"],
+    slogans: ["Vamos, Brasil!", "É PENTA!", "Verde e Amarelo"],
   },
 };

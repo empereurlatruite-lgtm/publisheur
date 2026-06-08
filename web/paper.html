@@ -6,15 +6,27 @@
 <title>Le Petit Daihbi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=PT+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1a1714; --paper:#f5efe1; --rule:#2a2622;
     --muted:#5b5349; --accent:#7a1f1a; --col-gap:1.6rem;
+    /* hairlines / borders / divider — themes can retint these */
+    --hair:#cbbfa3; --imgborder:#b9ad90; --dash:#9a7f55; --aihead:#7a5a2a;
+    --grain:rgba(120,100,70,.06);
+    /* type roles — a theme swaps these to change the whole paper's voice */
+    --font-body:"PT Serif",Georgia,"Times New Roman",serif;
+    --font-head:"Playfair Display",Georgia,serif;
+    --font-display:"UnifrakturCook","Playfair Display",serif;
+    --font-meta:"Old Standard TT",Georgia,serif;
+    --font-mono:"PT Mono","Courier Prime",ui-monospace,monospace;
+    /* photo treatment — duotone/grayscale per theme */
+    --photo-filter:grayscale(.55) sepia(.22) contrast(1.05);
+    --avatar-filter:grayscale(.5) sepia(.38) contrast(1.06);
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:#6b6357;}
-  body{font-family:"PT Serif",Georgia,"Times New Roman",serif;color:var(--ink);}
+  body{font-family:var(--font-body);color:var(--ink);}
 
   /* .toolbar nav styled by shared nav.css */
   .toolbar{
@@ -25,14 +37,30 @@
   .toolbar b{font-size:1rem}
 
   .stage{padding:1.5rem;display:flex;justify-content:center}
+  /* embed/preview mode (board.html iframe, ?embed=1): a clean, chrome-free,
+     scaled-to-fit miniature front page. The sheet keeps its true 1100px width
+     so the whole layout scales down (via applyEmbed's zoom) instead of reflowing
+     to one column; toolbar + reader comments are hidden. */
+  body.embed{background:#fff}
+  body.embed .toolbar{display:none}
+  body.embed .lecteurs{display:none !important}
+  body.embed .stage{padding:0;background:#fff}
+  body.embed .sheet{width:1100px;max-width:none;margin:0;box-shadow:none;border:none}
+  /* board "all" mode: every article is a clickable edit target; drafts dimmed + ribboned */
+  body.allmode .lead,body.allmode .story,body.allmode .adbox{position:relative;cursor:pointer;border-radius:2px;transition:outline-color .1s}
+  body.allmode .lead:hover,body.allmode .story:hover,body.allmode .adbox:hover{outline:2px solid var(--accent);outline-offset:3px}
+  body.allmode .draft{opacity:.5}
+  body.allmode .draft::after{content:var(--drafttxt,"DRAFT");position:absolute;top:.25rem;right:.25rem;z-index:3;
+    background:var(--accent);color:#fff;font-family:var(--font-meta);font-size:.6rem;font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;padding:.06rem .42rem;border-radius:2px;pointer-events:none}
   .sheet{
     width:1100px;max-width:100%;background:var(--paper);
-    background-image:radial-gradient(rgba(120,100,70,.06) 1px,transparent 1px);
+    background-image:radial-gradient(var(--grain) 1px,transparent 1px);
     background-size:3px 3px;
-    padding:2.6rem 2.8rem 3rem;box-shadow:0 6px 30px rgba(0,0,0,.5);border:1px solid #d8cdb2;
+    padding:2.6rem 2.8rem 3rem;box-shadow:0 6px 30px rgba(0,0,0,.5);border:1px solid var(--imgborder);
   }
 
-  .ear{display:flex;justify-content:space-between;font-family:"Old Standard TT",serif;
+  .ear{display:flex;justify-content:space-between;font-family:var(--font-meta);
        font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
        border-bottom:1px solid var(--rule);padding-bottom:.4rem}
   .nameplate{text-align:center;padding:.5rem 0 .2rem}
@@ -42,9 +70,9 @@
   .emblem{height:92px;width:auto;flex:0 0 auto;object-fit:contain}
   .emblem-spacer{flex:0 0 92px}
   @media(max-width:640px){.emblem,.emblem-spacer{height:54px;flex-basis:54px}}
-  .nameplate h1{font-family:"UnifrakturCook","Playfair Display",serif;font-weight:700;
+  .nameplate h1{font-family:var(--font-display);font-weight:700;
     font-size:5.2rem;line-height:.95;margin:.2rem 0;letter-spacing:.01em}
-  .nameplate .sub{font-family:"Old Standard TT",serif;font-style:italic;color:var(--muted);
+  .nameplate .sub{font-family:var(--font-meta);font-style:italic;color:var(--muted);
     font-size:1rem;letter-spacing:.04em}
   /* per-paper masthead styles (data-driven by edition) */
   .plate-anton h1{font-family:"Anton","Oswald",Impact,sans-serif;font-weight:400;
@@ -64,33 +92,33 @@
   .slogans{display:flex;justify-content:space-between;align-items:center;gap:1rem;
     border-top:3px double var(--rule);border-bottom:3px double var(--rule);
     padding:.55rem .3rem;margin-top:1.5rem;
-    font-family:"Old Standard TT",serif;font-weight:700;font-size:1.05rem;letter-spacing:.03em}
+    font-family:var(--font-meta);font-weight:700;font-size:1.05rem;letter-spacing:.03em}
   .slogans span{flex:1;text-align:center}
   .slogans span:first-child{text-align:left}
   .slogans span:last-child{text-align:right}
   .dateline-bar{display:flex;justify-content:space-between;align-items:center;
     border-top:3px double var(--rule);border-bottom:3px double var(--rule);
     padding:.3rem .2rem;margin:.5rem 0 1.2rem;
-    font-family:"Old Standard TT",serif;font-size:.78rem;letter-spacing:.05em;
+    font-family:var(--font-meta);font-size:.78rem;letter-spacing:.05em;
     text-transform:uppercase;color:var(--ink)}
   .dateline-bar .mid{font-weight:700;letter-spacing:.12em}
 
   .lead{border-bottom:2px solid var(--rule);padding-bottom:1.1rem;margin-bottom:1.1rem}
-  .kicker{font-family:"Old Standard TT",serif;text-transform:uppercase;letter-spacing:.18em;
+  .kicker{font-family:var(--font-meta);text-transform:uppercase;letter-spacing:.18em;
     font-size:.72rem;color:var(--accent);font-weight:700;text-align:center;margin-bottom:.3rem}
-  .lead h2{font-family:"Playfair Display",serif;font-weight:900;text-align:center;
+  .lead h2{font-family:var(--font-head);font-weight:900;text-align:center;
     font-size:3.6rem;line-height:1.02;margin:.1rem 0 .3rem;text-transform:uppercase}
-  .lead .deck{font-family:"Old Standard TT",serif;font-style:italic;text-align:center;
+  .lead .deck{font-family:var(--font-meta);font-style:italic;text-align:center;
     font-size:1.15rem;color:var(--muted);margin-bottom:.5rem;
-    border-bottom:1px solid #cbbfa3;padding-bottom:.7rem;max-width:46rem;margin:0 auto .5rem}
+    border-bottom:1px solid var(--hair);padding-bottom:.7rem;max-width:46rem;margin:0 auto .5rem}
   .lead .byline{text-align:center;font-variant:small-caps;letter-spacing:.08em;font-size:.85rem;color:var(--muted);margin-bottom:.6rem}
   /* lead: drop-capped opening paragraph spans full width (clean drop cap),
      remaining paragraphs flow into balanced columns below */
   .lead .lead-open{font-size:1.06rem;line-height:1.55;text-align:justify;hyphens:auto;max-width:52rem;margin:0 auto}
   .lead .lead-open p{margin:0 0 .55rem}
-  .lead .lead-open p:first-of-type::first-letter{font-family:"Playfair Display",serif;float:left;
+  .lead .lead-open p:first-of-type::first-letter{font-family:var(--font-head);float:left;
     font-size:3.6rem;line-height:.66;padding:.12rem .5rem 0 0;color:var(--accent);font-weight:900}
-  .lead .lead-cols{column-count:3;column-gap:var(--col-gap);column-rule:1px solid #cbbfa3;
+  .lead .lead-cols{column-count:3;column-gap:var(--col-gap);column-rule:1px solid var(--hair);
     text-align:justify;hyphens:auto;font-size:1rem;line-height:1.5;margin-top:.7rem}
   .lead .lead-cols p{margin:0 0 .55rem;break-inside:avoid-column}
   /* lead with an inset photo: single justified flow, text wraps the floated photo */
@@ -98,25 +126,34 @@
   .lead-flow p{margin:0 0 .6rem}
   .lead-flow .lead-open{max-width:none;margin:0}
   .lead-flow .lead-photo{float:right;width:42%;max-width:380px;height:auto;max-height:none;
-    margin:.2rem 0 .7rem 1.4rem;border:1px solid #b9ad90}
+    margin:.2rem 0 .7rem 1.4rem;border:1px solid var(--imgborder)}
   @media(max-width:640px){.lead-flow .lead-photo{float:none;width:100%;margin:.4rem 0}}
 
-  .well{column-count:3;column-gap:var(--col-gap);column-rule:1px solid #cbbfa3;text-align:justify;hyphens:auto}
+  /* masonry "snap" grid: stories are cards packed into the shortest column via
+     dense flow + JS row-spans (packWell); DOM order is preserved (the grid only
+     changes visual placement). grid-auto-rows is the fine row unit packWell
+     spans against; align-items:start lets each card size to its content. */
+  .well{display:grid;grid-template-columns:repeat(var(--wellcols,3),minmax(0,1fr));
+    column-gap:var(--col-gap);grid-auto-rows:8px;grid-auto-flow:row dense;align-items:start;
+    text-align:justify;hyphens:auto}
   /* transparency split: human stories (2-col) on the left, AI (1-col) on the right */
   .front{display:grid;grid-template-columns:2fr 1fr;gap:1.6rem;align-items:start}
   .front .zone-human{min-width:0}
-  .front .zone-ai{min-width:0;border-left:2px dashed #9a7f55;padding-left:1.2rem}
-  .front .zone-ai .ai-head{font-family:"Playfair Display",serif;font-weight:700;text-transform:uppercase;
-    letter-spacing:.09em;font-size:.74rem;color:#7a5a2a;border-bottom:2px dashed #9a7f55;padding-bottom:.35rem;margin-bottom:.8rem}
+  .front .zone-ai{min-width:0;border-left:2px dashed var(--dash);padding-left:1.2rem}
+  .front .zone-ai .ai-head{font-family:var(--font-head);font-weight:700;text-transform:uppercase;
+    letter-spacing:.09em;font-size:.74rem;color:var(--aihead);border-bottom:2px dashed var(--dash);padding-bottom:.35rem;margin-bottom:.8rem}
   .front .zone-ai .story h3{font-size:1.3rem;font-weight:800}
   .front .zone-ai .story .body{font-size:.9rem}
-  .well2{column-count:2}
+  .well2{--wellcols:2}
   @media(max-width:760px){.front{grid-template-columns:1fr}
-    .front .zone-ai{border-left:none;border-top:2px dashed #9a7f55;padding-left:0;padding-top:.8rem}}
-  .story{break-inside:avoid;margin:0 0 1.3rem;padding-bottom:1rem;border-bottom:1px solid #cbbfa3}
-  .story:last-child{border-bottom:none}
+    .front .zone-ai{border-left:none;border-top:2px dashed var(--dash);padding-left:0;padding-top:.8rem}}
+  @media(max-width:820px){.well{--wellcols:2}}
+  @media(max-width:520px){.well,.well2{--wellcols:1}}
+  /* each story is a grid card; align-items:start keeps it content-height inside
+     its (taller) spanned grid area, so the divider hugs the text. */
+  .story{break-inside:avoid;margin:0;padding-bottom:1rem;border-bottom:1px solid var(--hair)}
   .story .kicker{text-align:left;margin-bottom:.15rem}
-  .story h3{font-family:"Playfair Display",serif;line-height:1.04;margin:.1rem 0 .35rem}
+  .story h3{font-family:var(--font-head);line-height:1.04;margin:.1rem 0 .35rem}
   .story.major h3{font-size:1.8rem;font-weight:900}
   .story.minor h3{font-size:1.28rem;font-weight:700}
   .story.brief h3{font-size:1.05rem;font-weight:700}
@@ -124,36 +161,134 @@
   .story .body{font-size:.95rem;line-height:1.46}
   .story .body p{margin:0 0 .5rem}
   .story.brief .body{font-size:.9rem}
-  .story img,.lead img{width:100%;height:auto;filter:grayscale(.55) sepia(.22) contrast(1.05);margin:.3rem 0 .5rem;border:1px solid #b9ad90}
+  .story img,.lead img{width:100%;height:auto;filter:var(--photo-filter);margin:.3rem 0 .5rem;border:1px solid var(--imgborder)}
   .byline .avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #2a2620;
-    filter:grayscale(.5) sepia(.38) contrast(1.06);vertical-align:middle;margin-right:.4rem;background:#e9e1cd}
+    filter:var(--avatar-filter);vertical-align:middle;margin-right:.4rem;background:#e9e1cd}
   .lead .byline .avatar{width:32px;height:32px;margin-right:.55rem}
   .byline .src{display:inline-block;font-variant:normal;font-size:.62rem;letter-spacing:.05em;text-transform:uppercase;
-    padding:.05rem .42rem;border-radius:999px;margin-left:.4rem;vertical-align:middle;border:1px solid #b9ad90;color:#6a6253}
+    padding:.05rem .42rem;border-radius:999px;margin-left:.4rem;vertical-align:middle;border:1px solid var(--imgborder);color:#6a6253}
   .byline .src.reg{background:#e7decb}
-  .byline .src.ai{background:#efe4d2;border-style:dashed;border-color:#9a7f55;color:#7a5a2a}
+  .byline .src.ai{background:#efe4d2;border-style:dashed;border-color:var(--dash);color:#7a5a2a}
+  /* tiny content-language badge — shown only when a story's lang differs from the edition's */
+  .lbadge{font-family:"Oswald",system-ui,sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.06em;
+    background:#1f3a5f;color:#fff;border-radius:3px;padding:.08rem .3rem;
+    vertical-align:middle;margin-left:.4rem}
   .lead img{max-height:380px;object-fit:cover;margin:.5rem 0 .2rem}
-  .story.major{-webkit-column-span:all;column-span:all;border-bottom:2px solid var(--rule);padding-bottom:.9rem;margin-bottom:1.1rem}
+  /* a "major" story is a wide card spanning two grid columns (full width in the
+     2-col human zone); its body still flows in two internal text columns. */
+  .story.major{grid-column:span 2;border-bottom:2px solid var(--rule);padding-bottom:.9rem}
+  @media(max-width:520px){.story.major{grid-column:span 1}}
   .story.major .body{column-count:2;column-gap:var(--col-gap)}
 
   /* sponsor réclame box in the well */
-  .adbox{break-inside:avoid;border:2px solid var(--rule);padding:.5rem .6rem;margin:0 0 1.3rem;
+  .adbox{break-inside:avoid;border:2px solid var(--rule);padding:.5rem .6rem;margin:0;
     background:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(120,100,70,.05) 6px,rgba(120,100,70,.05) 12px)}
-  .adbox .ad-label{text-align:center;font-family:"Old Standard TT",serif;text-transform:uppercase;
+  .adbox .ad-label{text-align:center;font-family:var(--font-meta);text-transform:uppercase;
     letter-spacing:.3em;font-size:.6rem;color:var(--muted);border-bottom:1px solid var(--rule);padding-bottom:.25rem;margin-bottom:.4rem}
-  .adbox .ad-title{font-family:"Playfair Display",serif;font-weight:900;text-align:center;font-size:1.3rem;line-height:1.05;margin:.1rem 0}
+  .adbox .ad-title{font-family:var(--font-head);font-weight:900;text-align:center;font-size:1.3rem;line-height:1.05;margin:.1rem 0}
   .adbox .ad-maker{text-align:center;font-variant:small-caps;letter-spacing:.06em;color:var(--accent);font-size:.85rem;margin-bottom:.3rem}
   .adbox .ad-link{text-align:center;font-size:.72rem;color:var(--muted);word-break:break-all;margin-top:.3rem}
   .adbox .body{font-size:.92rem;line-height:1.4;text-align:center}
 
   .colophon{margin-top:1.4rem;border-top:3px double var(--rule);padding-top:.5rem;text-align:center;
-    font-family:"Old Standard TT",serif;font-size:.72rem;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+    font-family:var(--font-meta);font-size:.72rem;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
   .empty{padding:4rem 2rem;text-align:center;color:var(--muted);font-style:italic}
   .empty a{color:var(--accent)}
 
+  /* ─── PAPER THEMES ───────────────────────────────────────────────────────
+     A theme is a full reskin of the sheet: palette + type roles + photo
+     treatment + texture. Applied as `theme-<key>` on .sheet; selected by the
+     toolbar picker (live, per-edition) and registered in themes.js. The
+     per-edition `plate-*` masthead identity layers on top of the theme.
+     `theme-classic` keeps the :root defaults, so it needs no rules. */
+
+  /* Fujimoto / "Look Back" — warm newsprint, soft charcoal ink, faded
+     terracotta accent, overcast blue-grey rules; literary serifs for the
+     copy and a utilitarian monospace for kickers/datelines/captions, with a
+     halftone dot pattern on the tinted blocks for an old-press feel. */
+  .sheet.theme-fujimoto{
+    --ink:#2B2D31; --paper:#EADFC9; --rule:#626D71; --muted:#626D71; --accent:#C87A65;
+    --hair:#cabd9e; --imgborder:#b3a684; --dash:#C87A65; --aihead:#a55c47;
+    --grain:rgba(98,109,113,.10);
+    --font-body:"EB Garamond","Lora",Georgia,serif;
+    --font-head:"PT Serif","Playfair Display",Georgia,serif;
+    --font-display:"PT Serif","Playfair Display",serif;
+    --font-meta:"PT Mono","Courier Prime",ui-monospace,monospace;
+    --font-mono:"PT Mono","Courier Prime",ui-monospace,monospace;
+    --photo-filter:grayscale(.72) sepia(.30) contrast(1.06) brightness(1.02);
+    --avatar-filter:grayscale(.6) sepia(.35) contrast(1.05);
+  }
+  /* halftone on the tinted blocks → printed-by-an-old-press texture */
+  .sheet.theme-fujimoto .adbox{
+    background:transparent;
+    background-image:radial-gradient(var(--rule) .6px,transparent .7px);
+    background-size:4px 4px;
+  }
+  .sheet.theme-fujimoto .front .zone-ai{
+    background-image:radial-gradient(rgba(200,122,101,.18) .6px,transparent .7px);
+    background-size:5px 5px;
+  }
+  .sheet.theme-fujimoto .lead h2,
+  .sheet.theme-fujimoto .story h3{letter-spacing:-.005em}
+
+  /* Noir d'encre — stark modern tabloid: true black on white, red accent,
+     condensed sans display/headlines, full-grayscale photos, no paper grain. */
+  .sheet.theme-noir{
+    --ink:#0d0d0d; --paper:#ffffff; --rule:#0d0d0d; --muted:#4a4a4a; --accent:#c01818;
+    --hair:#d2d2d2; --imgborder:#1c1c1c; --dash:#9a9a9a; --aihead:#c01818;
+    --grain:transparent;
+    --font-body:"Lora",Georgia,serif;
+    --font-head:"Oswald","Playfair Display",sans-serif;
+    --font-display:"Anton","Oswald",sans-serif;
+    --font-meta:"Oswald",sans-serif;
+    --photo-filter:grayscale(1) contrast(1.12);
+    --avatar-filter:grayscale(1) contrast(1.1);
+  }
+  .sheet.theme-noir .nameplate h1,
+  .sheet.theme-noir .lead h2{text-transform:uppercase;letter-spacing:.01em}
+
+  /* Gazette — calm cool-grey broadsheet: slate ink on near-white, teal
+     accent, Playfair display over Lora body, lightly desaturated photos. */
+  .sheet.theme-gazette{
+    --ink:#23303a; --paper:#f3f5f7; --rule:#9fb0bb; --muted:#5c6b75; --accent:#2f6f8f;
+    --hair:#cfd8de; --imgborder:#bcc7ce; --dash:#9fb0bb; --aihead:#2f6f8f;
+    --grain:rgba(60,90,110,.05);
+    --font-body:"Lora",Georgia,serif;
+    --font-head:"Playfair Display",Georgia,serif;
+    --font-display:"Playfair Display",Georgia,serif;
+    --font-meta:"EB Garamond",Georgia,serif;
+    --photo-filter:grayscale(.25) contrast(1.03) saturate(.9);
+    --avatar-filter:grayscale(.2) contrast(1.02);
+  }
+
+  /* Brasil — tropical sports tabloid: jungle green + gold on warm cream,
+     Anton uppercase masthead, VIVID (non-vintage) photos, verde-amarela
+     slogan bar — the "É PENTA!" euphoria. */
+  .sheet.theme-brasil{
+    --ink:#173f1f; --paper:#fbf7e6; --rule:#2e7d32; --muted:#4f7a52; --accent:#009c3b;
+    --hair:#bfe3c2; --imgborder:#86c98c; --dash:#f2c200; --aihead:#1565c0;
+    --grain:rgba(0,156,59,.05);
+    --font-body:"Lora","PT Serif",Georgia,serif;
+    --font-head:"Oswald","Anton",sans-serif;
+    --font-display:"Anton","Oswald",Impact,sans-serif;
+    --font-meta:"Oswald",sans-serif;
+    --font-mono:"PT Mono","Courier Prime",ui-monospace,monospace;
+    --photo-filter:saturate(1.15) contrast(1.06);
+    --avatar-filter:saturate(1.1) contrast(1.04);
+  }
+  .sheet.theme-brasil .nameplate h1,
+  .sheet.theme-brasil .lead h2{text-transform:uppercase;letter-spacing:.01em}
+  .sheet.theme-brasil .slogans{background:#009c3b;color:#ffdf00;border-color:#00692a;
+    font-family:"Oswald",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+
+  /* toolbar theme picker */
+  .toolbar .themepick{display:inline-flex;align-items:center;gap:.3rem;font-size:.85rem}
+  .toolbar .themepick select{font:inherit;padding:.25rem .4rem;border-radius:4px;
+    border:1px solid #5a534a;background:#2c2924;color:#f3ead6;cursor:pointer}
+
   /* Courrier des lecteurs — web only, not part of the printed paper */
   .lecteurs{max-width:760px;margin:0 auto 3rem;padding:0 1rem;color:#ece3cf;font-family:system-ui,sans-serif}
-  .lecteurs h3{font-family:"Playfair Display",serif;color:#f3ead6;font-size:1.5rem;margin:.2rem 0 1rem;text-align:center}
+  .lecteurs h3{font-family:var(--font-head);color:#f3ead6;font-size:1.5rem;margin:.2rem 0 1rem;text-align:center}
   .clist{display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.2rem}
   .cmt{background:#2c2924;border:1px solid #4a443c;border-radius:8px;padding:.6rem .8rem}
   .cmt .meta{font-size:.72rem;color:#a89f8b;margin-bottom:.2rem;display:flex;gap:.5rem;align-items:center}
@@ -176,7 +311,7 @@
     .toolbar,.lecteurs{display:none !important}
     .stage{padding:0}
     .sheet{box-shadow:none;border:none;width:100%;padding:0}
-    .well{column-count:5}
+    .well{--wellcols:4}
   }
 </style>
 <link rel="stylesheet" href="nav.css">
@@ -186,19 +321,20 @@
 <div class="toolbar">
   <b>Le Petit Daihbi</b>
   <span class="grow"></span>
-  <a class="btn" href="/" target="_top">📰 Kiosque</a>
-  <button onclick="load()">↻ Refresh</button>
-  <a class="btn" id="layoutLink" href="#" target="_top">✎ Éditer la mise en page</a>
-  <button onclick="savePNG()">🖼 PNG</button>
-  <button class="primary" onclick="window.print()">⎙ Print / PDF</button>
+  <a class="btn" href="/" target="_top" data-i18n="paper.kiosk">📰 Kiosque</a>
+  <button onclick="load()" data-i18n="paper.refresh">↻ Refresh</button>
+  <label class="themepick" data-i18n-title="paper.themeTitle" title="Style du journal">🎨 <select id="themeSel" onchange="setTheme(this.value)"></select></label>
+  <a class="btn" id="layoutLink" href="#" target="_top" data-i18n="paper.editLayout">✎ Éditer la mise en page</a>
+  <button onclick="savePNG()" data-i18n="paper.png">🖼 PNG</button>
+  <button class="primary" onclick="window.print()" data-i18n="paper.print">⎙ Print / PDF</button>
 </div>
 
 <div class="stage">
-  <div class="sheet" id="sheet"><div class="empty">Loading the press…</div></div>
+  <div class="sheet" id="sheet"><div class="empty" data-i18n="paper.loading">Loading the press…</div></div>
 </div>
 
 <section class="lecteurs" id="lecteurs" style="display:none">
-  <h3>Courrier des lecteurs</h3>
+  <h3 data-i18n="paper.lettersTitle">Courrier des lecteurs</h3>
   <div class="clist" id="cList"></div>
   <div class="cbox" id="cBox"></div>
 </section>
@@ -207,41 +343,169 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="config.js"></script>
 <script src="papers.js"></script>
+<script src="themes.js"></script>
 <script src="daihbi.js"></script>
 <script>
 const $ = (s,r=document)=>r.querySelector(s);
-const { Placements, AdPlacements, Auth, Profiles, Comments, Ads, Papers, esc, md, configured } = window.Daihbi;
+const { Placements, AdPlacements, Auth, Profiles, Comments, Ads, Papers, esc, md, configured, I18n, Prefs } = window.Daihbi;
+
+I18n.register({
+  fr: {
+    "paper.kiosk":"📰 Kiosque","paper.refresh":"↻ Rafraîchir","paper.themeTitle":"Style du journal",
+    "paper.editLayout":"✎ Éditer la mise en page","paper.png":"🖼 PNG","paper.print":"⎙ Imprimer / PDF",
+    "paper.loading":"Chargement de la presse…","paper.lettersTitle":"Courrier des lecteurs",
+    "paper.aiHead":"✦ Rédigé par l’IA","paper.aiBadge":"✦ Rédigé par IA",
+    "paper.aiTitle":"Texte généré par intelligence artificielle","paper.regTitle":"Régiment d’origine",
+    "paper.byAuthor":"par {name}","paper.adFallback":"Réclame","paper.draft":"Brouillon",
+    "paper.noArticles":"Aucun article publié.","paper.writeOne":"En écrire un →",
+    "paper.loadFail":"Impossible de charger les articles.","paper.notConnected":"Pas encore connecté.",
+    "paper.addKeys":"Ajoutez votre URL Supabase + clé anon dans","paper.editionLabel":"ÉDITION « {issue} »",
+    "paper.articles":"{n} articles","paper.article":"{n} article",
+    "paper.commentAs":"Vous commentez en tant que <b>{name}</b>.",
+    "paper.reactionPh":"Votre réaction, votre témoignage…",
+    "paper.publish":"Publier","paper.signOut":"Se déconnecter",
+    "paper.freeRead":"Lecture libre. Connectez-vous (ou créez un compte lecteur) pour commenter.",
+    "paper.signIn":"Se connecter","paper.createReader":"Créer un compte lecteur",
+    "paper.forgotQ":"Mot de passe oublié ?","paper.passwordPh":"mot de passe",
+    "paper.writeSomething":"Écrivez quelque chose.","paper.confirmDelete":"Supprimer ce commentaire ?",
+    "paper.delete":"supprimer","paper.beFirst":"Soyez le premier à réagir à cette édition.",
+    "paper.reader":"Lecteur","paper.emailPwMin":"E-mail + mot de passe (6+ caractères).",
+    "paper.accountCreatedConfirm":"Compte créé ✓ — confirmez le lien dans votre e-mail (ignorez une éventuelle page d’erreur), puis revenez vous connecter.",
+    "paper.enterEmailFirst":"Entrez votre e-mail d’abord.",
+    "paper.resetSent":"Si un compte existe pour <b>{email}</b>, un lien de réinitialisation vient d’y être envoyé. Ouvrez-le sur cet appareil pour choisir un nouveau mot de passe.",
+  },
+  en: {
+    "paper.kiosk":"📰 Newsstand","paper.refresh":"↻ Refresh","paper.themeTitle":"Paper style",
+    "paper.editLayout":"✎ Edit layout","paper.png":"🖼 PNG","paper.print":"⎙ Print / PDF",
+    "paper.loading":"Loading the press…","paper.lettersTitle":"Readers’ mail",
+    "paper.aiHead":"✦ Written by AI","paper.aiBadge":"✦ Written by AI",
+    "paper.aiTitle":"Text generated by artificial intelligence","paper.regTitle":"Originating regiment",
+    "paper.byAuthor":"by {name}","paper.adFallback":"Advertisement","paper.draft":"Draft",
+    "paper.noArticles":"No article published.","paper.writeOne":"Write one →",
+    "paper.loadFail":"Could not load articles.","paper.notConnected":"Not connected yet.",
+    "paper.addKeys":"Add your Supabase URL + anon key to","paper.editionLabel":"EDITION “{issue}”",
+    "paper.articles":"{n} articles","paper.article":"{n} article",
+    "paper.commentAs":"You are commenting as <b>{name}</b>.",
+    "paper.reactionPh":"Your reaction, your account…",
+    "paper.publish":"Post","paper.signOut":"Sign out",
+    "paper.freeRead":"Free to read. Sign in (or create a reader account) to comment.",
+    "paper.signIn":"Sign in","paper.createReader":"Create a reader account",
+    "paper.forgotQ":"Forgot password?","paper.passwordPh":"password",
+    "paper.writeSomething":"Write something.","paper.confirmDelete":"Delete this comment?",
+    "paper.delete":"delete","paper.beFirst":"Be the first to react to this edition.",
+    "paper.reader":"Reader","paper.emailPwMin":"Email + password (6+ characters).",
+    "paper.accountCreatedConfirm":"Account created ✓ — confirm the link in your email (ignore any error page), then come back to sign in.",
+    "paper.enterEmailFirst":"Enter your email first.",
+    "paper.resetSent":"If an account exists for <b>{email}</b>, a reset link has just been sent to it. Open it on this device to choose a new password.",
+  },
+});
 
 // Editions come from the DB (Papers.map), with papers.js as the fallback.
 const ISSUE = window.Daihbi.ISSUE;
+// Embed/preview mode: board.html loads this page in an iframe with ?embed=1 to
+// show a clean, scaled mini-front (no toolbar, no comments).
+const EMBED = new URLSearchParams(location.search).has("embed");
+// ALL mode (board canvas): render EVERY placement incl. unpublished drafts and make
+// each article clickable → message the parent board to open its edit panel. Only the
+// managing editor's authed session actually receives drafts (placements RLS); an anon
+// hitting ?all=1 still gets published-only, so it never leaks. Gated to embed mode.
+const ALL = EMBED && new URLSearchParams(location.search).has("all");
+if (EMBED) document.body.classList.add("embed");
+if (ALL) {
+  document.body.classList.add("allmode");
+  // localized "DRAFT" ribbon text consumed by the .draft::after CSS
+  try{ document.body.style.setProperty("--drafttxt", JSON.stringify(window.Daihbi.I18n.t("paper.draft"))); }catch(e){}
+  // clicking any tagged article asks the parent board to open its edit panel
+  document.addEventListener("click", (e)=>{
+    const el = e.target.closest("[data-pid]"); if(!el) return;
+    e.preventDefault();
+    try{ parent.postMessage({ type:"daihbi-edit", pid: el.dataset.pid, kind: el.dataset.kind || "placement" }, location.origin); }catch(_){}
+  });
+}
 function fallbackPaper(){ return {
   name: ISSUE.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()),
   tagline: "", plate: "plate-fraktur", ear: ["Édition", "", "Warden"], slogans: [] }; }
 let PAPERS = window.DAIHBI_PAPERS || {};
 let PAPER = PAPERS[ISSUE] || fallbackPaper();
+
+// ── Paper theme (full skin) — URL ?theme= > saved pick > paper default > classic
+const THEMES = window.DAIHBI_THEMES || { classic:{label:"Classique"} };
+const THEME_KEY = "daihbi-theme-" + ISSUE;
+function resolveTheme(){
+  const url = new URLSearchParams(location.search).get("theme");
+  let saved = null; try{ saved = localStorage.getItem(THEME_KEY); }catch(e){}
+  const cand = url || saved || PAPER.theme || "classic";
+  return THEMES[cand] ? cand : "classic";
+}
+let THEME = resolveTheme();
+function setTheme(k){
+  THEME = THEMES[k] ? k : "classic";
+  try{ localStorage.setItem(THEME_KEY, THEME); }catch(e){}
+  const u = new URL(location.href); u.searchParams.set("theme", THEME);
+  history.replaceState(null, "", u);
+  applyPaper();
+}
+function populateThemes(){
+  const sel = $("#themeSel"); if(!sel) return;
+  sel.innerHTML = Object.entries(THEMES)
+    .map(([k,t]) => `<option value="${k}">${esc(t.label||k)}</option>`).join("");
+}
+
 function applyPaper(){
   document.title = PAPER.name;
   $(".toolbar b").innerHTML = PAPER.name;
   const ll = $("#layoutLink"); if(ll) ll.href = "board.html?issue=" + encodeURIComponent(ISSUE);
-  $("#sheet").className = "sheet " + (PAPER.plate || "");
+  THEME = resolveTheme();
+  $("#sheet").className = "sheet " + (PAPER.plate || "") + " theme-" + THEME;
+  const sel = $("#themeSel"); if(sel) sel.value = THEME;
 }
+populateThemes();
 applyPaper();
+
+// The edition's primary content language — computed during render (see load()),
+// used to format the dateline and decide when a per-story language badge shows.
+let PAPER_LANG = "fr";
+
+// Transparency labels are printed INTO the paper, so they follow the piece's
+// CONTENT language (like the dateline) — NOT the reader's UI chrome language.
+// (The shared I18n only ships fr/en chrome; content can be pt/es/de/… too.)
+const PRESS_L10N = {
+  fr:{ai:"✦ Rédigé par IA", aiT:"Texte généré par intelligence artificielle", reg:"Régiment d’origine", by:"par",  head:"✦ Rédigé par l’IA",  ed:"ÉDITION « {0} »"},
+  en:{ai:"✦ Written by AI", aiT:"Text generated by artificial intelligence",  reg:"Originating regiment", by:"by",  head:"✦ Written by AI",  ed:"EDITION “{0}”"},
+  pt:{ai:"✦ Escrito por IA", aiT:"Texto gerado por inteligência artificial",   reg:"Regimento de origem",  by:"por", head:"✦ Escrito pela IA", ed:"EDIÇÃO « {0} »"},
+  es:{ai:"✦ Escrito por IA", aiT:"Texto generado por inteligencia artificial", reg:"Regimiento de origen", by:"por", head:"✦ Escrito por IA",  ed:"EDICIÓN « {0} »"},
+  de:{ai:"✦ Von KI verfasst", aiT:"Von künstlicher Intelligenz erzeugter Text", reg:"Ursprungsregiment",  by:"von", head:"✦ Von KI verfasst", ed:"AUSGABE „{0}“"},
+  it:{ai:"✦ Scritto dall’IA", aiT:"Testo generato dall’intelligenza artificiale", reg:"Reggimento d’origine", by:"di", head:"✦ Scritto dall’IA", ed:"EDIZIONE « {0} »"},
+};
+const pressL = lang => PRESS_L10N[lang] || PRESS_L10N.en;
 
 function imgTag(url){ return url ? `<img src="${esc(url)}" alt="">` : ""; }
 function kicker(a){ return a.kicker ? `<div class="kicker">${esc(a.kicker)}</div>` : ""; }
+// tiny uppercase badge shown only when a story's lang differs from the edition's
+function langBadge(a){
+  const l = (a.lang || "fr");
+  return l !== PAPER_LANG ? ` <span class="lbadge" title="${esc(I18n.langLabel(l))}">${esc(l.toUpperCase())}</span>` : "";
+}
 function srcBadge(a){
   if(!a.source) return "";
+  const t = pressL(a.lang || PAPER_LANG);
   const ai = ["ia","ai"].includes(String(a.source).trim().toLowerCase());
   return ai
-    ? `<span class="src ai" title="Texte généré par intelligence artificielle">✦ Rédigé par IA</span>`
-    : `<span class="src reg" title="Régiment d'origine">${esc(a.source)}</span>`;
+    ? `<span class="src ai" title="${esc(t.aiT)}">${esc(t.ai)}</span>`
+    : `<span class="src reg" title="${esc(t.reg)}">${esc(a.source)}</span>`;
 }
 function byline(a){
   if(!a.byline && !a.author_avatar && !a.source) return "";
   const av = a.author_avatar ? `<img class="avatar" src="${esc(a.author_avatar)}" alt="">` : "";
   const sb = srcBadge(a);
-  return `<div class="byline">${av}${a.byline ? `par ${esc(a.byline)}` : ""}${sb ? ` ${sb}` : ""}</div>`;
+  const name = a.byline ? `${esc(pressL(a.lang || PAPER_LANG).by)} ${esc(a.byline)}` : "";
+  return `<div class="byline">${av}${name}${sb ? ` ${sb}` : ""}${langBadge(a)}</div>`;
 }
+
+// In board ALL mode, tag each rendered article with its placement id/kind (so a click
+// can be edited) and dim drafts. No-ops on the public page.
+function editAttrs(a){ return (ALL && a && a.pid) ? ` data-pid="${esc(a.pid)}" data-kind="${esc(a.kind||"placement")}"` : ""; }
+function draftCls(a){ return (ALL && a && a.published === false) ? " draft" : ""; }
 
 function renderLead(a){
   // split the rendered body into the opening paragraph (drop-capped, full width)
@@ -256,31 +520,31 @@ function renderLead(a){
     ${byline(a)}`;
   if (a.image_url) {
     // photo inset (floated), text wraps around it — like the hand-made originals
-    return `<section class="lead">${head}
+    return `<section class="lead${draftCls(a)}"${editAttrs(a)}>${head}
       <div class="lead-flow">
         <img class="lead-photo" src="${esc(a.image_url)}" alt="">
         <div class="lead-open">${open}</div>${rest}
       </div>
     </section>`;
   }
-  return `<section class="lead">${head}
+  return `<section class="lead${draftCls(a)}"${editAttrs(a)}>${head}
     <div class="lead-open">${open}</div>
     ${rest ? `<div class="lead-cols">${rest}</div>` : ""}
   </section>`;
 }
 function renderStory(a){
-  return `<article class="story ${esc(a.weight)}">
+  return `<article class="story ${esc(a.weight)}${draftCls(a)}"${editAttrs(a)}>
     ${kicker(a)}<h3>${esc(a.headline)}</h3>${byline(a)}${imgTag(a.image_url)}
     ${a.subhead ? `<p><em>${esc(a.subhead)}</em></p>` : ""}
     <div class="body">${md(a.body)}</div>
   </article>`;
 }
 function fmtDate(d){
-  return d.toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  return I18n.fmtDate(d,{weekday:"long",year:"numeric",month:"long",day:"numeric"}, PAPER_LANG);
 }
 function renderAd(ad){
-  const cat = (window.DAIHBI_AD_CAT_LABEL && ad.category) ? window.DAIHBI_AD_CAT_LABEL(ad.category) : "Réclame";
-  return `<aside class="story adbox cat-${esc(ad.category||"fabricant")}">
+  const cat = (window.DAIHBI_AD_CAT_LABEL && ad.category) ? window.DAIHBI_AD_CAT_LABEL(ad.category) : I18n.t("paper.adFallback");
+  return `<aside class="story adbox cat-${esc(ad.category||"fabricant")}${draftCls(ad)}"${editAttrs(ad)}>
     <div class="ad-label">${esc(cat)}</div>
     ${ad.image_url?`<img src="${esc(ad.image_url)}" alt="">`:""}
     <h3 class="ad-title">${esc(ad.title)}</h3>
@@ -290,32 +554,82 @@ function renderAd(ad){
   </aside>`;
 }
 
+// ── Masonry "snap": size each story card to span the right number of fine grid
+// rows so cards pack tightly under each other (dense flow fills the holes).
+// Measures with spans cleared first (align-items:start → cards are content-height),
+// then applies spans in one batch. DOM order is untouched — only visual placement.
+function packWell(){
+  const ROW = 8, GAP = 22;   // must match grid-auto-rows; GAP = vertical rhythm
+  document.querySelectorAll(".well").forEach(well=>{
+    const items = [...well.children].filter(el=>el.matches(".story"));
+    items.forEach(el=>{ el.style.gridRowEnd = ""; });           // reset → content height
+    const hs = items.map(el=>el.getBoundingClientRect().height); // measure all first
+    items.forEach((el,i)=>{ el.style.gridRowEnd = "span " + Math.max(1, Math.ceil((hs[i]+GAP)/ROW)); });
+  });
+}
+// In embed/preview mode, scale the full 1100px sheet down to fit the pane width
+// (zoom reflows the layout box, so no leftover whitespace). No-op otherwise.
+function applyEmbed(){
+  if(!EMBED) return;
+  const sheet = document.querySelector(".sheet"); if(!sheet) return;
+  sheet.style.zoom = String(Math.min(1, (window.innerWidth || 1100) / 1100));
+}
+let _packRAF;
+function schedulePack(){
+  applyEmbed();   // scale first so the masonry measures in the scaled space
+  cancelAnimationFrame(_packRAF);
+  _packRAF = requestAnimationFrame(()=>requestAnimationFrame(packWell));
+  // images and webfonts change card heights — re-pack as they settle
+  document.querySelectorAll(".well img").forEach(img=>{
+    if(!img.complete){ img.addEventListener("load", packWell, {once:true}); img.addEventListener("error", packWell, {once:true}); }
+  });
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(packWell);
+}
+let _packResize;
+window.addEventListener("resize", ()=>{ clearTimeout(_packResize); _packResize = setTimeout(()=>{ applyEmbed(); packWell(); }, 150); });
+
 async function load(){
   if(!configured){
-    $("#sheet").innerHTML = `<div class="empty">Not connected yet.<br>
-      Add your Supabase URL + anon key to <code>web/config.js</code>.</div>`;
+    $("#sheet").innerHTML = `<div class="empty">${esc(I18n.t("paper.notConnected"))}<br>
+      ${esc(I18n.t("paper.addKeys"))} <code>web/config.js</code>.</div>`;
     return;
   }
   try{ PAPERS = await Papers.map(); }catch(e){ /* keep papers.js */ }
   PAPER = PAPERS[ISSUE] || fallbackPaper(); applyPaper();
   let arts;
   try{
-    const placed = await Placements.publishedForIssue(ISSUE);
-    // flatten placement (layout) + chronicle (text); placement photo overrides the suggested one
+    // ALL mode (board canvas) shows every placement incl. drafts; public shows published only
+    const placed = ALL ? await Placements.forIssue(ISSUE) : await Placements.publishedForIssue(ISSUE);
+    // flatten placement (layout) + chronicle (text); placement photo overrides the suggested one.
+    // Keep the placement id/kind/published so the board can edit a clicked element.
     arts = placed.filter(p=>p.article).map(p => ({ ...p.article,
       weight: p.weight, position: p.position,
+      pid: p.id, kind: "placement", published: p.published !== false,
+      lang: (p.article.lang)||"fr",
       image_url: p.image_url || p.article.image_url || "" }));
   }
-  catch(e){ $("#sheet").innerHTML = `<div class="empty">Could not load articles.<br>${esc(e.message)}</div>`; return; }
+  catch(e){ $("#sheet").innerHTML = `<div class="empty">${esc(I18n.t("paper.loadFail"))}<br>${esc(e.message)}</div>`; return; }
+
+  // edition's PRIMARY content language: lead article's lang, else most frequent, else "fr"
+  PAPER_LANG = (() => {
+    if(!arts.length) return "fr";
+    const lead = arts.find(a=>a.weight==="lead");
+    if(lead && lead.lang) return lead.lang;
+    const tally = {};
+    for(const a of arts){ const l = a.lang||"fr"; tally[l] = (tally[l]||0)+1; }
+    return Object.keys(tally).sort((x,y)=>tally[y]-tally[x])[0] || "fr";
+  })();
   // Réclames: the editor lays them out (ad_placements), in their chosen order.
   // Fall back to auto-flowing all approved ads when nothing's been placed yet
   // (or before the ad_placements migration has run).
   let ads = [];
   try{
-    const ap = await AdPlacements.publishedForIssue(ISSUE);
-    ads = ap.map(p=>p.ad).filter(Boolean);
-    if(!ads.length) ads = await Ads.listApproved(ISSUE);
-  }catch(e){ try{ ads = await Ads.listApproved(ISSUE); }catch(_){} }
+    // ALL mode: every ad placement (incl. drafts), each carrying its placement id so
+    // the board can edit it. Public: published only, with the approved-ads fallback.
+    const ap = ALL ? await AdPlacements.forIssue(ISSUE) : await AdPlacements.publishedForIssue(ISSUE);
+    ads = ap.map(p=> p.ad ? { ...p.ad, pid:p.id, kind:"ad-placement", published:p.published!==false } : null).filter(Boolean);
+    if(!ALL && !ads.length) ads = await Ads.listApproved(ISSUE);
+  }catch(e){ if(!ALL){ try{ ads = await Ads.listApproved(ISSUE); }catch(_){} } }
 
   // transparency: AI-written chronicles go in a 1-column sidebar on the right,
   // human chronicles fill a 2-column well on the left.
@@ -329,9 +643,11 @@ async function load(){
   const humanArts = arts.filter(a=>!isAI(a));
   let bodyHTML;
   if(arts.length===0){
-    bodyHTML = `<div class="empty">Aucun article publié.<br><a href="editor.html?issue=${encodeURIComponent(ISSUE)}">En écrire un →</a></div>`;
-  } else if(aiArts.length===0){
-    const [lead,rest] = leadAndRest(arts);   // classic full-width layout, no AI
+    bodyHTML = `<div class="empty">${esc(I18n.t("paper.noArticles"))}<br><a href="editor.html?issue=${encodeURIComponent(ISSUE)}">${esc(I18n.t("paper.writeOne"))}</a></div>`;
+  } else if(aiArts.length===0 || humanArts.length===0){
+    // classic full-width layout when the page is all-human OR all-AI; each story
+    // still carries its own source badge (régiment or ✦ AI), so transparency holds.
+    const [lead,rest] = leadAndRest(arts);
     bodyHTML = (lead?renderLead(lead):"") +
       ((rest.length||ads.length)?`<div class="well">${rest.map(renderStory).join("")}${ads.map(renderAd).join("")}</div>`:"");
   } else {
@@ -342,7 +658,7 @@ async function load(){
         ${(hRest.length||ads.length)?`<div class="well well2">${hRest.map(renderStory).join("")}${ads.map(renderAd).join("")}</div>`:""}
       </div>
       <aside class="zone-ai">
-        <div class="ai-head">✦ Rédigé par l'IA</div>
+        <div class="ai-head">${esc(pressL(PAPER_LANG).head)}</div>
         ${aiArts.map(renderStory).join("")}
       </aside>
     </div>`;
@@ -350,7 +666,7 @@ async function load(){
 
   const footer = PAPER.slogans && PAPER.slogans.length
     ? `<div class="slogans">${PAPER.slogans.map(s=>`<span>${s}</span>`).join("")}</div>`
-    : `<div class="colophon">${esc(PAPER.name)} · ${arts.length} article${arts.length>1?"s":""} · Warden</div>`;
+    : `<div class="colophon">${esc(PAPER.name)} · ${esc(I18n.t(arts.length>1?"paper.articles":"paper.article",{n:arts.length}))} · Warden</div>`;
 
   $("#sheet").innerHTML = `
     <div class="ear"><span>${PAPER.ear[0]||""}</span><span>${PAPER.ear[1]||""}</span><span>${PAPER.ear[2]||""}</span></div>
@@ -366,31 +682,43 @@ async function load(){
     </div>
     <div class="dateline-bar">
       <span>${fmtDate(new Date())}</span>
-      <span class="mid">ÉDITION « ${esc(ISSUE).toUpperCase()} »</span>
+      <span class="mid">${esc(pressL(PAPER_LANG).ed.replace("{0}", ISSUE.toUpperCase()))}</span>
       <span>${PAPER.ear[2]||""}</span>
     </div>
     ${bodyHTML}
     ${arts.length ? footer : ""}
   `;
+  // The page's content is in the edition's primary language — reflect that on
+  // <html lang> (I18n.apply sets it to the UI language, so set it AFTER render).
+  document.documentElement.lang = PAPER_LANG;
+  schedulePack();   // snap the story cards together once laid out
+  // tell the board the canvas is current (it re-syncs status; clicks are self-wired)
+  if(ALL){ try{ parent.postMessage({ type:"daihbi-rendered" }, location.origin); }catch(_){} }
 }
 
 async function savePNG(){
   if(typeof html2canvas==="undefined"){ alert("PNG export needs internet (html2canvas). Use Print → Save as PDF."); return; }
-  const canvas = await html2canvas($("#sheet"),{scale:2,backgroundColor:"#f5efe1",useCORS:true});
+  const bg = getComputedStyle($("#sheet")).backgroundColor || "#f5efe1";
+  const canvas = await html2canvas($("#sheet"),{scale:2,backgroundColor:bg,useCORS:true});
   const a=document.createElement("a");
-  a.download=`le-petit-daihbi-${(new Date()).toISOString().slice(0,10)}.png`;
+  // filename matches the paper produced: slugified masthead name (accents stripped) + date
+  const slug = (PAPER.name||ISSUE).normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"") || ISSUE;
+  // English editions share the masthead name with their original, so tag them -en
+  const langSuffix = PAPER.lang === "en" ? "-en" : "";
+  a.download=`${slug}${langSuffix}-${(new Date()).toISOString().slice(0,10)}.png`;
   a.href=canvas.toDataURL("image/png"); a.click();
 }
 
 // ── Courrier des lecteurs (read = anonyme, commenter = connecté) ────────────
 let ME_ID = null, MY_NAME = "", IS_EDITOR = false;
 
-function fmtC(d){ return new Date(d).toLocaleString("fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }
+function fmtC(d){ return I18n.fmtDateTime(d,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }
 
 async function refreshMe(){
   const s = await Auth.session();
   ME_ID = s?.user?.id || null;
-  if(ME_ID){ const p = await Profiles.me(); MY_NAME = (p&&p.display_name) || s.user.email?.split("@")[0] || "Lecteur"; IS_EDITOR = (p&&p.role)==="editor"; }
+  if(ME_ID){ const p = await Profiles.me(); I18n.adoptProfile(p); MY_NAME = (p&&p.display_name) || s.user.email?.split("@")[0] || I18n.t("paper.reader"); IS_EDITOR = (p&&p.role)==="editor"; }
   else { MY_NAME=""; IS_EDITOR=false; }
 }
 
@@ -398,68 +726,77 @@ async function loadComments(){
   let list=[]; try{ list = await Comments.list(ISSUE); }catch(e){ /* table maybe absent */ }
   $("#cList").innerHTML = list.length ? list.map(c=>`
     <div class="cmt">
-      <div class="meta"><span class="who">${esc(c.author_name||"Lecteur")}</span><span>· ${fmtC(c.created_at)}</span>
-        ${(c.author_id===ME_ID||IS_EDITOR)?`<button class="del" onclick="delComment('${c.id}')">supprimer</button>`:""}</div>
+      <div class="meta"><span class="who">${esc(c.author_name||I18n.t("paper.reader"))}</span><span>· ${fmtC(c.created_at)}</span>
+        ${(c.author_id===ME_ID||IS_EDITOR)?`<button class="del" onclick="delComment('${c.id}')">${esc(I18n.t("paper.delete"))}</button>`:""}</div>
       <div class="txt">${esc(c.body)}</div>
-    </div>`).join("") : `<div class="cmt-empty">Soyez le premier à réagir à cette édition.</div>`;
+    </div>`).join("") : `<div class="cmt-empty">${esc(I18n.t("paper.beFirst"))}</div>`;
 }
 
 function renderCBox(){
   const box=$("#cBox");
   if(ME_ID){
     box.innerHTML = `
-      <div class="hint">Vous commentez en tant que <b>${esc(MY_NAME)}</b>.</div>
-      <textarea id="cText" placeholder="Votre réaction, votre témoignage…"></textarea>
-      <div class="row"><button onclick="postComment()">Publier</button>
-        <button class="ghost" onclick="cSignOut()">Se déconnecter</button></div>
+      <div class="hint">${I18n.t("paper.commentAs",{name:esc(MY_NAME)})}</div>
+      <textarea id="cText" placeholder="${esc(I18n.t("paper.reactionPh"))}"></textarea>
+      <div class="row"><button onclick="postComment()">${esc(I18n.t("paper.publish"))}</button>
+        <button class="ghost" onclick="cSignOut()">${esc(I18n.t("paper.signOut"))}</button></div>
       <div class="err" id="cErr"></div>`;
   } else {
     box.innerHTML = `
-      <div class="hint">Lecture libre. Connectez-vous (ou créez un compte lecteur) pour commenter.</div>
-      <input id="cEmail" type="email" placeholder="vous@exemple.com">
-      <input id="cPass" type="password" placeholder="mot de passe">
-      <div class="row"><button onclick="cSignIn()">Se connecter</button>
-        <button class="ghost" onclick="cSignUp()">Créer un compte lecteur</button></div>
-      <div style="font-size:.85rem;margin-top:.3rem"><a href="#" onclick="cForgot();return false">Mot de passe oublié ?</a></div>
+      <div class="hint">${esc(I18n.t("paper.freeRead"))}</div>
+      <input id="cEmail" type="email" placeholder="${esc(I18n.t("auth.emailPh"))}">
+      <input id="cPass" type="password" placeholder="${esc(I18n.t("paper.passwordPh"))}">
+      <div class="row"><button onclick="cSignIn()">${esc(I18n.t("paper.signIn"))}</button>
+        <button class="ghost" onclick="cSignUp()">${esc(I18n.t("paper.createReader"))}</button></div>
+      <div style="font-size:.85rem;margin-top:.3rem"><a href="#" onclick="cForgot();return false">${esc(I18n.t("paper.forgotQ"))}</a></div>
       <div class="err" id="cErr"></div>`;
   }
 }
 
 async function postComment(){
-  const t=$("#cText").value.trim(); if(!t){ $("#cErr").textContent="Écrivez quelque chose."; return; }
+  const t=$("#cText").value.trim(); if(!t){ $("#cErr").textContent=I18n.t("paper.writeSomething"); return; }
   try{ await Comments.add(ISSUE,t,MY_NAME); $("#cText").value=""; await loadComments(); }
   catch(e){ $("#cErr").textContent=e.message; }
 }
-async function delComment(id){ if(!confirm("Supprimer ce commentaire ?"))return; try{ await Comments.remove(id); await loadComments(); }catch(e){ alert(e.message); } }
+async function delComment(id){ if(!confirm(I18n.t("paper.confirmDelete")))return; try{ await Comments.remove(id); await loadComments(); }catch(e){ alert(e.message); } }
 async function cSignIn(){
   try{ await Auth.signInPassword($("#cEmail").value.trim(), $("#cPass").value); await afterAuth(); }
   catch(e){ $("#cErr").textContent=e.message; }
 }
 async function cSignUp(){
   const em=$("#cEmail").value.trim(), pw=$("#cPass").value;
-  if(!em||pw.length<6){ $("#cErr").textContent="E-mail + mot de passe (6+ caractères)."; return; }
+  if(!em||pw.length<6){ $("#cErr").textContent=I18n.t("paper.emailPwMin"); return; }
   try{
     const d=await Auth.signUp(em,pw,{role:"reader"});
     if(d&&d.session){ await afterAuth(); }
-    else { $("#cBox").innerHTML=`<div class="hint">Compte créé ✓ — confirmez le lien dans votre e-mail (ignorez une éventuelle page d'erreur), puis revenez vous connecter.</div>`; }
+    else { $("#cBox").innerHTML=`<div class="hint">${esc(I18n.t("paper.accountCreatedConfirm"))}</div>`; }
   }catch(e){ $("#cErr").textContent=e.message; }
 }
 async function cForgot(){
   const em=$("#cEmail").value.trim();
-  if(!em){ $("#cErr").textContent="Entrez votre e-mail d'abord."; return; }
+  if(!em){ $("#cErr").textContent=I18n.t("paper.enterEmailFirst"); return; }
   try{ await Auth.resetPassword(em);
-    $("#cBox").innerHTML=`<div class="hint">Si un compte existe pour <b>${em}</b>, un lien de réinitialisation vient d'y être envoyé. Ouvrez-le sur cet appareil pour choisir un nouveau mot de passe.</div>`;
+    $("#cBox").innerHTML=`<div class="hint">${I18n.t("paper.resetSent",{email:esc(em)})}</div>`;
   }catch(e){ $("#cErr").textContent=e.message; }
 }
 async function cSignOut(){ await Auth.signOut(); await afterAuth(); }
 async function afterAuth(){ await refreshMe(); renderCBox(); await loadComments(); }
 
 async function initComments(){
-  if(!configured) return;
+  if(!configured || EMBED) return;   // no reader comments in the board preview
   $("#lecteurs").style.display="";
   await refreshMe(); renderCBox(); await loadComments();
   Comments.subscribe(ISSUE, loadComments);
 }
+
+// re-translate static chrome + re-render dynamic content when the UI language changes
+document.addEventListener("daihbi:langchange", ()=>{
+  I18n.apply(document);          // static chrome (+ sets <html lang> to UI lang)
+  load();                        // re-render the paper (badges, dateline, footer count)
+  if(configured) renderCBox();   // re-render the comment box strings
+});
+
+I18n.apply(document);   // translate static chrome on boot (set <html lang> to UI; render() overrides with content lang)
 
 // live updates between collaborators
 if(configured){ Placements.subscribe(ISSUE, load); AdPlacements.subscribe(ISSUE, load); }
