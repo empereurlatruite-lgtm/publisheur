@@ -49,13 +49,26 @@ photo = `placement.image_url || article.image_url`.
 - `supabase/*.sql` — migrations, applied by pasting into the Supabase SQL Editor **in
   order**: `schema → roles → comments → portfolio → ads → papers → revisions →
   edited_by → pool → transparency → authors → ad_placements → media → i18n →
-  theme`.
+  theme → styles → regiments`.
   (`i18n` adds content `lang` to articles/ads/papers + `preferred_lang`/`ui_lang`
   to profiles, and opens chronicle writing to any signed-in user — editors still
   publish. `theme` adds `papers.theme` — the per-edition visual skin the
   rédacteur en chef picks; theme keys live in `web/themes.js`, applied in
   `paper.html`. **Required**: until it's run, saving any paper setting fails,
-  since `Papers.update/create` now write the `theme` column.)
+  since `Papers.update/create` now write the `theme` column.
+  `styles` adds a `styles` table (owner-scoped writes, public read) for **custom
+  styles** the editor creates on the board's 🎨 picker ("+ Créer un style…"):
+  palette + fonts + photo stored as a `def` JSON. A paper points at one via
+  `papers.theme = "style:<id>"`; `paper.html` applies the `def` as inline CSS
+  variables. **Required** for creating/using custom styles — until it's run, the
+  board's create-style modal can't save and `Styles.list()` 404s, **but the page
+  degrades gracefully** (built-in themes still work; `paper.html` only queries
+  the table when a paper actually uses a `style:` theme).
+  `regiments` adds a `regiments` table (public read, any signed-in user may
+  insert) for a **user-extensible régiment list**: `Daihbi.Regiments.list()`
+  merges `papers.js`' `DAIHBI_CLANS` defaults with these rows, and the régiment
+  pickers in `editor.html` (chronicle source, journal Régiment, profile) get a
+  "＋ Ajouter un régiment…" option. Degrades to the defaults if not run.)
 
 ## Roles
 `reader` (read anon, comment signed-in) · `writer` / `illustrator` (write chronicles;

@@ -347,7 +347,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = (s,r=document)=>r.querySelector(s);
-const { Placements, AdPlacements, Auth, Profiles, Comments, Ads, Papers, esc, md, configured, I18n, Prefs } = window.Daihbi;
+const { Placements, AdPlacements, Auth, Profiles, Comments, Ads, Papers, Styles, esc, md, configured, I18n, Prefs } = window.Daihbi;
 
 I18n.register({
   fr: {
@@ -430,16 +430,23 @@ let PAPER = PAPERS[ISSUE] || fallbackPaper();
 
 // ── Paper theme (full skin) — URL ?theme= > saved pick > paper default > classic
 const THEMES = window.DAIHBI_THEMES || { classic:{label:"Classique"} };
+// Custom styles (from the `styles` table), keyed by their papers.theme value
+// ("style:<id>"). Populated async by loadStyles(); applied as inline CSS vars.
+let CUSTOM = {};
 const THEME_KEY = "daihbi-theme-" + ISSUE;
-function resolveTheme(){
+const knownTheme = k => !!(THEMES[k] || CUSTOM[k]);
+function rawThemePref(){
   const url = new URLSearchParams(location.search).get("theme");
   let saved = null; try{ saved = localStorage.getItem(THEME_KEY); }catch(e){}
-  const cand = url || saved || PAPER.theme || "classic";
-  return THEMES[cand] ? cand : "classic";
+  return url || saved || PAPER.theme || "classic";
+}
+function resolveTheme(){
+  const cand = rawThemePref();
+  return knownTheme(cand) ? cand : "classic";
 }
 let THEME = resolveTheme();
 function setTheme(k){
-  THEME = THEMES[k] ? k : "classic";
+  THEME = knownTheme(k) ? k : "classic";
   try{ localStorage.setItem(THEME_KEY, THEME); }catch(e){}
   const u = new URL(location.href); u.searchParams.set("theme", THEME);
   history.replaceState(null, "", u);
@@ -447,8 +454,27 @@ function setTheme(k){
 }
 function populateThemes(){
   const sel = $("#themeSel"); if(!sel) return;
-  sel.innerHTML = Object.entries(THEMES)
-    .map(([k,t]) => `<option value="${k}">${esc(t.label||k)}</option>`).join("");
+  const opt = (k,label) => `<option value="${esc(k)}">${esc(label)}</option>`;
+  let html = Object.entries(THEMES).map(([k,t]) => opt(k, t.label||k)).join("");
+  const custom = Object.entries(CUSTOM);
+  if(custom.length) html += custom.map(([k,t]) => opt(k, t.label||k)).join("");
+  sel.innerHTML = html;
+  sel.value = THEME;
+}
+// Apply a custom style's `def` as inline CSS variables on the sheet (or clear
+// them when switching back to a built-in theme, whose look lives in CSS).
+function applyStyleVars(def){
+  const s = $("#sheet"); if(!s) return;
+  ["--paper","--ink","--accent","--rule","--muted",
+   "--font-head","--font-display","--font-body","--font-meta",
+   "--photo-filter","--avatar-filter"].forEach(p => s.style.removeProperty(p));
+  if(!def) return;
+  const set = (p,v) => { if(v) s.style.setProperty(p, v); };
+  set("--paper",def.paper); set("--ink",def.ink); set("--accent",def.accent);
+  set("--rule",def.rule); set("--muted",def.muted);
+  set("--font-head",def.fontHead); set("--font-display",def.fontHead);
+  set("--font-body",def.fontBody); set("--font-meta",def.fontBody);
+  set("--photo-filter",def.photoFilter); set("--avatar-filter",def.photoFilter);
 }
 
 function applyPaper(){
@@ -456,11 +482,25 @@ function applyPaper(){
   $(".toolbar b").innerHTML = PAPER.name;
   const ll = $("#layoutLink"); if(ll) ll.href = "board.html?issue=" + encodeURIComponent(ISSUE);
   THEME = resolveTheme();
-  $("#sheet").className = "sheet " + (PAPER.plate || "") + " theme-" + THEME;
+  const isCustom = !!CUSTOM[THEME];
+  $("#sheet").className = "sheet " + (PAPER.plate || "") + (isCustom ? " theme-custom" : " theme-" + THEME);
+  applyStyleVars(isCustom ? CUSTOM[THEME].def : null);
   const sel = $("#themeSel"); if(sel) sel.value = THEME;
+}
+async function loadStyles(){
+  try{
+    const list = await Styles.list();
+    CUSTOM = {};
+    list.forEach(st => { CUSTOM[Styles.key(st.id)] = { label: st.name, def: st.def }; });
+  }catch(e){ CUSTOM = {}; }
+  populateThemes();
+  applyPaper();   // re-apply once custom styles are known (initial run falls back to classic)
 }
 populateThemes();
 applyPaper();
+// Only hit the styles table when this paper actually wants a custom style — keeps
+// the common built-in-theme path (and the e2e layout suite) query-free.
+if(Styles.isCustom(rawThemePref())) loadStyles();
 
 // The edition's primary content language — computed during render (see load()),
 // used to format the dateline and decide when a per-story language badge shows.
