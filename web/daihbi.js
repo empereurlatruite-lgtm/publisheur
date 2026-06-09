@@ -1043,5 +1043,75 @@ const AuthModal = (function () {
   return { openLogin, openForgot, openExpired, openRecovery, close };
 })();
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, AuthModal, NavUser, Chronicles, Placements, AdPlacements, Media, Profiles, Comments, Portfolio, Ads, Papers, Revisions, esc, md, I18n, Prefs, LANGS };
+// ── Styles: reusable visual skins (palette + fonts + photo) authored by
+//    editors. Stored in the `styles` table — owner-scoped writes, public read so
+//    anonymous readers can render a paper that uses a custom style. A paper
+//    references one via papers.theme = "style:<id>"; built-in themes (themes.js)
+//    keep bare keys. `def` is applied as inline CSS variables by paper.html.
+function _rowToStyle(r) {
+  return { id: r.id, name: r.name || "", def: r.def || {}, owner_id: r.owner_id };
+}
+const Styles = {
+  key(id) { return "style:" + id; },                 // papers.theme value for a custom style
+  isCustom(theme) { return typeof theme === "string" && theme.indexOf("style:") === 0; },
+  idOf(theme) { return Styles.isCustom(theme) ? theme.slice(6) : null; },
+  async list() {
+    if (!db) return [];
+    const { data, error } = await db.from("styles").select("*").order("created_at", { ascending: true });
+    if (error) throw error;
+    return (data || []).map(_rowToStyle);
+  },
+  async get(id) {
+    if (!db) return null;
+    const { data, error } = await db.from("styles").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? _rowToStyle(data) : null;
+  },
+  async create({ name, def }) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { data, error } = await db.from("styles").insert({ name, def: def || {} }).select().single();
+    if (error) throw error;
+    return _rowToStyle(data);
+  },
+  async update(id, patch) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { error } = await db.from("styles").update(patch).eq("id", id);
+    if (error) throw error;
+  },
+  async remove(id) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { error } = await db.from("styles").delete().eq("id", id);
+    if (error) throw error;
+  },
+};
+
+// ── Regiments: a shared, user-extensible régiment/clan vocabulary. The base
+//    list ships in papers.js (DAIHBI_CLANS); the `regiments` table holds the ones
+//    contributors add. list() merges both (defaults first, deduped) so an added
+//    régiment appears in every picker; add() is open to any signed-in user.
+const Regiments = {
+  defaults() { return (window.DAIHBI_CLANS || []).slice(); },
+  async list() {
+    const defaults = Regiments.defaults();
+    if (!db) return defaults;
+    try {
+      const { data, error } = await db.from("regiments").select("name").order("created_at", { ascending: true });
+      if (error) throw error;
+      const seen = new Set(defaults.map(s => s.toLowerCase()));
+      const extra = (data || []).map(r => r.name).filter(n => n && !seen.has(n.toLowerCase()));
+      return defaults.concat(extra);
+    } catch (e) { return defaults; }
+  },
+  async add(name) {
+    name = (name || "").trim();
+    if (!name) throw new Error("Nom de régiment vide.");
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { error } = await db.from("regiments").insert({ name });
+    // a duplicate just means the régiment already exists — treat as success.
+    if (error && !/duplicate|unique|23505/i.test(error.message || error.code || "")) throw error;
+    return name;
+  },
+};
+
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, AuthModal, NavUser, Chronicles, Placements, AdPlacements, Media, Profiles, Comments, Portfolio, Ads, Papers, Revisions, Styles, Regiments, esc, md, I18n, Prefs, LANGS };
 })();

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Publisheur — Mise en page</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
   :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6;--ok:#2f6b3f}
   *{box-sizing:border-box}
@@ -154,6 +154,24 @@
 
   .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#211f1c;color:#f3ead6;padding:.55rem 1rem;border-radius:8px;opacity:0;transition:opacity .2s;font-size:.85rem;z-index:90}
   .toast.show{opacity:1}
+  /* create-style modal */
+  #styleModal .body{overflow:auto;max-height:82vh}
+  .sfield{display:flex;flex-direction:column;gap:.2rem;margin-bottom:.2rem}
+  .sfield.grow{flex:1;min-width:0}
+  .sfield label{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;font-weight:600}
+  .sfield input[type=color]{width:100%;height:34px;padding:2px;border:1px solid #c9bda0;border-radius:6px;background:#fff;cursor:pointer}
+  .sfield input,.sfield select{font:inherit;padding:.45rem .55rem;border:1px solid #c9bda0;border-radius:6px;background:#fff;color:var(--ink)}
+  .sgl{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;font-weight:600;margin:.7rem 0 .3rem}
+  .srow{display:flex;gap:.6rem;flex-wrap:wrap}
+  .srow.scolors .sfield{flex:1;min-width:78px}
+  .stprev{border:1px solid #c9bda0;border-radius:8px;padding:1rem 1.1rem;position:relative;overflow:hidden}
+  .stprev .stkick{font-family:"Old Standard TT",serif;text-transform:uppercase;letter-spacing:.16em;font-size:.66rem;font-weight:700;margin-bottom:.2rem}
+  .stprev .sthead{font-weight:900;font-size:1.7rem;line-height:1.05;margin:.1rem 0 .2rem}
+  .stprev .stby{font-variant:small-caps;letter-spacing:.06em;font-size:.8rem;margin-bottom:.4rem}
+  .stprev .stbodytx{font-size:.92rem;line-height:1.5}
+  .stprev .stimg{height:34px;border-radius:3px;margin-top:.6rem;background:linear-gradient(135deg,#888,#bbb)}
+  #styleModal .go{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:.55rem .95rem;font:inherit;font-weight:600;cursor:pointer}
+  #styleModal .del{background:#fff;border:1px solid #d8b6b2;color:#b33;border-radius:6px;padding:.55rem .8rem;font:inherit;cursor:pointer}
 </style>
 <link rel="stylesheet" href="nav.css">
 </head>
@@ -167,6 +185,8 @@
   <button class="go" id="addBtn" onclick="openPool()" data-i18n="board.add">＋ Ajouter</button>
   <a href="editor.html" data-i18n="board.myPapers">← Mes journaux</a>
   <label data-i18n-title="board.themeTitle" style="display:inline-flex;align-items:center;gap:.3rem">🎨 <select id="themeSel" onchange="setBoardTheme(this.value)" style="font:inherit;padding:.2rem .35rem;border-radius:5px;border:1px solid #c9bda0;background:#fff;cursor:pointer"></select></label>
+  <button id="editStyleBtn" onclick="editCurrentStyle()" style="display:none" data-i18n-title="board.editStyle" title="Modifier ce style">✎</button>
+  <a id="manageJournal" href="#" data-i18n="board.manage">⚙ Gérer le journal</a>
   <a id="openPaper" href="#" target="_blank" data-i18n="board.viewFront">Voir la une ↗</a>
   <button class="go" onclick="runExport()" data-i18n="board.printPdf">🖨 PDF imprimable</button>
   <span class="navuser" id="navuser"></span>
@@ -211,6 +231,43 @@
   </div>
 </div>
 
+<!-- create a reusable style (palette + fonts + photo) -->
+<div class="modal" id="styleModal">
+  <div class="card" style="max-width:600px">
+    <div class="h"><span id="st_title" data-i18n="board.styleModalTitle">Créer un style</span><span class="grow"></span><button class="x" onclick="closeStyleModal()" data-i18n-aria="auth.close">✕</button></div>
+    <div class="body" style="padding:1rem 1.1rem 1.2rem">
+      <div class="sfield"><label data-i18n="board.styleName">Nom du style</label><input id="st_name" data-i18n-ph="board.styleNamePh" placeholder="Ex. Tabloïd vert"></div>
+      <label class="sgl" data-i18n="board.stColors">Couleurs</label>
+      <div class="srow scolors">
+        <div class="sfield"><label data-i18n="board.stPaper">Papier</label><input type="color" id="st_paper" value="#f5efe1" oninput="updateStylePreview()"></div>
+        <div class="sfield"><label data-i18n="board.stInk">Encre</label><input type="color" id="st_ink" value="#1a1714" oninput="updateStylePreview()"></div>
+        <div class="sfield"><label data-i18n="board.stAccent">Accent</label><input type="color" id="st_accent" value="#7a1f1a" oninput="updateStylePreview()"></div>
+        <div class="sfield"><label data-i18n="board.stRule">Filets</label><input type="color" id="st_rule" value="#2a2622" oninput="updateStylePreview()"></div>
+        <div class="sfield"><label data-i18n="board.stMuted">Atténué</label><input type="color" id="st_muted" value="#5b5349" oninput="updateStylePreview()"></div>
+      </div>
+      <div class="srow">
+        <div class="sfield grow"><label data-i18n="board.stHead">Police des titres</label><select id="st_head" onchange="updateStylePreview()"></select></div>
+        <div class="sfield grow"><label data-i18n="board.stBody">Police du texte</label><select id="st_body" onchange="updateStylePreview()"></select></div>
+        <div class="sfield grow"><label data-i18n="board.stPhoto">Photos</label><select id="st_photo" onchange="updateStylePreview()"></select></div>
+      </div>
+      <label class="sgl" data-i18n="board.stPreview">Aperçu</label>
+      <div id="st_preview" class="stprev">
+        <div class="stkick">RÉGIMENT · WARDEN</div>
+        <div class="sthead" data-i18n="board.stPreviewHead">La Une du Front</div>
+        <div class="stby" data-i18n="board.stPreviewBy">par un chroniqueur</div>
+        <div class="stbodytx" data-i18n="board.stPreviewBody">Le texte de l’article s’affiche dans la police choisie, sur le papier choisi.</div>
+        <div class="stimg"></div>
+      </div>
+      <div class="jerr" id="st_err" style="color:#b33;font-size:.82rem;min-height:1em;margin-top:.4rem"></div>
+      <div style="display:flex;gap:.5rem;margin-top:.7rem">
+        <button id="st_del" class="del" onclick="deleteStyle()" style="display:none" data-i18n="board.styleDelete">🗑 Supprimer</button>
+        <span class="grow"></span>
+        <button class="go" id="st_save" onclick="saveStyle()" data-i18n="board.styleSave">Créer &amp; appliquer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -220,7 +277,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Ads, NavUser, configured, esc, I18n, Prefs } = window.Daihbi;
+const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Ads, NavUser, Styles, configured, esc, I18n, Prefs } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
@@ -235,6 +292,21 @@ I18n.register({
     "board.theLayout":"La mise en page","board.layoutHint":"glissez ici · double-cliquez pour éditer",
     "board.frontPreview":"Aperçu de la une","board.reloadPreview":"Recharger l’aperçu",
     "board.add":"＋ Ajouter","board.addToEdition":"Ajouter à l’édition",
+    "board.manage":"⚙ Gérer le journal",
+    "board.createStyle":"＋ Créer un style…","board.myStyles":"Mes styles",
+    "board.styleModalTitle":"Créer un style","board.styleName":"Nom du style",
+    "board.styleNamePh":"Ex. Tabloïd vert","board.stColors":"Couleurs",
+    "board.stPaper":"Papier","board.stInk":"Encre","board.stAccent":"Accent",
+    "board.stRule":"Filets","board.stMuted":"Atténué",
+    "board.stHead":"Police des titres","board.stBody":"Police du texte","board.stPhoto":"Photos",
+    "board.stPreview":"Aperçu","board.stPreviewHead":"La Une du Front","board.stPreviewBy":"par un chroniqueur",
+    "board.stPreviewBody":"Le texte de l’article s’affiche dans la police choisie, sur le papier choisi.",
+    "board.styleSave":"Créer & appliquer","board.styleNameNeeded":"Donnez un nom au style.",
+    "board.styleSaved":"Style créé et appliqué ✓",
+    "board.editStyle":"Modifier ce style","board.styleEditTitle":"Modifier le style",
+    "board.styleUpdate":"Enregistrer","board.styleDelete":"🗑 Supprimer",
+    "board.styleUpdated":"Style mis à jour ✓","board.styleDeleted":"Style supprimé ✓",
+    "board.styleConfirmDelete":"Supprimer ce style ? Les éditions qui l’utilisent reviendront au style classique.",
     "board.pin":"Épingler le panneau","board.unpin":"Détacher le panneau",
     "board.clickToEdit":"Cliquez un article","board.clickHint":"Cliquez un article dans l’aperçu pour le mettre en page.",
     "board.choosePhoto":"Choisir une photo (portfolio)",
@@ -287,6 +359,21 @@ I18n.register({
     "board.theLayout":"The layout","board.layoutHint":"drag here · double-click to edit",
     "board.frontPreview":"Front-page preview","board.reloadPreview":"Reload the preview",
     "board.add":"＋ Add","board.addToEdition":"Add to the edition",
+    "board.manage":"⚙ Manage paper",
+    "board.createStyle":"＋ Create a style…","board.myStyles":"My styles",
+    "board.styleModalTitle":"Create a style","board.styleName":"Style name",
+    "board.styleNamePh":"e.g. Green tabloid","board.stColors":"Colours",
+    "board.stPaper":"Paper","board.stInk":"Ink","board.stAccent":"Accent",
+    "board.stRule":"Rules","board.stMuted":"Muted",
+    "board.stHead":"Headline font","board.stBody":"Body font","board.stPhoto":"Photos",
+    "board.stPreview":"Preview","board.stPreviewHead":"Front-page lead","board.stPreviewBy":"by a columnist",
+    "board.stPreviewBody":"The article text renders in the chosen font, on the chosen paper.",
+    "board.styleSave":"Create & apply","board.styleNameNeeded":"Give the style a name.",
+    "board.styleSaved":"Style created and applied ✓",
+    "board.editStyle":"Edit this style","board.styleEditTitle":"Edit style",
+    "board.styleUpdate":"Save","board.styleDelete":"🗑 Delete",
+    "board.styleUpdated":"Style updated ✓","board.styleDeleted":"Style deleted ✓",
+    "board.styleConfirmDelete":"Delete this style? Editions using it will revert to the classic style.",
     "board.pin":"Pin the panel","board.unpin":"Unpin the panel",
     "board.clickToEdit":"Click an article","board.clickHint":"Click an article in the preview to lay it out.",
     "board.choosePhoto":"Choose a photo (portfolio)",
@@ -360,19 +447,143 @@ function previewURL(){
   return `paper.html?issue=${encodeURIComponent(ISSUE)}${t}&embed=1&all=1&_=${Date.now()}`;
 }
 function reloadPreview(){ $("#pv").src=previewURL(); }
+let STYLES=[];   // reusable custom styles (styles table), shared across editions
 function populateThemeSel(){
   const sel=$("#themeSel"); if(!sel) return;
   const themes=window.DAIHBI_THEMES||{classic:{label:"Classique"}};
-  sel.innerHTML=Object.entries(themes).map(([k,t])=>`<option value="${k}">${esc(t.label||k)}</option>`).join("");
+  let html=Object.entries(themes).map(([k,t])=>`<option value="${esc(k)}">${esc(t.label||k)}</option>`).join("");
+  if(STYLES.length){
+    html+=`<optgroup label="${esc(I18n.t("board.myStyles"))}">`
+      +STYLES.map(s=>`<option value="${esc(Styles.key(s.id))}">${esc(s.name)}</option>`).join("")
+      +`</optgroup>`;
+  }
+  html+=`<option value="__newstyle">${esc(I18n.t("board.createStyle"))}</option>`;
+  sel.innerHTML=html;
   sel.value=(PAPER&&PAPER.theme)||"classic";
+  updateEditStyleBtn();
 }
 async function setBoardTheme(v){
+  if(v==="__newstyle"){ $("#themeSel").value=(PAPER&&PAPER.theme)||"classic"; openStyleModal(); return; }
   try{
     await Papers.update(ISSUE,{theme:v});   // RLS: owner / co-éditeur only
     if(PAPER) PAPER.theme=v;
+    updateEditStyleBtn();
     reloadPreview();                         // instant: the une re-renders in the chosen style
     toast(I18n.t("board.themeSaved"));
   }catch(e){ toast(I18n.t("board.error",{msg:e.message})); }
+}
+
+// ── Create a reusable style (palette + fonts + photo) ───────────────────────
+// Fonts limited to those loaded in <head>; values are the CSS font stacks that
+// paper.html drops straight into --font-head / --font-body.
+const STYLE_FONTS=[
+  {label:"Playfair Display — serif élégant", v:'"Playfair Display",Georgia,serif'},
+  {label:"PT Serif — serif lisible",          v:'"PT Serif",Georgia,serif'},
+  {label:"Old Standard TT — serif classique", v:'"Old Standard TT",Georgia,serif'},
+  {label:"Oswald — sans condensé",            v:'"Oswald",system-ui,sans-serif'},
+  {label:"Anton — titre massif",              v:'"Anton","Oswald",Impact,sans-serif'},
+  {label:"UnifrakturCook — gothique",         v:'"UnifrakturCook","Playfair Display",serif'},
+];
+const STYLE_PHOTOS=[
+  {label:"Sépia",        v:"grayscale(.5) sepia(.3) contrast(1.05)"},
+  {label:"Noir & blanc", v:"grayscale(1) contrast(1.1)"},
+  {label:"Vif",          v:"saturate(1.15) contrast(1.05)"},
+  {label:"Aucun filtre", v:"none"},
+];
+let EDIT_ID=null;   // non-null → the modal edits an existing style instead of creating
+function setColorInputs(d){
+  $("#st_paper").value=d.paper||"#f5efe1"; $("#st_ink").value=d.ink||"#1a1714";
+  $("#st_accent").value=d.accent||"#7a1f1a"; $("#st_rule").value=d.rule||"#2a2622"; $("#st_muted").value=d.muted||"#5b5349";
+}
+function selectByValue(sel,v,fallbackIdx){ const i=[...sel.options].findIndex(o=>o.value===v); sel.selectedIndex=i>=0?i:fallbackIdx; }
+function openStyleModal(editId){
+  EDIT_ID = editId || null;
+  const fopt=STYLE_FONTS.map(f=>`<option value='${esc(f.v)}'>${esc(f.label)}</option>`).join("");
+  $("#st_head").innerHTML=fopt; $("#st_body").innerHTML=fopt;
+  $("#st_photo").innerHTML=STYLE_PHOTOS.map(p=>`<option value='${esc(p.v)}'>${esc(p.label)}</option>`).join("");
+  $("#st_err").textContent="";
+  I18n.apply($("#styleModal"));   // localize labels first, then override title/save below
+  const editing = EDIT_ID && STYLES.find(s=>s.id===EDIT_ID);
+  if(editing){
+    const d=editing.def||{};
+    $("#st_name").value=editing.name||"";
+    setColorInputs(d);
+    selectByValue($("#st_head"), d.fontHead, 0);
+    selectByValue($("#st_body"), d.fontBody, 1);
+    selectByValue($("#st_photo"), d.photoFilter, 0);
+    $("#st_title").textContent=I18n.t("board.styleEditTitle");
+    $("#st_save").textContent=I18n.t("board.styleUpdate");
+    $("#st_del").style.display="";
+  } else {
+    $("#st_head").selectedIndex=0;       // Playfair for heads
+    $("#st_body").selectedIndex=1;       // PT Serif for body
+    $("#st_photo").selectedIndex=0;
+    $("#st_name").value="";
+    setColorInputs({});
+    $("#st_title").textContent=I18n.t("board.styleModalTitle");
+    $("#st_save").textContent=I18n.t("board.styleSave");
+    $("#st_del").style.display="none";
+  }
+  updateStylePreview();
+  $("#styleModal").classList.add("open");
+  $("#st_name").focus();
+}
+function editCurrentStyle(){ const id=Styles.idOf((PAPER&&PAPER.theme)||""); if(id) openStyleModal(id); }
+function closeStyleModal(){ $("#styleModal").classList.remove("open"); }
+// Show the ✎ edit affordance only when the edition currently uses a custom style.
+function updateEditStyleBtn(){ const b=$("#editStyleBtn"); if(b) b.style.display = Styles.isCustom((PAPER&&PAPER.theme)||"") ? "" : "none"; }
+function readStyleDef(){
+  return { paper:$("#st_paper").value, ink:$("#st_ink").value, accent:$("#st_accent").value,
+    rule:$("#st_rule").value, muted:$("#st_muted").value,
+    fontHead:$("#st_head").value, fontBody:$("#st_body").value, photoFilter:$("#st_photo").value };
+}
+function updateStylePreview(){
+  const d=readStyleDef(), p=$("#st_preview"); if(!p) return;
+  p.style.background=d.paper; p.style.color=d.ink; p.style.border="1px solid "+d.rule;
+  p.querySelector(".stkick").style.color=d.accent;
+  const h=p.querySelector(".sthead"); h.style.fontFamily=d.fontHead; h.style.color=d.ink;
+  p.querySelector(".stby").style.color=d.muted;
+  const b=p.querySelector(".stbodytx"); b.style.fontFamily=d.fontBody;
+  p.querySelector(".stimg").style.filter=d.photoFilter;
+}
+async function saveStyle(){
+  const name=$("#st_name").value.trim();
+  if(!name){ $("#st_err").textContent=I18n.t("board.styleNameNeeded"); return; }
+  const def=readStyleDef();
+  try{
+    if(EDIT_ID){
+      await Styles.update(EDIT_ID,{name,def});
+      const s=STYLES.find(x=>x.id===EDIT_ID); if(s){ s.name=name; s.def=def; }
+      populateThemeSel();
+      reloadPreview();                          // the edition (and any other) using it updates
+      closeStyleModal();
+      toast(I18n.t("board.styleUpdated"));
+    } else {
+      const st=await Styles.create({name,def});
+      STYLES.push(st);
+      const key=Styles.key(st.id);
+      await Papers.update(ISSUE,{theme:key});   // apply the new style to this edition
+      if(PAPER) PAPER.theme=key;
+      populateThemeSel(); updateEditStyleBtn();
+      reloadPreview();
+      closeStyleModal();
+      toast(I18n.t("board.styleSaved"));
+    }
+  }catch(e){ $("#st_err").textContent=I18n.t("board.error",{msg:e.message}); }
+}
+async function deleteStyle(){
+  if(!EDIT_ID) return;
+  if(!confirm(I18n.t("board.styleConfirmDelete"))) return;
+  try{
+    const wasApplied = (PAPER&&PAPER.theme)===Styles.key(EDIT_ID);
+    await Styles.remove(EDIT_ID);
+    STYLES=STYLES.filter(s=>s.id!==EDIT_ID);
+    if(wasApplied){ await Papers.update(ISSUE,{theme:"classic"}); if(PAPER) PAPER.theme="classic"; }
+    populateThemeSel(); updateEditStyleBtn();
+    reloadPreview();
+    closeStyleModal();
+    toast(I18n.t("board.styleDeleted"));
+  }catch(e){ $("#st_err").textContent=I18n.t("board.error",{msg:e.message}); }
 }
 async function signOut(){ await Auth.signOut(); location.href="editor.html"; }
 
@@ -627,8 +838,8 @@ async function setPhoto(url){
 }
 
 // close modals on backdrop click / Escape
-document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{ if(e.target===m){ if(m.id==="photoModal") closePhoto(); else if(m.id==="poolModal") closePool(); } }));
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#photoModal").classList.contains("open")) closePhoto(); else if($("#poolModal").classList.contains("open")) closePool(); else if(currentEdit) closeEdit(); } });
+document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{ if(e.target===m){ if(m.id==="photoModal") closePhoto(); else if(m.id==="poolModal") closePool(); else if(m.id==="styleModal") closeStyleModal(); } }));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#styleModal").classList.contains("open")) closeStyleModal(); else if($("#photoModal").classList.contains("open")) closePhoto(); else if($("#poolModal").classList.contains("open")) closePool(); else if(currentEdit) closeEdit(); } });
 
 async function runExport(){
   const s=await Auth.session(); if(!s) return;
@@ -673,6 +884,8 @@ async function boot(){
   });
   $("#paperName").textContent=PAPER.name||ISSUE;
   $("#openPaper").href=`paper.html?issue=${encodeURIComponent(ISSUE)}`;
+  $("#manageJournal").href=`editor.html?manage=${encodeURIComponent(ISSUE)}`;
+  try{ STYLES=await Styles.list(); }catch(e){ STYLES=[]; }   // reusable custom styles for the picker
   populateThemeSel();
   applyPinUI(); if(PINNED){ $("#editPanel").classList.add("open"); showDockHint(); }   // restore pinned dock
   reloadPreview();

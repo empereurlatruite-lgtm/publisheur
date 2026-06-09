@@ -315,7 +315,10 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, NavUser, configured, I18n, Prefs } = window.Daihbi;
+const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, NavUser, Regiments, configured, I18n, Prefs } = window.Daihbi;
+// Régiment vocabulary: papers.js defaults now, merged with the DB list at boot.
+let CLANS = (window.DAIHBI_CLANS || []).slice();
+const ADD_CLAN = "__addclan";   // sentinel option value → "add a new régiment"
 const ISSUE = window.Daihbi.ISSUE;
 
 I18n.register({
@@ -355,6 +358,8 @@ I18n.register({
     "ed.source": "De quel régiment ? (transparence)",
     "ed.lang": "Langue de la chronique",
     "ed.regimentDefault": "— régiment —",
+    "ed.addRegiment": "＋ Ajouter un régiment…",
+    "ed.addRegimentPrompt": "Nom du nouveau régiment :",
     "ed.photoLabel": "Photo suggérée (optionnel) — l’éditeur décidera de la mise en page",
     "ed.imagePh": "https://…  ou glissez/téléversez une photo",
     "ed.uploadBtn": "📷 Téléverser",
@@ -561,6 +566,8 @@ I18n.register({
     "ed.source": "Which regiment? (transparency)",
     "ed.lang": "Chronicle language",
     "ed.regimentDefault": "— regiment —",
+    "ed.addRegiment": "＋ Add a regiment…",
+    "ed.addRegimentPrompt": "Name of the new regiment:",
     "ed.photoLabel": "Suggested photo (optional) — the editor decides the layout",
     "ed.imagePh": "https://…  or drag/upload a photo",
     "ed.uploadBtn": "📷 Upload",
@@ -751,9 +758,38 @@ const F = {
   byline:$("#f_byline"), source:$("#f_source"), image:$("#f_image"),
   body:$("#f_body"), lang:$("#f_lang"),
 };
+// ── Régiment pickers (user-extensible) ──────────────────────────────────────
+// Build the <option>s for a régiment <select>, optionally with the "+ add" entry.
+function clanOptions(selected, withAdd){
+  let h = CLANS.map(c=>`<option ${c===selected?"selected":""}>${escapeHtml(c)}</option>`).join("");
+  if(withAdd) h += `<option value="${ADD_CLAN}">${escapeHtml(I18n.t("ed.addRegiment"))}</option>`;
+  return h;
+}
+const _lastClan = {};   // remember each select's value so we can revert on cancel
+// onchange handler: when "+ add" is chosen, prompt for a name, save it, and
+// refresh every open régiment picker; otherwise just remember the choice.
+async function onClanPick(sel){
+  if(sel.value !== ADD_CLAN){ _lastClan[sel.id] = sel.value; return; }
+  const name = (prompt(I18n.t("ed.addRegimentPrompt"))||"").trim();
+  if(!name){ sel.value = _lastClan[sel.id]||""; return; }
+  try{
+    await Regiments.add(name);
+    CLANS = await Regiments.list();
+    rebuildClanSelects(name);
+  }catch(e){ alert(e.message); sel.value = _lastClan[sel.id]||""; }
+}
+// Repopulate any régiment picker currently in the DOM, keeping its selection
+// (or selecting `select` when a new régiment was just added).
+function rebuildClanSelects(select){
+  if(F.source){ const cur = select || F.source.value;
+    F.source.innerHTML = `<option value="">${I18n.t("ed.regimentDefault")}</option>` + clanOptions(cur,true);
+    F.source.value = cur; _lastClan[F.source.id] = cur; }
+  ["j_clan","p_clan"].forEach(id=>{ const s=$("#"+id); if(s){ const cur=select||s.value;
+    s.innerHTML = clanOptions(cur,true); s.value = cur; _lastClan[id]=cur; } });
+}
 // régiment options for the provenance/transparency field
-F.source.innerHTML = `<option value="">${I18n.t("ed.regimentDefault")}</option>`
-  + (window.DAIHBI_CLANS||[]).map(c=>`<option>${escapeHtml(c)}</option>`).join("");
+F.source.innerHTML = `<option value="">${I18n.t("ed.regimentDefault")}</option>` + clanOptions("",true);
+F.source.addEventListener("change", ()=>onClanPick(F.source));
 // content-language options (no "all": a chronicle is in exactly one language)
 F.lang.innerHTML = I18n.contentOptionsHTML("", false);
 // the composer's default language for a brand-new chronicle (reader pref → UI lang)
@@ -787,7 +823,7 @@ function loginScreen(msg, mode, preRole){
       <div class="rolepick">
         ${radio("reader",I18n.t("role.reader"))}${radio("writer",I18n.t("role.writer"))}${radio("illustrator",I18n.t("role.illustrator"))}${radio("annonceur",I18n.t("role.annonceur"))}
       </div>
-      <select id="clan">${(window.DAIHBI_CLANS||["Indépendant"]).map(c=>`<option>${c}</option>`).join("")}</select>
+      <select id="clan">${clanOptions("",false)}</select>
     ` : ""}
     <button onclick="${up?"doSignUp()":"doPasswordLogin()"}">${up?I18n.t("ed.createAccountBtn"):I18n.t("ed.signIn")}</button>
     <div class="err" id="loginErr">${msg||""}</div>
@@ -1009,7 +1045,7 @@ function openProfile(){
     <button onclick="document.querySelector('#p_avatar').click()">${I18n.t("ed.changeAvatar")}</button>
     <input id="p_avatar" type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this.files[0])">
     <input id="p_name" placeholder="${I18n.t("ed.displayNamePlain")}" value="${escapeHtml(p.display_name||"")}">
-    <select id="p_clan">${(window.DAIHBI_CLANS||[]).map(c=>`<option ${c===p.clan?"selected":""}>${escapeHtml(c)}</option>`).join("")}</select>
+    <select id="p_clan" onchange="onClanPick(this)">${clanOptions(p.clan,true)}</select>
     <div class="err" id="profErr"></div>
     <button onclick="saveProfile()">${I18n.t("ed.save")}</button>
     <p style="margin-top:.7rem;font-size:.85rem"><a href="#" onclick="hideGate();return false">${I18n.t("ed.close")}</a></p>`);
@@ -1089,7 +1125,7 @@ function journalForm(p, isNew){
     <label>${I18n.t("ed.jTagline")}</label><input id="j_tagline" value="${escapeHtml(p.tagline||"")}" placeholder="${I18n.t("ed.jTaglinePh")}">
     <div class="two">
       <div><label>${I18n.t("ed.jPlate")}</label><select id="j_plate">${plates.map(([v,l])=>`<option value="${v}" ${((p.plate||"plate-fraktur")===v)?"selected":""}>${l}</option>`).join("")}</select></div>
-      <div><label>${I18n.t("ed.jClan")}</label><select id="j_clan">${(window.DAIHBI_CLANS||[]).map(c=>`<option ${c===p.clan?"selected":""}>${escapeHtml(c)}</option>`).join("")}</select></div>
+      <div><label>${I18n.t("ed.jClan")}</label><select id="j_clan" onchange="onClanPick(this)">${clanOptions(p.clan,true)}</select></div>
     </div>
     <label>${I18n.t("ed.jTheme")} <span style="font-weight:400;color:#8a8170">${I18n.t("ed.jThemeHint")}</span></label>
     <select id="j_theme" onchange="updateThemeNote()">${themes.map(([v,t])=>`<option value="${v}" ${(curTheme===v)?"selected":""}>${escapeHtml(t.label||v)}</option>`).join("")}</select>
@@ -1249,6 +1285,8 @@ document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s")
 // ── Boot ───────────────────────────────────────────────────────────────────
 async function boot(){
   I18n.apply(document);   // translate static chrome + set <html lang>
+  // Merge the DB régiment list over the papers.js defaults, then refresh pickers.
+  Regiments.list().then(list=>{ CLANS=list; rebuildClanSelects(); }).catch(()=>{});
   if(!configured){ setupNotice(); return; }
   // Password-recovery deep link: let the user set a new password instead of
   // silently logging them into the app with the recovery session. Detected via
@@ -1283,6 +1321,9 @@ async function boot(){
     $("#journauxLink").style.display=""; $("#chronLink").style.display="";
     try{ PAPERS = await Papers.map(); MY_MANAGED = await Papers.myManaged(); }catch(e){}
     showJournaux();          // editors land on their newsroom (journaux), not the writing desk
+    // Deep link from the board's "⚙ Gérer le journal": open the manage modal directly.
+    const mp = new URLSearchParams(location.search).get("manage");
+    if(mp && PAPERS[mp]) openManageJournal(mp);
   } else {
     showChronicles();
   }
