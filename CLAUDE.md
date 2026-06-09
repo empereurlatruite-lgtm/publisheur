@@ -42,6 +42,9 @@ photo = `placement.image_url || article.image_url`.
 - `web/editor.html` — **writer workspace** ("Mes chroniques", text + suggested photo)
   + editors' "Mes journaux" dashboard.
 - `web/board.html` — **editor mise-en-page board** (pool → placements → publish).
+  Single-click a story/ad → layout dock; **double-click** (preview or pool card)
+  → in-place **edit modal** (chronicle text incl. ✦ Rédigé/Traduit par IA toggles;
+  or réclame content + approve). Pool cards: single-click places, double-click edits.
 - `web/paper.html` — the rendered paper (from placements). `web/index.html` — kiosque.
 - `web/ads.html` — ad studio. `web/papers.js` — fallback editions registry.
 - `web/functions/api/export.js` — Cloudflare Pages Function: verifies an editor JWT,
@@ -49,7 +52,8 @@ photo = `placement.image_url || article.image_url`.
 - `supabase/*.sql` — migrations, applied by pasting into the Supabase SQL Editor **in
   order**: `schema → roles → comments → portfolio → ads → papers → revisions →
   edited_by → pool → transparency → authors → ad_placements → media → i18n →
-  theme → styles → regiments`.
+  theme → styles → regiments → columns → chronicle_edit → ai_labels →
+  paper_purpose → ai_zone → image_moderation → img_pos → img_crop`.
   (`i18n` adds content `lang` to articles/ads/papers + `preferred_lang`/`ui_lang`
   to profiles, and opens chronicle writing to any signed-in user — editors still
   publish. `theme` adds `papers.theme` — the per-edition visual skin the
@@ -68,7 +72,63 @@ photo = `placement.image_url || article.image_url`.
   insert) for a **user-extensible régiment list**: `Daihbi.Regiments.list()`
   merges `papers.js`' `DAIHBI_CLANS` defaults with these rows, and the régiment
   pickers in `editor.html` (chronicle source, journal Régiment, profile) get a
-  "＋ Ajouter un régiment…" option. Degrades to the defaults if not run.)
+  "＋ Ajouter un régiment…" option. Degrades to the defaults if not run.
+  `columns` adds **editor-controlled layout**: `papers.grid_cols` (front-page
+  well column count, 0 = auto), `placements.col_span` (how many columns an
+  article spans, 0 = auto by weight) and `placements.img_cols` (photo width in
+  columns — floats with text wrapping when narrower than the span, 0 = full
+  width). Set on the board's ▦ Colonnes picker + the dock editor's Colonnes /
+  Taille image rows; `paper.html` lays out the grid accordingly. All default to
+  0, so editions are unchanged until an editor opts in — degrades gracefully if
+  not run.
+  `chronicle_edit` lets a managing editor edit a **chronicle's text** in place
+  from the board (double-click a story in the preview or a pool card → edit
+  modal), not just lay it out — relaxing the "author owns the words" rule for
+  rédacteurs en chef. It re-adds an `art editor update` RLS policy scoped via
+  **placements** (an editor may edit a chronicle placed in an edition they
+  manage; the author keeps editing their own), and fixes `snapshot_article()` to
+  `coalesce(issue,'')` so editing a pooled chronicle (null issue) no longer
+  throws on the revision trigger. Edits are stamped (`last_edited_by`) and the
+  prior version is archived to `article_revisions`. **Required** for the board's
+  edit-chronicle modal to save.
+  `ai_labels` adds `articles.ai_translated boolean` for the **transparency
+  toggles** in the edit-chronicle modal: "✦ Rédigé par IA" (reuses the
+  `source="IA"` sentinel) and "✦ Traduit par IA" (the new flag). `paper.html`
+  renders a "✦ Traduit par IA" badge in the byline (content-language localized,
+  like the other transparency labels). Defaults false; degrades gracefully.
+  `paper_purpose` adds `papers.purpose text` — a short "what's this paper about"
+  summary set in **Gérer le journal** and shown on the **kiosque** card. (The same
+  manage modal also gained a language picker, a "Police du titre" shortcut that
+  applies a custom style, and a delete button; the dashboard cards gained a
+  **🔄 Republier** button that bumps the edition's published placements'
+  `updated_at` so the kiosque re-flags it "à la une" — reusing the existing
+  freshness ranking, no extra column.)
+  `ai_zone` adds `papers.ai_zone boolean` — per-edition opt-in for the **separate
+  "Rédigé par l'IA" sidebar**. Off by default: a chronicle flagged AI keeps its
+  "✦ Rédigé par IA" badge but stays in the normal well (no layout split). On:
+  `paper.html` pulls AI chronicles into the two-zone front layout. Toggled in
+  Gérer le journal.
+  `image_moderation` gates **image uploads + visibility**: `profiles.can_upload`
+  / `profiles.can_moderate` (granted to specific users **via SQL**; editors keep
+  both via `is_editor()`), plus `images.approved` / `media.approved`. Only
+  `can_upload` users may write to the public **media** Storage bucket (the
+  `storage.objects` "media auth write" insert policy now requires `can_upload()`)
+  or insert portfolio/media rows; uploads start unapproved and the public sees
+  **approved only** (owners/moderators see pending). `can_moderate` users approve
+  pending images in the editor's Portfolio (pending badge + Approve). Caveat: the
+  media bucket is public, so a raw object URL is still reachable — the gate is on
+  *who can upload* and *what the app surfaces*; truly hiding bytes would need a
+  private bucket + signed URLs.)
+  `img_pos` adds `placements.img_pos` (`top`|`left`|`right`, default `top`) — a
+  Word/Docs-style image position. `top` = banner across the story columns;
+  `left`/`right` = the photo floats and the text wraps (single-column body).
+  Set in the board dock **and** the double-click edit-chronicle modal's new
+  **Mise en page** section (column span + image position + image size), alongside
+  `col_span`/`img_cols` from columns.sql; `paper.html` `applyStorySpans()` renders it.
+  `img_crop` adds `placements.img_crop` (`''` natural | `16x9`|`3x2`|`4x3`|`1x1`|`3x4`)
+  — Word-style **crop-to-fill**: the photo is cropped (`object-fit:cover` + a forced
+  `aspect-ratio`) to that ratio so blocks line up. Set via the **Recadrage** control
+  in the dock + edit-modal layout section; applied in `applyStorySpans()`.)
 
 ## Roles
 `reader` (read anon, comment signed-in) · `writer` / `illustrator` (write chronicles;
@@ -104,3 +164,218 @@ chronicle/ad/paper has a `lang`; readers filter the kiosque by language.
 - For the 🖨 print button: Cloudflare Pages secret **`GITHUB_TOKEN`** (fine-grained
   PAT, Actions r+w) + GitHub repo secrets **`SUPABASE_URL` / `SUPABASE_KEY` /
   `SUPABASE_SERVICE_KEY`**.
+
+## Database schema (reference snapshot)
+
+Live `public` schema, for orientation only. **Source of truth = the `supabase/*.sql`
+migrations** (applied in the order under Architecture › Key files); this dump is
+context only — table order/constraints aren't valid for direct execution, and RLS
+policies aren't shown (they live in the migrations). Regenerate when the schema
+changes.
+
+```sql
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.articles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  issue text,
+  kicker text NOT NULL DEFAULT ''::text,
+  headline text NOT NULL DEFAULT 'Untitled'::text,
+  subhead text NOT NULL DEFAULT ''::text,
+  byline text NOT NULL DEFAULT ''::text,
+  body text NOT NULL DEFAULT ''::text,
+  weight text NOT NULL DEFAULT 'minor'::text CHECK (weight = ANY (ARRAY['lead'::text, 'major'::text, 'minor'::text, 'brief'::text])),
+  image_url text NOT NULL DEFAULT ''::text,
+  published boolean NOT NULL DEFAULT false,
+  position integer NOT NULL DEFAULT 0,
+  author_id uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['draft'::text, 'submitted'::text])),
+  last_edited_by uuid,
+  author_avatar text NOT NULL DEFAULT ''::text,
+  source text NOT NULL DEFAULT ''::text,
+  lang text NOT NULL DEFAULT 'fr'::text,
+  ai_translated boolean NOT NULL DEFAULT false,
+  CONSTRAINT articles_pkey PRIMARY KEY (id),
+  CONSTRAINT articles_author_id_fkey FOREIGN KEY (author_id) REFERENCES auth.users(id),
+  CONSTRAINT articles_last_edited_by_fkey FOREIGN KEY (last_edited_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  display_name text NOT NULL DEFAULT ''::text,
+  role text NOT NULL DEFAULT 'reader'::text CHECK (role = ANY (ARRAY['reader'::text, 'writer'::text, 'illustrator'::text, 'editor'::text, 'annonceur'::text])),
+  clan text NOT NULL DEFAULT ''::text,
+  avatar_url text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  preferred_lang text NOT NULL DEFAULT ''::text,
+  ui_lang text NOT NULL DEFAULT ''::text,
+  can_upload boolean NOT NULL DEFAULT false,
+  can_moderate boolean NOT NULL DEFAULT false,
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.comments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  issue text NOT NULL,
+  article_id uuid,
+  author_id uuid DEFAULT auth.uid(),
+  author_name text NOT NULL DEFAULT ''::text,
+  body text NOT NULL CHECK (char_length(body) >= 1 AND char_length(body) <= 2000),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT comments_pkey PRIMARY KEY (id),
+  CONSTRAINT comments_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
+  CONSTRAINT comments_author_id_fkey FOREIGN KEY (author_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.images (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  uploader_id uuid DEFAULT auth.uid(),
+  uploader_name text NOT NULL DEFAULT ''::text,
+  url text NOT NULL,
+  caption text NOT NULL DEFAULT ''::text,
+  clan text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  mime text NOT NULL DEFAULT ''::text,
+  bytes integer NOT NULL DEFAULT 0,
+  width integer NOT NULL DEFAULT 0,
+  height integer NOT NULL DEFAULT 0,
+  approved boolean NOT NULL DEFAULT false,
+  CONSTRAINT images_pkey PRIMARY KEY (id),
+  CONSTRAINT images_uploader_id_fkey FOREIGN KEY (uploader_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.ads (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  advertiser_id uuid DEFAULT auth.uid(),
+  advertiser_name text NOT NULL DEFAULT ''::text,
+  title text NOT NULL DEFAULT ''::text,
+  body text NOT NULL DEFAULT ''::text,
+  category text NOT NULL DEFAULT 'fabricant'::text CHECK (category = ANY (ARRAY['recrutement'::text, 'troc'::text, 'parodie'::text, 'createur'::text, 'fabricant'::text])),
+  maker text NOT NULL DEFAULT ''::text,
+  link text NOT NULL DEFAULT ''::text,
+  image_url text NOT NULL DEFAULT ''::text,
+  issue text NOT NULL DEFAULT 'all'::text,
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['draft'::text, 'review'::text, 'approved'::text, 'rejected'::text])),
+  approved boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  lang text NOT NULL DEFAULT 'fr'::text,
+  CONSTRAINT ads_pkey PRIMARY KEY (id),
+  CONSTRAINT ads_advertiser_id_fkey FOREIGN KEY (advertiser_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.papers (
+  issue text NOT NULL,
+  name text NOT NULL DEFAULT ''::text,
+  tagline text NOT NULL DEFAULT ''::text,
+  plate text NOT NULL DEFAULT 'plate-fraktur'::text,
+  ear jsonb NOT NULL DEFAULT '["", "", ""]'::jsonb,
+  slogans jsonb NOT NULL DEFAULT '[]'::jsonb,
+  emblem_left text NOT NULL DEFAULT ''::text,
+  emblem_right text NOT NULL DEFAULT ''::text,
+  clan text NOT NULL DEFAULT ''::text,
+  owner_id uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  theme text NOT NULL DEFAULT 'classic'::text,
+  lang text NOT NULL DEFAULT 'fr'::text,
+  grid_cols smallint NOT NULL DEFAULT 0,
+  purpose text NOT NULL DEFAULT ''::text,
+  ai_zone boolean NOT NULL DEFAULT false,
+  CONSTRAINT papers_pkey PRIMARY KEY (issue),
+  CONSTRAINT papers_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.paper_editors (
+  issue text NOT NULL,
+  editor_id uuid NOT NULL,
+  CONSTRAINT paper_editors_pkey PRIMARY KEY (issue, editor_id),
+  CONSTRAINT paper_editors_issue_fkey FOREIGN KEY (issue) REFERENCES public.papers(issue),
+  CONSTRAINT paper_editors_editor_id_fkey FOREIGN KEY (editor_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.article_revisions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  article_id uuid,
+  issue text NOT NULL DEFAULT ''::text,
+  kicker text,
+  headline text,
+  subhead text,
+  byline text,
+  body text,
+  weight text,
+  image_url text,
+  published boolean,
+  status text,
+  author_id uuid,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  edited_by uuid,
+  CONSTRAINT article_revisions_pkey PRIMARY KEY (id),
+  CONSTRAINT article_revisions_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id)
+);
+CREATE TABLE public.placements (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  article_id uuid NOT NULL,
+  issue text NOT NULL,
+  weight text NOT NULL DEFAULT 'minor'::text CHECK (weight = ANY (ARRAY['lead'::text, 'major'::text, 'minor'::text, 'brief'::text])),
+  position integer NOT NULL DEFAULT 0,
+  image_url text NOT NULL DEFAULT ''::text,
+  published boolean NOT NULL DEFAULT false,
+  placed_by uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  col_span smallint NOT NULL DEFAULT 0,
+  img_cols smallint NOT NULL DEFAULT 0,
+  img_pos text NOT NULL DEFAULT 'top'::text,
+  img_crop text NOT NULL DEFAULT ''::text,
+  CONSTRAINT placements_pkey PRIMARY KEY (id),
+  CONSTRAINT placements_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
+  CONSTRAINT placements_issue_fkey FOREIGN KEY (issue) REFERENCES public.papers(issue),
+  CONSTRAINT placements_placed_by_fkey FOREIGN KEY (placed_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.media (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  uploader_id uuid DEFAULT auth.uid(),
+  uploader_name text NOT NULL DEFAULT ''::text,
+  url text NOT NULL,
+  path text NOT NULL DEFAULT ''::text,
+  folder text NOT NULL DEFAULT ''::text,
+  mime text NOT NULL DEFAULT ''::text,
+  bytes integer NOT NULL DEFAULT 0,
+  width integer NOT NULL DEFAULT 0,
+  height integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  approved boolean NOT NULL DEFAULT false,
+  CONSTRAINT media_pkey PRIMARY KEY (id),
+  CONSTRAINT media_uploader_id_fkey FOREIGN KEY (uploader_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.ad_placements (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  ad_id uuid NOT NULL,
+  issue text NOT NULL,
+  position integer NOT NULL DEFAULT 0,
+  published boolean NOT NULL DEFAULT false,
+  placed_by uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT ad_placements_pkey PRIMARY KEY (id),
+  CONSTRAINT ad_placements_ad_id_fkey FOREIGN KEY (ad_id) REFERENCES public.ads(id),
+  CONSTRAINT ad_placements_issue_fkey FOREIGN KEY (issue) REFERENCES public.papers(issue),
+  CONSTRAINT ad_placements_placed_by_fkey FOREIGN KEY (placed_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.styles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  owner_id uuid NOT NULL DEFAULT auth.uid(),
+  name text NOT NULL,
+  def jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT styles_pkey PRIMARY KEY (id),
+  CONSTRAINT styles_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.regiments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL UNIQUE,
+  created_by uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT regiments_pkey PRIMARY KEY (id),
+  CONSTRAINT regiments_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
+);
+```

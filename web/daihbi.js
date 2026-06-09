@@ -396,6 +396,14 @@ const Chronicles = {
 
 // ── Placements ─ an editor runs a chronicle in their edition (the LAYOUT) ────
 const Placements = {
+  /** Set of article ids that are placed in ANY edition (for the "never used"
+   *  pool filter). RLS: authenticated read is unrestricted. */
+  async usedArticleIds() {
+    if (!db) return new Set();
+    const { data, error } = await db.from("placements").select("article_id");
+    if (error) throw error;
+    return new Set((data || []).map((r) => r.article_id));
+  },
   /** Board view: every placement in the edition + its joined chronicle. */
   async forIssue(issue) {
     if (!db) return [];
@@ -659,6 +667,9 @@ function _rowToPaper(r) {
     slogans: Array.isArray(r.slogans) ? r.slogans : [],
     emblemLeft: r.emblem_left || "", emblemRight: r.emblem_right || "",
     clan: r.clan || "", owner_id: r.owner_id,
+    gridCols: r.grid_cols || 0,   // 0 = auto well column count (see columns.sql)
+    purpose: r.purpose || "",     // kiosque "what's this paper about" (paper_purpose.sql)
+    aiZone: !!r.ai_zone,          // true → AI chronicles get a separate sidebar (ai_zone.sql)
   };
 }
 const Papers = {
@@ -687,7 +698,7 @@ const Papers = {
   async create(p) {
     const { data: { user } } = await db.auth.getUser();
     const row = { issue: p.issue, name: p.name || "", tagline: p.tagline || "", plate: p.plate || "plate-fraktur",
-      theme: p.theme || "classic",
+      theme: p.theme || "classic", grid_cols: p.gridCols || 0, purpose: p.purpose || "", lang: p.lang || "fr", ai_zone: !!p.aiZone,
       ear: p.ear || ["", "", ""], slogans: p.slogans || [], emblem_left: p.emblemLeft || "",
       emblem_right: p.emblemRight || "", clan: p.clan || "", owner_id: user.id };
     const { data, error } = await db.from("papers").insert(row).select().single();
@@ -696,13 +707,22 @@ const Papers = {
   },
   async update(issue, f) {
     const m = { name:"name", tagline:"tagline", plate:"plate", theme:"theme", ear:"ear", slogans:"slogans",
-      emblemLeft:"emblem_left", emblemRight:"emblem_right", clan:"clan" };
+      emblemLeft:"emblem_left", emblemRight:"emblem_right", clan:"clan", gridCols:"grid_cols",
+      purpose:"purpose", lang:"lang", aiZone:"ai_zone" };
     const row = {}; Object.keys(f).forEach((k) => { if (m[k]) row[m[k]] = f[k]; });
     const { data, error } = await db.from("papers").update(row).eq("issue", issue).select().single();
     if (error) throw error;
     return _rowToPaper(data);
   },
   async remove(issue) { const { error } = await db.from("papers").delete().eq("issue", issue); if (error) throw error; },
+  /** Re-announce an edition: bump its published placements so the kiosque (which
+   *  ranks by the newest placement's updated_at) re-flags it "fresh" and floats
+   *  it to the top. RLS: placements update = manages_issue (owner / co-éditeur). */
+  async republish(issue) {
+    const { error } = await db.from("placements")
+      .update({ updated_at: new Date().toISOString() }).eq("issue", issue).eq("published", true);
+    if (error) throw error;
+  },
   async editors(issue) {
     const { data } = await db.from("paper_editors").select("editor_id").eq("issue", issue);
     return (data || []).map((x) => x.editor_id);
@@ -772,6 +792,18 @@ const Portfolio = {
   },
   async remove(id) {
     const { error } = await db.from("images").delete().eq("id", id);
+    if (error) throw error;
+  },
+  /** Pending (unapproved) uploads — visible to moderators (image_moderation.sql). */
+  async listPending() {
+    if (!db) return [];
+    const { data, error } = await db.from("images").select("*").eq("approved", false).order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+  /** Moderator approves a pending image so the public can see it. */
+  async approve(id) {
+    const { error } = await db.from("images").update({ approved: true }).eq("id", id);
     if (error) throw error;
   },
 };

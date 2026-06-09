@@ -68,6 +68,8 @@
   .card.anton .mast{font-family:"Anton",Impact,sans-serif;font-weight:400;text-transform:uppercase;font-size:2.3rem}
   .card.echo  .mast{font-family:"Oswald",sans-serif;font-weight:700;text-transform:uppercase;color:#1f3a5f;font-size:2.1rem}
   .card.echo  .tag,.card.echo .ears{color:#1f3a5f}
+  .card .purpose{text-align:center;font-size:.74rem;line-height:1.35;color:var(--muted);margin:0 0 .5rem;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .card .teaser{border-top:1px solid #cbbfa3;padding-top:.5rem}
   .card .kick{font-family:"Old Standard TT",serif;text-transform:uppercase;letter-spacing:.14em;font-size:.6rem;color:var(--accent);font-weight:700;text-align:center}
   .card.echo .kick{color:#1f3a5f}
@@ -249,7 +251,7 @@ function passesDate(ed){
 }
 function passesText(ed){
   const q=filter.q.trim().toLowerCase(); if(!q) return true;
-  return (ed.paper.name+" "+(ed.paper.tagline||"")+" "+(ed.lead?.headline||"")).toLowerCase().includes(q);
+  return (ed.paper.name+" "+(ed.paper.tagline||"")+" "+(ed.paper.purpose||"")+" "+(ed.lead?.headline||"")).toLowerCase().includes(q);
 }
 function passesLang(ed){
   if(!filter.lang) return true;                 // "All languages"
@@ -277,6 +279,7 @@ function cardHTML(ed){
         <div class="ears"><span>${ear[0]||""}</span><span>${ear[2]||""}</span></div>
         <div class="mast">${esc(p.name)}</div>
         ${p.tagline?`<div class="tag">${p.tagline}</div>`:""}
+        ${p.purpose?`<div class="purpose">${esc(p.purpose)}</div>`:""}
         ${teaser}
       </div>
     </a>

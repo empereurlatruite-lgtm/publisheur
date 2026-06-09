@@ -117,7 +117,10 @@ web/        Site statique (GitHub Pages / Cloudflare Pages)
 supabase/     Migrations SQL — à coller dans l'éditeur SQL de Supabase, dans l'ordre :
   schema.sql · roles.sql · comments.sql · portfolio.sql · ads.sql ·
   papers.sql · revisions.sql · edited_by.sql · pool.sql ·
-  transparency.sql · authors.sql · ad_placements.sql
+  transparency.sql · authors.sql · ad_placements.sql · media.sql ·
+  i18n.sql · theme.sql · styles.sql · regiments.sql · columns.sql ·
+  chronicle_edit.sql · ai_labels.sql · paper_purpose.sql · ai_zone.sql ·
+  image_moderation.sql · img_pos.sql · img_crop.sql
 publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements)
 .github/workflows/  pages.yml (déploie web/ sur GitHub Pages) · publish.yml (Scribus en CI)
 ```
@@ -126,7 +129,7 @@ publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements
 
 1. Créez un projet sur [supabase.com](https://supabase.com).
 2. **SQL Editor → New query →** collez chaque fichier de `supabase/` **dans
-   l'ordre** ci-dessus (`schema.sql` d'abord, `ad_placements.sql` en dernier) → **Run**.
+   l'ordre** ci-dessus (`schema.sql` d'abord, `img_crop.sql` en dernier) → **Run**.
 3. **Authentication → Providers →** activez **Email** (mot de passe ou lien magique).
 4. **Authentication → URL Configuration →** réglez **Site URL** sur l'URL publique
    et ajoutez-la en redirection (sinon les liens magiques retombent sur localhost).
@@ -292,7 +295,10 @@ web/        Static site (GitHub Pages / Cloudflare Pages)
 supabase/     SQL migrations — paste into the Supabase SQL editor, in order:
   schema.sql · roles.sql · comments.sql · portfolio.sql · ads.sql ·
   papers.sql · revisions.sql · edited_by.sql · pool.sql ·
-  transparency.sql · authors.sql · ad_placements.sql
+  transparency.sql · authors.sql · ad_placements.sql · media.sql ·
+  i18n.sql · theme.sql · styles.sql · regiments.sql · columns.sql ·
+  chronicle_edit.sql · ai_labels.sql · paper_purpose.sql · ai_zone.sql ·
+  image_moderation.sql · img_pos.sql · img_crop.sql
 publish/      Scribus publisher (print-grade PDF/PNG, from placements)
 .github/workflows/  pages.yml (deploy web/ to GitHub Pages) · publish.yml (Scribus in CI)
 ```
@@ -301,7 +307,7 @@ publish/      Scribus publisher (print-grade PDF/PNG, from placements)
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. **SQL Editor → New query →** paste each file in `supabase/` **in the order**
-   above (`schema.sql` first, `ad_placements.sql` last) → **Run**.
+   above (`schema.sql` first, `img_crop.sql` last) → **Run**.
 3. **Authentication → Providers →** enable **Email** (password or magic-link).
 4. **Authentication → URL Configuration →** set **Site URL** to your public URL and
    add it as a redirect (otherwise magic links bounce to localhost).
@@ -349,3 +355,219 @@ cd web && python3 -m http.server 8200   # → http://127.0.0.1:8200
   **published placements + chronicles** → `out/issue.json`) → `layout.py` (Scribus
   headless via `xvfb-run scribus -g -ns -py`) → `pdftoppm` (PNG). Set `SUPABASE_URL`
   + `SUPABASE_KEY` to pull from the cloud.
+
+---
+
+## Database schema (reference snapshot)
+
+A snapshot of the live `public` schema, for orientation. The **source of truth** is
+the migration files in `supabase/` (applied in the order listed above) — this dump
+is **context only**: table order and constraints below are **not** valid for direct
+execution. Regenerate from Supabase when the schema changes.
+
+```sql
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.articles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  issue text,
+  kicker text NOT NULL DEFAULT ''::text,
+  headline text NOT NULL DEFAULT 'Untitled'::text,
+  subhead text NOT NULL DEFAULT ''::text,
+  byline text NOT NULL DEFAULT ''::text,
+  body text NOT NULL DEFAULT ''::text,
+  weight text NOT NULL DEFAULT 'minor'::text CHECK (weight = ANY (ARRAY['lead'::text, 'major'::text, 'minor'::text, 'brief'::text])),
+  image_url text NOT NULL DEFAULT ''::text,
+  published boolean NOT NULL DEFAULT false,
+  position integer NOT NULL DEFAULT 0,
+  author_id uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['draft'::text, 'submitted'::text])),
+  last_edited_by uuid,
+  author_avatar text NOT NULL DEFAULT ''::text,
+  source text NOT NULL DEFAULT ''::text,
+  lang text NOT NULL DEFAULT 'fr'::text,
+  ai_translated boolean NOT NULL DEFAULT false,
+  CONSTRAINT articles_pkey PRIMARY KEY (id),
+  CONSTRAINT articles_author_id_fkey FOREIGN KEY (author_id) REFERENCES auth.users(id),
+  CONSTRAINT articles_last_edited_by_fkey FOREIGN KEY (last_edited_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  display_name text NOT NULL DEFAULT ''::text,
+  role text NOT NULL DEFAULT 'reader'::text CHECK (role = ANY (ARRAY['reader'::text, 'writer'::text, 'illustrator'::text, 'editor'::text, 'annonceur'::text])),
+  clan text NOT NULL DEFAULT ''::text,
+  avatar_url text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  preferred_lang text NOT NULL DEFAULT ''::text,
+  ui_lang text NOT NULL DEFAULT ''::text,
+  can_upload boolean NOT NULL DEFAULT false,
+  can_moderate boolean NOT NULL DEFAULT false,
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.comments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  issue text NOT NULL,
+  article_id uuid,
+  author_id uuid DEFAULT auth.uid(),
+  author_name text NOT NULL DEFAULT ''::text,
+  body text NOT NULL CHECK (char_length(body) >= 1 AND char_length(body) <= 2000),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT comments_pkey PRIMARY KEY (id),
+  CONSTRAINT comments_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
+  CONSTRAINT comments_author_id_fkey FOREIGN KEY (author_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.images (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  uploader_id uuid DEFAULT auth.uid(),
+  uploader_name text NOT NULL DEFAULT ''::text,
+  url text NOT NULL,
+  caption text NOT NULL DEFAULT ''::text,
+  clan text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  mime text NOT NULL DEFAULT ''::text,
+  bytes integer NOT NULL DEFAULT 0,
+  width integer NOT NULL DEFAULT 0,
+  height integer NOT NULL DEFAULT 0,
+  approved boolean NOT NULL DEFAULT false,
+  CONSTRAINT images_pkey PRIMARY KEY (id),
+  CONSTRAINT images_uploader_id_fkey FOREIGN KEY (uploader_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.ads (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  advertiser_id uuid DEFAULT auth.uid(),
+  advertiser_name text NOT NULL DEFAULT ''::text,
+  title text NOT NULL DEFAULT ''::text,
+  body text NOT NULL DEFAULT ''::text,
+  category text NOT NULL DEFAULT 'fabricant'::text CHECK (category = ANY (ARRAY['recrutement'::text, 'troc'::text, 'parodie'::text, 'createur'::text, 'fabricant'::text])),
+  maker text NOT NULL DEFAULT ''::text,
+  link text NOT NULL DEFAULT ''::text,
+  image_url text NOT NULL DEFAULT ''::text,
+  issue text NOT NULL DEFAULT 'all'::text,
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['draft'::text, 'review'::text, 'approved'::text, 'rejected'::text])),
+  approved boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  lang text NOT NULL DEFAULT 'fr'::text,
+  CONSTRAINT ads_pkey PRIMARY KEY (id),
+  CONSTRAINT ads_advertiser_id_fkey FOREIGN KEY (advertiser_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.papers (
+  issue text NOT NULL,
+  name text NOT NULL DEFAULT ''::text,
+  tagline text NOT NULL DEFAULT ''::text,
+  plate text NOT NULL DEFAULT 'plate-fraktur'::text,
+  ear jsonb NOT NULL DEFAULT '["", "", ""]'::jsonb,
+  slogans jsonb NOT NULL DEFAULT '[]'::jsonb,
+  emblem_left text NOT NULL DEFAULT ''::text,
+  emblem_right text NOT NULL DEFAULT ''::text,
+  clan text NOT NULL DEFAULT ''::text,
+  owner_id uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  theme text NOT NULL DEFAULT 'classic'::text,
+  lang text NOT NULL DEFAULT 'fr'::text,
+  grid_cols smallint NOT NULL DEFAULT 0,
+  purpose text NOT NULL DEFAULT ''::text,
+  ai_zone boolean NOT NULL DEFAULT false,
+  CONSTRAINT papers_pkey PRIMARY KEY (issue),
+  CONSTRAINT papers_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.paper_editors (
+  issue text NOT NULL,
+  editor_id uuid NOT NULL,
+  CONSTRAINT paper_editors_pkey PRIMARY KEY (issue, editor_id),
+  CONSTRAINT paper_editors_issue_fkey FOREIGN KEY (issue) REFERENCES public.papers(issue),
+  CONSTRAINT paper_editors_editor_id_fkey FOREIGN KEY (editor_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.article_revisions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  article_id uuid,
+  issue text NOT NULL DEFAULT ''::text,
+  kicker text,
+  headline text,
+  subhead text,
+  byline text,
+  body text,
+  weight text,
+  image_url text,
+  published boolean,
+  status text,
+  author_id uuid,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  edited_by uuid,
+  CONSTRAINT article_revisions_pkey PRIMARY KEY (id),
+  CONSTRAINT article_revisions_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id)
+);
+CREATE TABLE public.placements (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  article_id uuid NOT NULL,
+  issue text NOT NULL,
+  weight text NOT NULL DEFAULT 'minor'::text CHECK (weight = ANY (ARRAY['lead'::text, 'major'::text, 'minor'::text, 'brief'::text])),
+  position integer NOT NULL DEFAULT 0,
+  image_url text NOT NULL DEFAULT ''::text,
+  published boolean NOT NULL DEFAULT false,
+  placed_by uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  col_span smallint NOT NULL DEFAULT 0,
+  img_cols smallint NOT NULL DEFAULT 0,
+  img_pos text NOT NULL DEFAULT 'top'::text,
+  img_crop text NOT NULL DEFAULT ''::text,
+  CONSTRAINT placements_pkey PRIMARY KEY (id),
+  CONSTRAINT placements_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
+  CONSTRAINT placements_issue_fkey FOREIGN KEY (issue) REFERENCES public.papers(issue),
+  CONSTRAINT placements_placed_by_fkey FOREIGN KEY (placed_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.media (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  uploader_id uuid DEFAULT auth.uid(),
+  uploader_name text NOT NULL DEFAULT ''::text,
+  url text NOT NULL,
+  path text NOT NULL DEFAULT ''::text,
+  folder text NOT NULL DEFAULT ''::text,
+  mime text NOT NULL DEFAULT ''::text,
+  bytes integer NOT NULL DEFAULT 0,
+  width integer NOT NULL DEFAULT 0,
+  height integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  approved boolean NOT NULL DEFAULT false,
+  CONSTRAINT media_pkey PRIMARY KEY (id),
+  CONSTRAINT media_uploader_id_fkey FOREIGN KEY (uploader_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.ad_placements (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  ad_id uuid NOT NULL,
+  issue text NOT NULL,
+  position integer NOT NULL DEFAULT 0,
+  published boolean NOT NULL DEFAULT false,
+  placed_by uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT ad_placements_pkey PRIMARY KEY (id),
+  CONSTRAINT ad_placements_ad_id_fkey FOREIGN KEY (ad_id) REFERENCES public.ads(id),
+  CONSTRAINT ad_placements_issue_fkey FOREIGN KEY (issue) REFERENCES public.papers(issue),
+  CONSTRAINT ad_placements_placed_by_fkey FOREIGN KEY (placed_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.styles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  owner_id uuid NOT NULL DEFAULT auth.uid(),
+  name text NOT NULL,
+  def jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT styles_pkey PRIMARY KEY (id),
+  CONSTRAINT styles_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.regiments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL UNIQUE,
+  created_by uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT regiments_pkey PRIMARY KEY (id),
+  CONSTRAINT regiments_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
+);
+```
