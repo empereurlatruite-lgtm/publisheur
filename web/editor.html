@@ -78,6 +78,11 @@
   .pcell .pacts button{flex:1;font:inherit;font-size:.74rem;border:1px solid #c9bda0;background:#fff;border-radius:5px;cursor:pointer;padding:.25rem}
   .pcell .pacts .use{background:var(--accent);color:#fff;border-color:var(--accent)}
   .pcell .pacts .rm{flex:0 0 auto;color:#b33}
+  .pcell.pending{border-color:#d8b06a;box-shadow:0 0 0 1px #e7c98a inset}
+  .pcell.pending img{filter:grayscale(.7) sepia(.2) brightness(.9)}
+  .pcell .pendtag{background:#b9772a;color:#fff;font-size:.64rem;font-weight:700;text-transform:uppercase;
+    letter-spacing:.05em;padding:.12rem .5rem;text-align:center}
+  .pcell .pacts .go{background:var(--ok,#2f6b3f);color:#fff;border-color:var(--ok,#2f6b3f)}
   .pempty{grid-column:1/-1;color:#8a8070;font-style:italic;text-align:center;padding:2rem}
   /* Journal create/manage */
   .jbody{padding:1rem;overflow:auto}
@@ -247,7 +252,7 @@
       <div id="dropzone" class="dropzone">
         <div class="dzrow">
           <input id="f_image" placeholder="https://…  ou glissez/téléversez une photo" data-i18n-ph="ed.imagePh" oninput="showPreview(this.value)">
-          <button type="button" class="dzbtn" onclick="document.querySelector('#f_file').click()" data-i18n="ed.uploadBtn">📷 Téléverser</button>
+          <button type="button" id="f_upbtn" class="dzbtn" onclick="document.querySelector('#f_file').click()" data-i18n="ed.uploadBtn">📷 Téléverser</button>
           <button type="button" class="dzbtn" onclick="openPortfolio(true)" data-i18n="ed.portfolioBtn">🖼 Portfolio</button>
           <input id="f_file" type="file" accept="image/*" style="display:none" onchange="onPickFile(this.files[0])">
         </div>
@@ -315,7 +320,16 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, NavUser, Regiments, configured, I18n, Prefs } = window.Daihbi;
+const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, NavUser, Regiments, Styles, configured, I18n, Prefs } = window.Daihbi;
+// Masthead title fonts for the "Police du titre" shortcut (applied via a custom style).
+const JOURNAL_HEAD_FONTS = [
+  ['"Playfair Display",Georgia,serif',"Playfair Display"], ['"Old Standard TT",Georgia,serif',"Old Standard TT"],
+  ['"Cinzel","Playfair Display",serif',"Cinzel"], ['"Abril Fatface","Playfair Display",serif',"Abril Fatface"],
+  ['"Marcellus","Old Standard TT",serif',"Marcellus"], ['"Yeseva One","Playfair Display",serif',"Yeseva One"],
+  ['"EB Garamond",Georgia,serif',"EB Garamond"], ['"Oswald",system-ui,sans-serif',"Oswald"],
+  ['"Anton","Oswald",Impact,sans-serif',"Anton"], ['"Bebas Neue","Oswald",Impact,sans-serif',"Bebas Neue"],
+  ['"UnifrakturCook","Playfair Display",serif',"UnifrakturCook"], ['"Pirata One","UnifrakturCook",serif',"Pirata One"],
+];
 // Régiment vocabulary: papers.js defaults now, merged with the DB list at boot.
 let CLANS = (window.DAIHBI_CLANS || []).slice();
 const ADD_CLAN = "__addclan";   // sentinel option value → "add a new régiment"
@@ -442,7 +456,8 @@ I18n.register({
     "ed.addToPortfolio": "Ajouter au portfolio",
     "ed.portfolioReady": "✓ prête — ajoutez une légende puis « Ajouter ».",
     "ed.pickImageFirst": "Choisissez d’abord une image.",
-    "ed.portfolioAdded": "✓ Ajoutée au portfolio.",
+    "ed.portfolioAdded": "✓ Ajoutée au portfolio — en attente de validation.",
+    "ed.imgPending": "En attente de validation","ed.imgApprove": "✓ Approuver","ed.imgApproved": "Image approuvée ✓",
     "ed.portfolioUnavailable": "Portfolio indisponible.",
     "ed.by": "par {name}",
     "ed.use": "Utiliser",
@@ -459,6 +474,16 @@ I18n.register({
     "ed.jIssuePh": "etendard-8e",
     "ed.jTagline": "Sous-titre",
     "ed.jTaglinePh": "Devise du journal",
+    "ed.jPurpose": "Objet / résumé du journal",
+    "ed.jPurposeHint": "— affiché au kiosque, pour situer l’édition",
+    "ed.jPurposePh": "Ex. La voix du 501e : chroniques du front, opérations et moral.",
+    "ed.jLang": "Langue de l’édition",
+    "ed.jFont": "Police du titre",
+    "ed.jFontTheme": "— selon le thème —",
+    "ed.jAiZone": "Zone « Rédigé par l’IA » séparée",
+    "ed.jAiZoneHint": "— sinon, les chroniques IA restent dans la une avec seulement le label.",
+    "ed.republishTip": "Republier (remettre à la une du kiosque)",
+    "ed.republished": "Republié — remis à la une ✓",
     "ed.jPlate": "Style du titre",
     "ed.plateFraktur": "Gothique (fraktur)",
     "ed.plateAnton": "Condensé (Anton)",
@@ -476,6 +501,9 @@ I18n.register({
     "ed.jEmblemRight": "Emblème droit (URL)",
     "ed.createJournalTitle": "Créer un journal",
     "ed.createJournalBtn": "Créer le journal",
+    "ed.newEditionTip": "Nouvelle édition (même titre, nouveau numéro)",
+    "ed.newEditionTitle": "Nouvelle édition de « {name} »",
+    "ed.createEditionBtn": "Créer l’édition",
     "ed.manageJournalTitle": "Gérer : {name}",
     "ed.saveJournalBtn": "Enregistrer le journal",
     "ed.jGiveName": "Donnez un nom.",
@@ -650,7 +678,8 @@ I18n.register({
     "ed.addToPortfolio": "Add to portfolio",
     "ed.portfolioReady": "✓ ready — add a caption then “Add”.",
     "ed.pickImageFirst": "Choose an image first.",
-    "ed.portfolioAdded": "✓ Added to the portfolio.",
+    "ed.portfolioAdded": "✓ Added to the portfolio — pending approval.",
+    "ed.imgPending": "Pending approval","ed.imgApprove": "✓ Approve","ed.imgApproved": "Image approved ✓",
     "ed.portfolioUnavailable": "Portfolio unavailable.",
     "ed.by": "by {name}",
     "ed.use": "Use",
@@ -667,6 +696,16 @@ I18n.register({
     "ed.jIssuePh": "the-standard-8th",
     "ed.jTagline": "Subtitle",
     "ed.jTaglinePh": "Paper’s motto",
+    "ed.jPurpose": "Purpose / summary",
+    "ed.jPurposeHint": "— shown in the kiosque, to situate the edition",
+    "ed.jPurposePh": "e.g. The voice of the 501e: front chronicles, operations and morale.",
+    "ed.jLang": "Edition language",
+    "ed.jFont": "Masthead font",
+    "ed.jFontTheme": "— follow the theme —",
+    "ed.jAiZone": "Separate “Written by AI” section",
+    "ed.jAiZoneHint": "— otherwise AI chronicles stay in the front page with just the label.",
+    "ed.republishTip": "Republish (bump back to the kiosque front)",
+    "ed.republished": "Republished — back on the front ✓",
     "ed.jPlate": "Masthead style",
     "ed.plateFraktur": "Gothic (fraktur)",
     "ed.plateAnton": "Condensed (Anton)",
@@ -684,6 +723,9 @@ I18n.register({
     "ed.jEmblemRight": "Right emblem (URL)",
     "ed.createJournalTitle": "Create a paper",
     "ed.createJournalBtn": "Create the paper",
+    "ed.newEditionTip": "New edition (same title, new issue)",
+    "ed.newEditionTitle": "New edition of “{name}”",
+    "ed.createEditionBtn": "Create the edition",
     "ed.manageJournalTitle": "Manage: {name}",
     "ed.saveJournalBtn": "Save the paper",
     "ed.jGiveName": "Give it a name.",
@@ -1072,8 +1114,13 @@ async function saveProfile(){
 let pPendingUrl = null, pPendingMeta = null;
 function openPortfolio(){ $("#pmodal").style.display="flex"; renderPUpload(); loadPGrid(); }
 function closePortfolio(){ $("#pmodal").style.display="none"; pPendingUrl=null; pPendingMeta=null; }
+// who can upload / approve images (image_moderation.sql; editors keep both)
+function canUpload(){ return !!(MYPROFILE && (MYPROFILE.can_upload || MYROLE==="editor")); }
+function canModerate(){ return !!(MYPROFILE && (MYPROFILE.can_moderate || MYROLE==="editor")); }
+// hide upload affordances when the user lacks the upload right (RLS enforces it anyway)
+function applyUploadGate(){ const b=$("#f_upbtn"); if(b) b.style.display = canUpload() ? "" : "none"; }
 function renderPUpload(){
-  const can = (MYROLE==="illustrator"||MYROLE==="editor");
+  const can = canUpload();
   const u=$("#pUpload"); u.style.display = can ? "flex" : "none";
   if(can) u.innerHTML = `
     <button onclick="document.querySelector('#pFile').click()">${I18n.t("ed.pickImage")}</button>
@@ -1099,18 +1146,23 @@ async function addToPortfolio(){
 }
 async function loadPGrid(){
   let imgs=[]; try{ imgs=await Portfolio.list(); }catch(e){ $("#pGrid").innerHTML=`<div class="pempty">${I18n.t("ed.portfolioUnavailable")}<br>${escapeHtml(e.message)}</div>`; return; }
+  const mod = canModerate();
   $("#pGrid").innerHTML = imgs.length ? imgs.map(im=>{
-    const own = im.uploader_id===ME || MYROLE==="editor";
-    return `<div class="pcell">
+    const own = im.uploader_id===ME || canModerate();
+    const pending = im.approved===false;
+    return `<div class="pcell${pending?" pending":""}">
       <img src="${escapeHtml(im.url)}" alt="">
+      ${pending?`<div class="pendtag">${I18n.t("ed.imgPending")}</div>`:""}
       ${im.caption?`<div class="cap">${escapeHtml(im.caption)}</div>`:""}
       <div class="by">${I18n.t("ed.by",{name:escapeHtml(im.uploader_name||"?")})}${im.clan?" · "+escapeHtml(im.clan):""}</div>
       <div class="pacts">
-        <button class="use" onclick="usePortfolioImage('${escapeHtml(im.url)}')">${I18n.t("ed.use")}</button>
+        ${(pending&&mod)?`<button class="go" onclick="approvePortfolioImage('${im.id}')">${I18n.t("ed.imgApprove")}</button>`:""}
+        ${pending?"":`<button class="use" onclick="usePortfolioImage('${escapeHtml(im.url)}')">${I18n.t("ed.use")}</button>`}
         ${own?`<button class="rm" title="${I18n.t("ed.removeTitle")}" onclick="removePortfolioImage('${im.id}')">✕</button>`:""}
       </div></div>`;
-  }).join("") : `<div class="pempty">${I18n.t("ed.portfolioEmpty")}${(MYROLE==="illustrator"||MYROLE==="editor")?I18n.t("ed.portfolioEmptyAdd"):""}</div>`;
+  }).join("") : `<div class="pempty">${I18n.t("ed.portfolioEmpty")}${canUpload()?I18n.t("ed.portfolioEmptyAdd"):""}</div>`;
 }
+async function approvePortfolioImage(id){ try{ await Portfolio.approve(id); await loadPGrid(); toast(I18n.t("ed.imgApproved")); }catch(e){ alert(e.message); } }
 function usePortfolioImage(url){ F.image.value=url; showPreview(url); closePortfolio(); toast(I18n.t("ed.imageAddedToArticle")); }
 async function removePortfolioImage(id){ if(!confirm(I18n.t("ed.confirmRemovePortfolio")))return; try{ await Portfolio.remove(id); await loadPGrid(); }catch(e){ alert(e.message); } }
 
@@ -1121,15 +1173,24 @@ function journalForm(p, isNew){
   const curTheme=p.theme||"classic";
   return `
     <label>${I18n.t("ed.jName")}</label><input id="j_name" value="${escapeHtml(p.name||"")}" placeholder="${I18n.t("ed.jNamePh")}">
-    ${isNew?`<label>${I18n.t("ed.jIssue")}</label><input id="j_issue" value="" placeholder="${I18n.t("ed.jIssuePh")}">`:""}
+    ${isNew?`<label>${I18n.t("ed.jIssue")}</label><input id="j_issue" value="${escapeHtml(p.issue||"")}" placeholder="${I18n.t("ed.jIssuePh")}">`:""}
     <label>${I18n.t("ed.jTagline")}</label><input id="j_tagline" value="${escapeHtml(p.tagline||"")}" placeholder="${I18n.t("ed.jTaglinePh")}">
+    <label>${I18n.t("ed.jPurpose")} <span style="font-weight:400;color:#8a8170">${I18n.t("ed.jPurposeHint")}</span></label>
+    <textarea id="j_purpose" rows="2" placeholder="${I18n.t("ed.jPurposePh")}" style="width:100%;font:inherit;padding:.5rem;border:1px solid var(--line);border-radius:6px;resize:vertical">${escapeHtml(p.purpose||"")}</textarea>
     <div class="two">
       <div><label>${I18n.t("ed.jPlate")}</label><select id="j_plate">${plates.map(([v,l])=>`<option value="${v}" ${((p.plate||"plate-fraktur")===v)?"selected":""}>${l}</option>`).join("")}</select></div>
       <div><label>${I18n.t("ed.jClan")}</label><select id="j_clan" onchange="onClanPick(this)">${clanOptions(p.clan,true)}</select></div>
     </div>
+    <div class="two">
+      <div><label>${I18n.t("ed.jLang")}</label><select id="j_lang">${I18n.contentOptionsHTML(p.lang||"fr",false)}</select></div>
+      <div><label>${I18n.t("ed.jFont")}</label><select id="j_font"><option value="">${I18n.t("ed.jFontTheme")}</option>${JOURNAL_HEAD_FONTS.map(([v,l])=>`<option value='${escapeHtml(v)}'>${escapeHtml(l)}</option>`).join("")}</select></div>
+    </div>
     <label>${I18n.t("ed.jTheme")} <span style="font-weight:400;color:#8a8170">${I18n.t("ed.jThemeHint")}</span></label>
     <select id="j_theme" onchange="updateThemeNote()">${themes.map(([v,t])=>`<option value="${v}" ${(curTheme===v)?"selected":""}>${escapeHtml(t.label||v)}</option>`).join("")}</select>
     <div id="j_theme_note" style="font-size:.8rem;color:#8a8170;margin:.25rem 0 .2rem"></div>
+    <label style="display:flex;align-items:center;gap:.45rem;font-weight:400;margin:.3rem 0 .1rem;cursor:pointer">
+      <input type="checkbox" id="j_aizone" ${p.aiZone?"checked":""}> ${I18n.t("ed.jAiZone")}</label>
+    <div style="font-size:.8rem;color:#8a8170;margin-bottom:.2rem">${I18n.t("ed.jAiZoneHint")}</div>
     <label>${I18n.t("ed.jEar")}</label>
     <div class="two" style="grid-template-columns:1fr 1fr 1fr">
       <input id="j_ear0" value="${escapeHtml((p.ear&&p.ear[0])||"")}" placeholder="${I18n.t("ed.jEarLeft")}">
@@ -1151,16 +1212,36 @@ function updateThemeNote(){
 function readJournal(isNew){
   return { issue: isNew ? $("#j_issue").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") : ISSUE,
     name:$("#j_name").value.trim(), tagline:$("#j_tagline").value.trim(), plate:$("#j_plate").value, theme:$("#j_theme").value, clan:$("#j_clan").value,
+    purpose:$("#j_purpose").value.trim(), lang:$("#j_lang").value, aiZone:$("#j_aizone").checked,
     ear:[$("#j_ear0").value.trim(),$("#j_ear1").value.trim(),$("#j_ear2").value.trim()],
     slogans:$("#j_slogans").value.split("|").map(s=>s.trim()).filter(Boolean),
     emblemLeft:$("#j_eleft").value.trim(), emblemRight:$("#j_eright").value.trim() };
 }
 function openCreateJournal(){
+  NEW_ED_THEME = null;   // fresh paper, not a cloned edition
   // a ready-made template so the editor isn't starting from a blank page
   const tmpl = { plate:"plate-fraktur", ear:["Édition du Front", "", "Warden"],
     slogans:["Vive les Wardens"], clan:(MYPROFILE&&MYPROFILE.clan)||"" };
   $("#jTitle").textContent=I18n.t("ed.createJournalTitle");
   $("#jBody").innerHTML = journalForm(tmpl,true) + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">${I18n.t("ed.createJournalBtn")}</button></div>`;
+  updateThemeNote();
+  $("#jmodal").style.display="flex";
+}
+// "Nouvelle édition" — same masthead, fresh issue. Clones an existing paper's
+// branding into the create form; the editor only picks the new issue key.
+let NEW_ED_THEME = null;   // carries a cloned (possibly custom-style) theme through create
+function suggestEditionIssue(srcIssue){
+  const base = srcIssue.replace(/-\d+$/, "");   // le-petit-wardien-2 → le-petit-wardien
+  let n = 2; while(PAPERS[base + "-" + n]) n++;
+  return base + "-" + n;
+}
+function openNewEdition(srcIssue){
+  const src = PAPERS[srcIssue] || {};
+  const tmpl = Object.assign({}, src, { issue: suggestEditionIssue(srcIssue) });
+  NEW_ED_THEME = src.theme || null;   // preserve the cloned theme/style through createJournal
+  $("#jTitle").textContent = I18n.t("ed.newEditionTitle", {name: src.name || srcIssue});
+  $("#jBody").innerHTML = journalForm(tmpl, true)
+    + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">${I18n.t("ed.createEditionBtn")}</button></div>`;
   updateThemeNote();
   $("#jmodal").style.display="flex";
 }
@@ -1170,7 +1251,9 @@ async function createJournal(){
   if(!p.issue){ $("#jErr").textContent=I18n.t("ed.jGiveIssue"); return; }
   if(PAPERS[p.issue]){ $("#jErr").textContent=I18n.t("ed.jIssueExists"); return; }
   try{
-    await Papers.create(p);
+    const baseTheme = NEW_ED_THEME || "classic";   // preserve a cloned custom style
+    NEW_ED_THEME = null;
+    await Papers.create(await applyFontToData(p, baseTheme));
     location.href=`board.html?issue=${encodeURIComponent(p.issue)}`;   // lay it out (pull from the pool)
   }catch(e){ $("#jErr").textContent=e.message; }
 }
@@ -1180,16 +1263,35 @@ function openManageJournal(issue){
   const p = Object.assign({issue:manageIssue}, PAPERS[manageIssue]||{});
   $("#jTitle").textContent=I18n.t("ed.manageJournalTitle",{name:(p.name||manageIssue)});
   $("#jBody").innerHTML = journalForm(p,false)
-    + `<div class="jbar"><span class="grow"></span><button class="go" onclick="saveJournal()">${I18n.t("ed.saveJournalBtn")}</button></div>
+    + `<div class="jbar"><button class="del" onclick="deleteEdition('${escapeHtml(manageIssue)}')">${I18n.t("ed.deleteJournalTip")}</button><span class="grow"></span><button class="go" onclick="saveJournal()">${I18n.t("ed.saveJournalBtn")}</button></div>
        <div id="coeds"></div>`;
   updateThemeNote();
   $("#jmodal").style.display="flex";
   loadCoEditors();
 }
+// "Police du titre" shortcut: a custom masthead font lives in a style (built-in
+// themes have fixed plate fonts). Pick a font → create/update a style carrying it
+// and point the paper at it. No font picked → preserve any existing custom style
+// (the theme picker here only lists built-in themes and can't represent it).
+async function applyFontToData(data, curTheme){
+  const font = (($("#j_font")||{}).value) || "";
+  if(font){
+    let id = Styles.isCustom(curTheme) ? Styles.idOf(curTheme) : null;
+    if(id){ const st=await Styles.get(id); await Styles.update(id,{def:Object.assign({},(st&&st.def)||{},{fontHead:font})}); }
+    else { const st=await Styles.create({ name:(data.name||data.issue)+" — titre",
+      def:{paper:"#f3ead6",ink:"#1a1714",accent:"#5a1e16",rule:"#2a2622",muted:"#6a6253",fontHead:font,fontBody:'"PT Serif",Georgia,serif'} }); id=st.id; }
+    data.theme = Styles.key(id);
+  } else if(Styles.isCustom(curTheme) && !Styles.isCustom(data.theme)){
+    data.theme = curTheme;
+  }
+  return data;
+}
 async function saveJournal(){
-  try{ await Papers.update(manageIssue, readJournal(false)); PAPERS=await Papers.map(); reloadPreview();
-    $("#jErr").textContent=I18n.t("ed.jSaved"); if($("#dash").style.display!=="none") renderDashboard(); }
-  catch(e){ $("#jErr").textContent=e.message; }
+  try{
+    const data = await applyFontToData(readJournal(false), (PAPERS[manageIssue]||{}).theme||"classic");
+    await Papers.update(manageIssue, data); PAPERS=await Papers.map(); reloadPreview();
+    $("#jErr").textContent=I18n.t("ed.jSaved"); if($("#dash").style.display!=="none") renderDashboard();
+  }catch(e){ $("#jErr").textContent=e.message; }
 }
 async function loadCoEditors(){
   try{
@@ -1303,6 +1405,7 @@ async function boot(){
   // load profile + role
   MYPROFILE = await Profiles.me();
   MYROLE = (MYPROFILE && MYPROFILE.role) || "reader";
+  applyUploadGate();   // hide the composer photo-upload button if the user can't upload
   I18n.adoptProfile(MYPROFILE);
   // Anyone signed in can write a chronicle — no role gate (editors still publish).
   // signed in as a contributor
@@ -1416,15 +1519,23 @@ function dashCard(issue, p, st){
     <div class="dmeta">${escapeHtml(p.clan||"")}</div>
     <div class="dacts">
       <button class="open" onclick="openEdition('${issue}')">${I18n.t("ed.openLayout")}</button>
+      <button class="manage" title="${I18n.t("ed.newEditionTip")}" onclick="openNewEdition('${issue}')">📄＋</button>
+      <button class="manage" title="${I18n.t("ed.republishTip")}" onclick="republishEdition('${issue}')">🔄</button>
       <button class="manage" title="${I18n.t("ed.manageJournalTip")}" onclick="openManageJournal('${issue}')">⚙</button>
       <button class="del" title="${I18n.t("ed.deleteJournalTip")}" onclick="deleteEdition('${issue}')">🗑</button>
     </div></div>`;
 }
 function openEdition(issue){ location.href = "board.html?issue="+encodeURIComponent(issue); }
+async function republishEdition(issue){
+  try{ await Papers.republish(issue); toast(I18n.t("ed.republished")); }
+  catch(e){ toast(e.message); }
+}
 async function deleteEdition(issue){
   const nm = (PAPERS[issue]&&PAPERS[issue].name)||issue;
   if(!confirm(I18n.t("ed.confirmDeleteJournal",{name:nm}))) return;
-  try{ await Papers.remove(issue); MY_MANAGED = await Papers.myManaged(); PAPERS = await Papers.map(); renderDashboard(); toast(I18n.t("ed.journalDeleted")); }
+  try{ await Papers.remove(issue); MY_MANAGED = await Papers.myManaged(); PAPERS = await Papers.map();
+    const m=$("#jmodal"); if(m) m.style.display="none";   // close the manage modal if open
+    renderDashboard(); toast(I18n.t("ed.journalDeleted")); }
   catch(e){ alert(I18n.t("ed.deleteRefused",{msg:e.message})); }
 }
 document.addEventListener("daihbi:langchange", ()=>{ I18n.apply(document); });

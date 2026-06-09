@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Publisheur — Mise en page</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700;900&family=Abril+Fatface&family=Marcellus&family=Yeseva+One&family=Bebas+Neue&family=Pirata+One&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
   :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6;--ok:#2f6b3f}
   *{box-sizing:border-box}
@@ -45,9 +45,15 @@
   .ptab .n{opacity:.6;font-weight:400}
   #paletteBody{flex:1;overflow:auto;padding:.5rem 0}
   #palette input[type=search]{font:inherit;padding:.4rem .5rem;border:1px solid var(--line);border-radius:6px;margin:.2rem .8rem .4rem;width:calc(100% - 1.6rem)}
+  .poolfilters{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 .8rem .45rem}
+  .poolfilters select{font:inherit;font-size:.8rem;padding:.3rem .4rem;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);flex:1 1 90px;min-width:0}
+  .poolfilters .poolchk{display:flex;align-items:center;gap:.3rem;font-size:.78rem;color:#6a6253;white-space:nowrap;flex:0 0 auto}
+  .poolfilters .chron-only.hidden{display:none}
 
-  .pal{margin:.4rem .8rem;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:grab;display:flex;gap:.55rem;align-items:flex-start}
-  .pal:active{cursor:grabbing}
+  /* pool cards add on click (no drag-and-drop yet — the modal covers the board,
+     so a grab cursor would be a lie). Whole card is the click target. */
+  .pal{margin:.4rem .8rem;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;display:flex;gap:.55rem;align-items:flex-start;transition:border-color .12s,background .12s}
+  .pal:hover{border-color:var(--accent);background:#fcf7ef}
   .pal.dragging{opacity:.4}
   .pal .thumb{width:46px;height:38px;object-fit:cover;border:1px solid #b9ad90;border-radius:4px;flex:none;filter:grayscale(.4) sepia(.15)}
   .pal .info{flex:1;min-width:0}
@@ -59,7 +65,7 @@
   .pal .cat{display:inline-block;font-size:.62rem;text-transform:uppercase;letter-spacing:.03em;color:#6a6253}
   /* image palette is a tighter grid */
   #imgGrid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding:0 .8rem}
-  #imgGrid figure{margin:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;cursor:grab}
+  #imgGrid figure{margin:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;cursor:pointer}
   #imgGrid figure.dragging{opacity:.4}
   #imgGrid img{width:100%;height:72px;object-fit:cover;display:block;pointer-events:none}
   #imgGrid figcaption{font-size:.66rem;padding:.2rem .35rem;color:#6a6253;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -162,9 +168,15 @@
   .sfield input[type=color]{width:100%;height:34px;padding:2px;border:1px solid #c9bda0;border-radius:6px;background:#fff;cursor:pointer}
   .sfield input,.sfield select{font:inherit;padding:.45rem .55rem;border:1px solid #c9bda0;border-radius:6px;background:#fff;color:var(--ink)}
   .sgl{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;font-weight:600;margin:.7rem 0 .3rem}
+  .cefld{display:flex;align-items:center;gap:.5rem;margin:.3rem 0}
+  .cefld .cel{font-size:.72rem;color:#6a6253;min-width:74px;flex:none}
+  .cefld .cectl{display:flex;gap:.3rem;flex-wrap:wrap}
   .srow{display:flex;gap:.6rem;flex-wrap:wrap}
   .srow.scolors .sfield{flex:1;min-width:78px}
   .stprev{border:1px solid #c9bda0;border-radius:8px;padding:1rem 1.1rem;position:relative;overflow:hidden}
+  .stprev .stmast{text-align:center;font-weight:900;font-size:2rem;line-height:1.02;margin:.1rem 0}
+  .stprev .sttag{text-align:center;font-style:italic;font-size:.78rem;margin-bottom:.45rem}
+  .stprev .strule{border:none;border-top:1px solid;opacity:.55;margin:.25rem 0 .6rem}
   .stprev .stkick{font-family:"Old Standard TT",serif;text-transform:uppercase;letter-spacing:.16em;font-size:.66rem;font-weight:700;margin-bottom:.2rem}
   .stprev .sthead{font-weight:900;font-size:1.7rem;line-height:1.05;margin:.1rem 0 .2rem}
   .stprev .stby{font-variant:small-caps;letter-spacing:.06em;font-size:.8rem;margin-bottom:.4rem}
@@ -184,8 +196,9 @@
   <span class="grow"></span>
   <button class="go" id="addBtn" onclick="openPool()" data-i18n="board.add">＋ Ajouter</button>
   <a href="editor.html" data-i18n="board.myPapers">← Mes journaux</a>
-  <label data-i18n-title="board.themeTitle" style="display:inline-flex;align-items:center;gap:.3rem">🎨 <select id="themeSel" onchange="setBoardTheme(this.value)" style="font:inherit;padding:.2rem .35rem;border-radius:5px;border:1px solid #c9bda0;background:#fff;cursor:pointer"></select></label>
+  <label data-i18n-title="board.themeTitle" style="display:inline-flex;align-items:center;gap:.3rem">🎨 <select id="themeSel" onchange="setBoardTheme(this.value)" style="font:inherit;padding:.2rem .35rem;border-radius:5px;border:1px solid #c9bda0;background:#fff;color:#26231f;cursor:pointer"></select></label>
   <button id="editStyleBtn" onclick="editCurrentStyle()" style="display:none" data-i18n-title="board.editStyle" title="Modifier ce style">✎</button>
+  <label data-i18n-title="board.columnsTitle" style="display:inline-flex;align-items:center;gap:.3rem">▦ <select id="colsSel" onchange="setGridCols(this.value)" style="font:inherit;padding:.2rem .35rem;border-radius:5px;border:1px solid #c9bda0;background:#fff;color:#26231f;cursor:pointer"></select></label>
   <a id="manageJournal" href="#" data-i18n="board.manage">⚙ Gérer le journal</a>
   <a id="openPaper" href="#" target="_blank" data-i18n="board.viewFront">Voir la une ↗</a>
   <button class="go" onclick="runExport()" data-i18n="board.printPdf">🖨 PDF imprimable</button>
@@ -217,7 +230,14 @@
         <button class="ptab"    id="tab-img"   onclick="setTab('img')"><span data-i18n="board.tabImg">Images</span> <span class="n" id="n-img"></span></button>
       </div>
       <input type="search" id="poolq" data-i18n-ph="board.searchPh" placeholder="Rechercher une chronique…" oninput="setPoolQ(this.value)">
-      <select id="poolLangFilter" data-i18n-title="board.filterByLang" title="Filtrer par langue" onchange="setPoolLang(this.value)" style="font:inherit;padding:.4rem .5rem;border:1px solid var(--line);border-radius:6px;margin:0 .8rem .4rem;width:calc(100% - 1.6rem)"></select>
+      <div class="poolfilters" id="poolFilters">
+        <select id="poolLangFilter" data-i18n-title="board.filterByLang" title="Filtrer par langue" onchange="setPoolLang(this.value)"></select>
+        <select id="poolType" class="chron-only" onchange="setPoolType(this.value)"></select>
+        <select id="poolReg" class="chron-only" onchange="setPoolReg(this.value)"></select>
+        <select id="poolAuthor" class="chron-only" onchange="setPoolAuthor(this.value)"></select>
+        <select id="poolDate" class="chron-only" onchange="setPoolDate(this.value)"></select>
+        <label class="poolchk chron-only"><input type="checkbox" id="poolUnused" onchange="setPoolUnused(this.checked)"> <span data-i18n="board.fUnused">Jamais utilisée</span></label>
+      </div>
       <div id="paletteBody"></div>
     </div>
   </div>
@@ -252,6 +272,9 @@
       </div>
       <label class="sgl" data-i18n="board.stPreview">Aperçu</label>
       <div id="st_preview" class="stprev">
+        <div class="stmast"></div>
+        <div class="sttag"></div>
+        <hr class="strule">
         <div class="stkick">RÉGIMENT · WARDEN</div>
         <div class="sthead" data-i18n="board.stPreviewHead">La Une du Front</div>
         <div class="stby" data-i18n="board.stPreviewBy">par un chroniqueur</div>
@@ -268,6 +291,69 @@
   </div>
 </div>
 
+<!-- edit a chronicle's text in place (double-click a story or pool card) -->
+<div class="modal" id="chronModal">
+  <div class="card" style="max-width:640px">
+    <div class="h"><span id="ce_title" data-i18n="board.ceTitle">Modifier la chronique</span><span class="grow"></span><button class="x" onclick="closeChronEditor()" data-i18n-aria="auth.close">✕</button></div>
+    <div class="body" style="padding:1rem 1.1rem 1.2rem;overflow:auto;max-height:82vh">
+      <div class="sfield"><label data-i18n="board.ceKicker">Surtitre (kicker)</label><input id="ce_kicker"></div>
+      <div class="sfield"><label data-i18n="board.ceHeadline">Titre</label><input id="ce_headline"></div>
+      <div class="sfield"><label data-i18n="board.ceSubhead">Chapô / sous-titre</label><input id="ce_subhead"></div>
+      <div class="srow">
+        <div class="sfield grow"><label data-i18n="board.ceByline">Signature</label><input id="ce_byline"></div>
+        <div class="sfield grow"><label data-i18n="board.ceSource">Régiment</label><select id="ce_source"></select></div>
+        <div class="sfield grow"><label data-i18n="board.ceLang">Langue</label><select id="ce_lang"></select></div>
+      </div>
+      <div class="sfield"><label data-i18n="board.ceTransparency">Transparence (IA)</label>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button type="button" class="ebtn" id="ce_ai_written" onclick="ceToggleAI('written')" data-i18n="board.ceAiWritten">✦ Rédigé par IA</button>
+          <button type="button" class="ebtn" id="ce_ai_translated" onclick="ceToggleAI('translated')" data-i18n="board.ceAiTranslated">✦ Traduit par IA</button>
+        </div>
+      </div>
+      <div class="sfield"><label data-i18n="board.ceBody">Texte</label><textarea id="ce_body" rows="9" style="font:inherit;padding:.55rem;border:1px solid #c9bda0;border-radius:6px;background:#fff;color:var(--ink);resize:vertical"></textarea></div>
+      <div class="srow">
+        <div class="sfield grow"><label data-i18n="board.cePhoto">Photo suggérée (URL)</label><input id="ce_image" oninput="ceShowPreview(this.value)" placeholder="https://…"></div>
+        <div id="ce_prev" style="width:96px;height:64px;border:1px solid #c9bda0;border-radius:6px;overflow:hidden;flex:none;background:#f3ead6"></div>
+      </div>
+      <div id="ce_layout" style="display:none"></div>
+      <div class="jerr" id="ce_err" style="color:#b33;font-size:.82rem;min-height:1em;margin-top:.4rem"></div>
+      <div style="display:flex;gap:.5rem;margin-top:.7rem">
+        <span class="grow"></span>
+        <button class="go" id="ce_save" onclick="saveChronicle()" data-i18n="board.ceSave">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- edit a réclame's content in place (double-click an ad or a pool ad card) -->
+<div class="modal" id="adModal">
+  <div class="card" style="max-width:560px">
+    <div class="h"><span id="ae_title_h" data-i18n="board.aeTitle">Modifier la réclame</span><span class="grow"></span><button class="x" onclick="closeAdEditor()" data-i18n-aria="auth.close">✕</button></div>
+    <div class="body" style="padding:1rem 1.1rem 1.2rem;overflow:auto;max-height:82vh">
+      <div class="srow">
+        <div class="sfield grow"><label data-i18n="board.aeCat">Type de réclame</label><select id="ae_cat"></select></div>
+        <div class="sfield grow"><label data-i18n="board.aeLang">Langue</label><select id="ae_lang"></select></div>
+      </div>
+      <div class="sfield"><label data-i18n="board.aeAdTitle">Titre</label><input id="ae_title"></div>
+      <div class="sfield"><label data-i18n="board.aeMaker">Fabricant / sponsor / chaîne</label><input id="ae_maker"></div>
+      <div class="sfield"><label data-i18n="board.aeBody">Texte</label><textarea id="ae_body" rows="5" style="font:inherit;padding:.55rem;border:1px solid #c9bda0;border-radius:6px;background:#fff;color:var(--ink);resize:vertical"></textarea></div>
+      <div class="sfield"><label data-i18n="board.aeLink">Lien (optionnel)</label><input id="ae_link" placeholder="https://…"></div>
+      <div class="srow">
+        <div class="sfield grow"><label data-i18n="board.aeImage">Image (URL)</label><input id="ae_image" oninput="aeShowPreview(this.value)" placeholder="https://…"></div>
+        <div id="ae_prev" style="width:96px;height:64px;border:1px solid #c9bda0;border-radius:6px;overflow:hidden;flex:none;background:#f3ead6"></div>
+      </div>
+      <div class="sfield"><label data-i18n="board.aeApproval">Validation (éditeur)</label>
+        <div><button type="button" class="ebtn" id="ae_approved" onclick="aeToggleApproved()" data-i18n="board.aeApproved">✓ Approuvée (visible)</button></div>
+      </div>
+      <div class="jerr" id="ae_err" style="color:#b33;font-size:.82rem;min-height:1em;margin-top:.4rem"></div>
+      <div style="display:flex;gap:.5rem;margin-top:.7rem">
+        <span class="grow"></span>
+        <button class="go" id="ae_save" onclick="saveAd()" data-i18n="board.aeSave">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -277,7 +363,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Ads, NavUser, Styles, configured, esc, I18n, Prefs } = window.Daihbi;
+const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Ads, NavUser, Styles, Regiments, configured, esc, I18n, Prefs } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
@@ -289,6 +375,9 @@ I18n.register({
     "board.viewFront":"Voir la une ↗","board.printPdf":"🖨 PDF imprimable",
     "board.tabChron":"Chroniques","board.tabAds":"Réclames","board.tabImg":"Images",
     "board.searchPh":"Rechercher une chronique…","board.filterByLang":"Filtrer par langue de contenu",
+    "board.fUnused":"Jamais utilisée","board.fTypeAll":"Type : tous","board.fHuman":"✍ Humain","board.fIA":"✦ IA",
+    "board.fDateAll":"Date : toutes","board.fToday":"Aujourd’hui","board.f7d":"7 derniers jours","board.f30d":"30 derniers jours",
+    "board.fRegAll":"Régiment : tous","board.fAuthorAll":"Auteur : tous",
     "board.theLayout":"La mise en page","board.layoutHint":"glissez ici · double-cliquez pour éditer",
     "board.frontPreview":"Aperçu de la une","board.reloadPreview":"Recharger l’aperçu",
     "board.add":"＋ Ajouter","board.addToEdition":"Ajouter à l’édition",
@@ -339,6 +428,23 @@ I18n.register({
     "board.chronicleDeleted":"Chronique supprimée","board.refused":"Refusé : {msg} (auteur ou éditeur uniquement)",
     "board.photoUpdated":"Photo mise à jour","board.removePhoto":"Retirer la photo","board.noPhoto":"✕ aucune",
     "board.themeSaved":"Style du journal enregistré ✓","board.error":"Erreur : {msg}",
+    "board.columnsTitle":"Colonnes de la une — pour toute l’édition","board.colsAuto":"Auto",
+    "board.colsSaved":"Colonnes mises à jour ✓",
+    "board.colSpan":"Colonnes","board.colSpanHint":"largeur de l’article (en colonnes)",
+    "board.imgSize":"Taille image","board.imgSizeHint":"en colonnes — le texte habille la photo",
+    "board.poolCardHint":"Cliquer pour placer · double-cliquer pour modifier le texte",
+    "board.ceTitle":"Modifier : {h}","board.ceKicker":"Surtitre (kicker)","board.ceHeadline":"Titre",
+    "board.ceSubhead":"Chapô / sous-titre","board.ceByline":"Signature","board.ceSource":"Régiment",
+    "board.ceLang":"Langue","board.ceBody":"Texte","board.cePhoto":"Photo suggérée (URL)",
+    "board.ceNoRegiment":"— régiment —","board.ceSave":"Enregistrer",
+    "board.ceNeedHeadline":"Donnez un titre à la chronique.","board.ceSaved":"Chronique enregistrée ✓",
+    "board.ceTransparency":"Transparence (IA)","board.ceAiWritten":"✦ Rédigé par IA","board.ceAiTranslated":"✦ Traduit par IA",
+    "board.ceLayout":"Mise en page","board.ceImgPos":"Position image","board.posTop":"Haut","board.posLeft":"Gauche","board.posRight":"Droite",
+    "board.ceCrop":"Recadrage","board.cropAuto":"Auto","board.cropLand":"Paysage","board.cropSquare":"Carré","board.cropPortrait":"Portrait",
+    "board.aeTitle":"Modifier : {t}","board.aeEdit":"✎ Modifier","board.aeCat":"Type de réclame","board.aeLang":"Langue",
+    "board.aeAdTitle":"Titre","board.aeMaker":"Fabricant / sponsor / chaîne","board.aeBody":"Texte","board.aeLink":"Lien (optionnel)",
+    "board.aeImage":"Image (URL)","board.aeApproval":"Validation (éditeur)","board.aeApproved":"✓ Approuvée (visible)",
+    "board.aeSave":"Enregistrer","board.aeNeedTitle":"Donnez un titre à la réclame.","board.aeSaved":"Réclame enregistrée ✓",
     "board.exportStarted":"Export imprimable lancé…","board.scribusLaying":"Scribus met en page le PDF… (~1–2 min)",
     "board.pdfReady":"PDF prêt ✓",
     "board.notConnected":"Non connecté","board.signinRequired":"Connexion requise",
@@ -356,6 +462,9 @@ I18n.register({
     "board.viewFront":"View the front page ↗","board.printPdf":"🖨 Printable PDF",
     "board.tabChron":"Chronicles","board.tabAds":"Ads","board.tabImg":"Images",
     "board.searchPh":"Search a chronicle…","board.filterByLang":"Filter by content language",
+    "board.fUnused":"Never used","board.fTypeAll":"Type: all","board.fHuman":"✍ Human","board.fIA":"✦ AI",
+    "board.fDateAll":"Date: all","board.fToday":"Today","board.f7d":"Last 7 days","board.f30d":"Last 30 days",
+    "board.fRegAll":"Regiment: all","board.fAuthorAll":"Author: all",
     "board.theLayout":"The layout","board.layoutHint":"drag here · double-click to edit",
     "board.frontPreview":"Front-page preview","board.reloadPreview":"Reload the preview",
     "board.add":"＋ Add","board.addToEdition":"Add to the edition",
@@ -406,6 +515,23 @@ I18n.register({
     "board.chronicleDeleted":"Chronicle deleted","board.refused":"Refused: {msg} (author or editor only)",
     "board.photoUpdated":"Photo updated","board.removePhoto":"Remove the photo","board.noPhoto":"✕ none",
     "board.themeSaved":"Paper style saved ✓","board.error":"Error: {msg}",
+    "board.columnsTitle":"Front-page columns — for the whole edition","board.colsAuto":"Auto",
+    "board.colsSaved":"Columns updated ✓",
+    "board.colSpan":"Columns","board.colSpanHint":"article width (in columns)",
+    "board.imgSize":"Image size","board.imgSizeHint":"in columns — text wraps around the photo",
+    "board.poolCardHint":"Click to place · double-click to edit the text",
+    "board.ceTitle":"Edit: {h}","board.ceKicker":"Kicker","board.ceHeadline":"Headline",
+    "board.ceSubhead":"Standfirst / subhead","board.ceByline":"Byline","board.ceSource":"Regiment",
+    "board.ceLang":"Language","board.ceBody":"Body","board.cePhoto":"Suggested photo (URL)",
+    "board.ceNoRegiment":"— regiment —","board.ceSave":"Save",
+    "board.ceNeedHeadline":"Give the chronicle a headline.","board.ceSaved":"Chronicle saved ✓",
+    "board.ceTransparency":"Transparency (AI)","board.ceAiWritten":"✦ Written by AI","board.ceAiTranslated":"✦ Translated by AI",
+    "board.ceLayout":"Layout","board.ceImgPos":"Image position","board.posTop":"Top","board.posLeft":"Left","board.posRight":"Right",
+    "board.ceCrop":"Crop","board.cropAuto":"Auto","board.cropLand":"Landscape","board.cropSquare":"Square","board.cropPortrait":"Portrait",
+    "board.aeTitle":"Edit: {t}","board.aeEdit":"✎ Edit","board.aeCat":"Ad type","board.aeLang":"Language",
+    "board.aeAdTitle":"Title","board.aeMaker":"Maker / sponsor / channel","board.aeBody":"Body","board.aeLink":"Link (optional)",
+    "board.aeImage":"Image (URL)","board.aeApproval":"Approval (editor)","board.aeApproved":"✓ Approved (visible)",
+    "board.aeSave":"Save","board.aeNeedTitle":"Give the ad a title.","board.aeSaved":"Ad saved ✓",
     "board.exportStarted":"Printable export started…","board.scribusLaying":"Scribus is laying out the PDF… (~1–2 min)",
     "board.pdfReady":"PDF ready ✓",
     "board.notConnected":"Not connected","board.signinRequired":"Sign-in required",
@@ -424,6 +550,14 @@ const catLabel = k => (window.DAIHBI_AD_CAT_LABEL && k) ? window.DAIHBI_AD_CAT_L
 
 let PAPER={}, PLACEMENTS=[], ADPLACEMENTS=[], POOL=[], ADS=[], IMAGES=[];
 let poolQ="", poolLang="", tab="chron", photoTarget=null, currentEdit=null;
+// extra pool filters (chroniques): type human/IA, régiment, author, date range, never-placed
+let poolType="", poolReg="", poolAuthor="", poolDate="", poolUnused=false, USED=new Set();
+function setPoolType(v){ poolType=v; renderPalette(); }
+function setPoolReg(v){ poolReg=v; renderPalette(); }
+function setPoolAuthor(v){ poolAuthor=v; renderPalette(); }
+function setPoolDate(v){ poolDate=v; renderPalette(); }
+function setPoolUnused(v){ poolUnused=!!v; renderPalette(); }
+const poolIsAI = a => ["ia","ai"].includes(String(a.source||"").trim().toLowerCase());
 const rowLang = r => (r && r.lang) ? String(r.lang) : "fr";
 const langBadge = r => `<span class="lbadge">${esc2(rowLang(r).toUpperCase())}</span>`;
 
@@ -462,6 +596,22 @@ function populateThemeSel(){
   sel.value=(PAPER&&PAPER.theme)||"classic";
   updateEditStyleBtn();
 }
+// Per-edition column count for the front-page well (papers.grid_cols). 0 = auto.
+function populateColsSel(){
+  const sel=$("#colsSel"); if(!sel) return;
+  const opts=[[0,I18n.t("board.colsAuto")],[3,"3"],[4,"4"],[5,"5"],[6,"6"],[7,"7"]];
+  sel.innerHTML=opts.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join("");
+  sel.value=String((PAPER&&PAPER.gridCols)||0);
+}
+async function setGridCols(v){
+  const n=parseInt(v,10)||0;
+  try{
+    await Papers.update(ISSUE,{gridCols:n});   // RLS: owner / co-éditeur only
+    if(PAPER) PAPER.gridCols=n;
+    reloadPreview();
+    toast(I18n.t("board.colsSaved"));
+  }catch(e){ toast(I18n.t("board.error",{msg:e.message})); }
+}
 async function setBoardTheme(v){
   if(v==="__newstyle"){ $("#themeSel").value=(PAPER&&PAPER.theme)||"classic"; openStyleModal(); return; }
   try{
@@ -476,13 +626,28 @@ async function setBoardTheme(v){
 // ── Create a reusable style (palette + fonts + photo) ───────────────────────
 // Fonts limited to those loaded in <head>; values are the CSS font stacks that
 // paper.html drops straight into --font-head / --font-body.
-const STYLE_FONTS=[
-  {label:"Playfair Display — serif élégant", v:'"Playfair Display",Georgia,serif'},
+// "Police des titres" — masthead + headline fonts (drive --font-display/--font-head).
+const STYLE_HEAD_FONTS=[
+  {label:"Playfair Display — serif élégant",   v:'"Playfair Display",Georgia,serif'},
+  {label:"Old Standard TT — serif classique",  v:'"Old Standard TT",Georgia,serif'},
+  {label:"Cinzel — capitales gravées",         v:'"Cinzel","Playfair Display",serif'},
+  {label:"Abril Fatface — didone d’affiche",   v:'"Abril Fatface","Playfair Display",serif'},
+  {label:"Marcellus — romaine élégante",       v:'"Marcellus","Old Standard TT",serif'},
+  {label:"Yeseva One — titre serif",           v:'"Yeseva One","Playfair Display",serif'},
+  {label:"EB Garamond — garamond",             v:'"EB Garamond",Georgia,serif'},
+  {label:"Oswald — sans condensé",             v:'"Oswald",system-ui,sans-serif'},
+  {label:"Anton — titre massif",               v:'"Anton","Oswald",Impact,sans-serif'},
+  {label:"Bebas Neue — bâton haut",            v:'"Bebas Neue","Oswald",Impact,sans-serif'},
+  {label:"UnifrakturCook — gothique",          v:'"UnifrakturCook","Playfair Display",serif'},
+  {label:"Pirata One — gothique d’affiche",    v:'"Pirata One","UnifrakturCook",serif'},
+];
+// "Police du texte" — readable body fonts.
+const STYLE_BODY_FONTS=[
   {label:"PT Serif — serif lisible",          v:'"PT Serif",Georgia,serif'},
   {label:"Old Standard TT — serif classique", v:'"Old Standard TT",Georgia,serif'},
-  {label:"Oswald — sans condensé",            v:'"Oswald",system-ui,sans-serif'},
-  {label:"Anton — titre massif",              v:'"Anton","Oswald",Impact,sans-serif'},
-  {label:"UnifrakturCook — gothique",         v:'"UnifrakturCook","Playfair Display",serif'},
+  {label:"EB Garamond — garamond",            v:'"EB Garamond",Georgia,serif'},
+  {label:"Lora — serif moderne",              v:'"Lora",Georgia,serif'},
+  {label:"Playfair Display — serif élégant",  v:'"Playfair Display",Georgia,serif'},
 ];
 const STYLE_PHOTOS=[
   {label:"Sépia",        v:"grayscale(.5) sepia(.3) contrast(1.05)"},
@@ -498,8 +663,8 @@ function setColorInputs(d){
 function selectByValue(sel,v,fallbackIdx){ const i=[...sel.options].findIndex(o=>o.value===v); sel.selectedIndex=i>=0?i:fallbackIdx; }
 function openStyleModal(editId){
   EDIT_ID = editId || null;
-  const fopt=STYLE_FONTS.map(f=>`<option value='${esc(f.v)}'>${esc(f.label)}</option>`).join("");
-  $("#st_head").innerHTML=fopt; $("#st_body").innerHTML=fopt;
+  const fopt=l=>l.map(f=>`<option value='${esc(f.v)}'>${esc(f.label)}</option>`).join("");
+  $("#st_head").innerHTML=fopt(STYLE_HEAD_FONTS); $("#st_body").innerHTML=fopt(STYLE_BODY_FONTS);
   $("#st_photo").innerHTML=STYLE_PHOTOS.map(p=>`<option value='${esc(p.v)}'>${esc(p.label)}</option>`).join("");
   $("#st_err").textContent="";
   I18n.apply($("#styleModal"));   // localize labels first, then override title/save below
@@ -509,14 +674,14 @@ function openStyleModal(editId){
     $("#st_name").value=editing.name||"";
     setColorInputs(d);
     selectByValue($("#st_head"), d.fontHead, 0);
-    selectByValue($("#st_body"), d.fontBody, 1);
+    selectByValue($("#st_body"), d.fontBody, 0);
     selectByValue($("#st_photo"), d.photoFilter, 0);
     $("#st_title").textContent=I18n.t("board.styleEditTitle");
     $("#st_save").textContent=I18n.t("board.styleUpdate");
     $("#st_del").style.display="";
   } else {
     $("#st_head").selectedIndex=0;       // Playfair for heads
-    $("#st_body").selectedIndex=1;       // PT Serif for body
+    $("#st_body").selectedIndex=0;       // PT Serif for body
     $("#st_photo").selectedIndex=0;
     $("#st_name").value="";
     setColorInputs({});
@@ -540,6 +705,10 @@ function readStyleDef(){
 function updateStylePreview(){
   const d=readStyleDef(), p=$("#st_preview"); if(!p) return;
   p.style.background=d.paper; p.style.color=d.ink; p.style.border="1px solid "+d.rule;
+  // masthead = this edition's real title/tagline, rendered in the chosen title font
+  const m=p.querySelector(".stmast"); m.textContent=(PAPER&&PAPER.name)||I18n.t("board.stPreviewHead"); m.style.fontFamily=d.fontHead; m.style.color=d.ink;
+  const tg=p.querySelector(".sttag"); tg.textContent=(PAPER&&PAPER.tagline)||""; tg.style.color=d.muted; tg.style.fontFamily=d.fontBody;
+  const r=p.querySelector(".strule"); if(r) r.style.borderTopColor=d.rule;
   p.querySelector(".stkick").style.color=d.accent;
   const h=p.querySelector(".sthead"); h.style.fontFamily=d.fontHead; h.style.color=d.ink;
   p.querySelector(".stby").style.color=d.muted;
@@ -609,13 +778,36 @@ function populatePoolLangFilter(){ const sel=$("#poolLangFilter"); if(sel){ sel.
 // only refreshes the pool overlay's available-items list.
 function render(){ renderPalette(); }
 
-function setTab(t){ tab=t; document.querySelectorAll(".ptab").forEach(b=>b.classList.remove("on")); $("#tab-"+t).classList.add("on"); $("#poolq").style.display = t==="chron"?"":"none"; renderPalette(); }
+function setTab(t){ tab=t; document.querySelectorAll(".ptab").forEach(b=>b.classList.remove("on")); $("#tab-"+t).classList.add("on");
+  $("#poolq").style.display = t==="chron"?"":"none";
+  document.querySelectorAll("#poolFilters .chron-only").forEach(el=>el.classList.toggle("hidden", t!=="chron"));
+  $("#poolLangFilter").style.display = (t==="img")?"none":"";   // images have no language
+  renderPalette(); }
 
+function populatePoolFilters(){
+  const sv=(sel,html,val)=>{ const s=$(sel); if(s){ s.innerHTML=html; s.value=val; } };
+  sv("#poolType",`<option value="">${esc(I18n.t("board.fTypeAll"))}</option><option value="human">${esc(I18n.t("board.fHuman"))}</option><option value="ia">${esc(I18n.t("board.fIA"))}</option>`,poolType);
+  sv("#poolDate",`<option value="">${esc(I18n.t("board.fDateAll"))}</option><option value="today">${esc(I18n.t("board.fToday"))}</option><option value="7">${esc(I18n.t("board.f7d"))}</option><option value="30">${esc(I18n.t("board.f30d"))}</option>`,poolDate);
+  const regs=[...new Set(POOL.map(a=>a.source).filter(s=>s && !poolIsAI({source:s})))].sort();
+  sv("#poolReg",`<option value="">${esc(I18n.t("board.fRegAll"))}</option>`+regs.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join(""),poolReg);
+  const am=new Map(); POOL.forEach(a=>{ if(a.author_id && !am.has(a.author_id)) am.set(a.author_id, a.byline||a.author_id.slice(0,8)); });
+  sv("#poolAuthor",`<option value="">${esc(I18n.t("board.fAuthorAll"))}</option>`+[...am].map(([id,lbl])=>`<option value="${esc(id)}">${esc(lbl)}</option>`).join(""),poolAuthor);
+}
 function renderPalette(){
+  populatePoolFilters();
   const placedArt = new Set(PLACEMENTS.map(p=>p.article_id));
   const placedAd  = new Set(ADPLACEMENTS.map(p=>p.ad_id));
   const langOK = a => !poolLang || rowLang(a)===poolLang;
-  const availChron = POOL.filter(a=>!placedArt.has(a.id) && langOK(a));
+  const inDate = a => { if(!poolDate) return true; const t=new Date(a.created_at).getTime();
+    if(poolDate==="today"){ const d=new Date(); d.setHours(0,0,0,0); return t>=d.getTime(); }
+    const days=parseInt(poolDate)||0; return days?(Date.now()-t)<=days*864e5:true; };
+  const chronOK = a => langOK(a)
+    && (!poolType || (poolType==="ia"?poolIsAI(a):!poolIsAI(a)))
+    && (!poolReg || a.source===poolReg)
+    && (!poolAuthor || a.author_id===poolAuthor)
+    && (!poolUnused || !USED.has(a.id))
+    && inDate(a);
+  const availChron = POOL.filter(a=>!placedArt.has(a.id) && chronOK(a));
   const availAds   = ADS.filter(a=>!placedAd.has(a.id) && langOK(a));
   $("#n-chron").textContent = availChron.length||"";
   $("#n-ads").textContent   = availAds.length||"";
@@ -623,26 +815,26 @@ function renderPalette(){
   const body=$("#paletteBody");
   if(tab==="chron"){
     body.innerHTML = availChron.length ? availChron.map(a=>`
-      <div class="pal" data-kind="pool-article" data-id="${a.id}">
+      <div class="pal" data-kind="pool-article" data-id="${a.id}" onclick="palClick('${a.id}')" ondblclick="palDbl('${a.id}')" title="${esc2(I18n.t("board.poolCardHint"))}">
         ${a.image_url?`<img class="thumb" draggable="false" src="${esc2(a.image_url)}">`:""}
         <div class="info">
           <div class="t">${esc2(a.headline||I18n.t("board.untitled"))}</div>
           <div class="by">${a.author_avatar?`<img class="byav" draggable="false" src="${esc2(a.author_avatar)}">`:""}${esc2(a.byline||"—")} ${langBadge(a)}${srcTag(a)}</div>
           <div class="acts">
-            <button onclick="quickAdd('${a.id}')" title="${esc2(I18n.t("board.placePool"))}">${esc2(I18n.t("board.place"))}</button>
-            <button class="pdel" title="${esc2(I18n.t("board.delChronicleTitle"))}" onclick="deleteChronicle('${a.id}')">🗑</button>
+            <button onclick="event.stopPropagation();quickAdd('${a.id}')" title="${esc2(I18n.t("board.placePool"))}">${esc2(I18n.t("board.place"))}</button>
+            <button class="pdel" title="${esc2(I18n.t("board.delChronicleTitle"))}" onclick="event.stopPropagation();deleteChronicle('${a.id}')">🗑</button>
           </div>
         </div>
       </div>`).join("") : `<div class="empty">${esc2(I18n.t("board.emptyChron"))}</div>`;
   } else if(tab==="ads"){
     body.innerHTML = availAds.length ? availAds.map(a=>`
-      <div class="pal" data-kind="pool-ad" data-id="${a.id}">
+      <div class="pal" data-kind="pool-ad" data-id="${a.id}" onclick="adPalClick('${a.id}')" ondblclick="adPalDbl('${a.id}')" title="${esc2(I18n.t("board.poolCardHint"))}">
         ${a.image_url?`<img class="thumb" draggable="false" src="${esc2(a.image_url)}">`:""}
         <div class="info">
           <span class="cat">${esc2(catLabel(a.category))}</span> ${langBadge(a)}
           <div class="t">${esc2(a.title||I18n.t("board.anAd"))}</div>
           <div class="by">${esc2(a.maker||a.advertiser_name||"")}</div>
-          <div class="acts"><button onclick="quickAddAd('${a.id}')" title="${esc2(I18n.t("board.placeAd"))}">${esc2(I18n.t("board.place"))}</button></div>
+          <div class="acts"><button onclick="event.stopPropagation();quickAddAd('${a.id}')" title="${esc2(I18n.t("board.placeAd"))}">${esc2(I18n.t("board.place"))}</button></div>
         </div>
       </div>`).join("") : `<div class="empty">${esc2(I18n.t("board.emptyAds"))}</div>`;
   } else {
@@ -694,6 +886,138 @@ async function moveAd(placementId,index){
 /* palette ＋ buttons (non-DnD fallback) */
 async function quickAdd(articleId){ try{ await addArticleAt(articleId,"minor",1e9); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
 async function quickAddAd(adId){ try{ await addAdAt(adId,1e9); await load(); reloadPreview(); }catch(e){ toast(e.message); } }
+// pool card: single-click places, double-click opens the text editor. A short
+// guard delays the place so a double-click doesn't also place the chronicle.
+let _palTimer=null;
+function palClick(id){ clearTimeout(_palTimer); _palTimer=setTimeout(()=>quickAdd(id),220); }
+function palDbl(id){ clearTimeout(_palTimer); openChronicleEditor(id); }
+
+// ── Edit a chronicle's text in place (editor/author) ─────────────────────────
+let CHRON_CLANS=null, editChronId=null, editChronPid=null;
+async function chronClans(){ if(!CHRON_CLANS){ try{ CHRON_CLANS=await Regiments.list(); }catch(e){ CHRON_CLANS=(window.DAIHBI_CLANS||[]); } } return CHRON_CLANS; }
+async function openChronicleEditor(articleId, pid){
+  // prefer the cached copy (pool or placement), else fetch
+  let a=(POOL.find(x=>x.id===articleId))||((PLACEMENTS.find(p=>p.article&&p.article.id===articleId)||{}).article);
+  if(!a){ try{ a=await Chronicles.get(articleId); }catch(e){ toast(e.message); return; } }
+  editChronId=articleId; editChronPid=pid||null;
+  const clans=await chronClans();
+  $("#ce_kicker").value=a.kicker||""; $("#ce_headline").value=a.headline||"";
+  $("#ce_subhead").value=a.subhead||""; $("#ce_byline").value=a.byline||"";
+  $("#ce_body").value=a.body||""; $("#ce_image").value=a.image_url||"";
+  const aiWritten = isAISource(a.source);
+  $("#ce_source").innerHTML=`<option value="">${esc2(I18n.t("board.ceNoRegiment"))}</option>`
+    +clans.map(c=>`<option ${c===a.source?"selected":""}>${esc2(c)}</option>`).join("");
+  $("#ce_source").value=aiWritten ? "" : (a.source||"");
+  $("#ce_lang").innerHTML=I18n.contentOptionsHTML(a.lang||"fr",false);
+  $("#ce_lang").value=a.lang||"fr";
+  $("#ce_ai_written").classList.toggle("on", aiWritten);
+  $("#ce_ai_translated").classList.toggle("on", !!a.ai_translated);
+  $("#ce_source").disabled = aiWritten;   // AI-written → régiment is the "IA" label
+  ceShowPreview(a.image_url||"");
+  renderCeLayout();
+  $("#ce_err").textContent="";
+  $("#ce_title").textContent=I18n.t("board.ceTitle",{h:a.headline||I18n.t("board.chronicle")});
+  $("#chronModal").classList.add("open");
+  $("#ce_headline").focus();
+}
+// Word/Docs-style layout controls — only when editing a PLACED chronicle (a
+// placement carries col_span / img_pos / img_cols). Hidden for pool chronicles.
+function renderCeLayout(){
+  const box=$("#ce_layout"); if(!box) return;
+  const p = editChronPid ? getPl(editChronPid) : null;
+  if(!p){ box.style.display="none"; box.innerHTML=""; return; }
+  const maxCols=(PAPER&&PAPER.gridCols)>0?PAPER.gridCols:4;
+  const span=(p.col_span>0?p.col_span:(p.weight==="major"?2:1));
+  const opt=(cur,max,fn)=>[[0,I18n.t("board.colsAuto")]].concat(Array.from({length:max},(_,i)=>[i+1,String(i+1)]))
+    .map(([v,l])=>`<button type="button" class="ebtn ${(cur||0)===v?'on':''}" onclick="${fn}(${v})">${esc2(l)}</button>`).join("");
+  const pos=p.img_pos||"top";
+  const posBtn=(v,lbl)=>`<button type="button" class="ebtn ${pos===v?'on':''}" onclick="mceImgPos('${v}')">${esc2(lbl)}</button>`;
+  const cropBtns=(cur,fn)=>[["",I18n.t("board.cropAuto")],["16x9",I18n.t("board.cropLand")],["1x1",I18n.t("board.cropSquare")],["3x4",I18n.t("board.cropPortrait")]]
+    .map(([v,l])=>`<button type="button" class="ebtn ${(cur||"")===v?'on':''}" onclick="${fn}('${v}')">${esc2(l)}</button>`).join("");
+  const hasImg = !!(p.image_url || (p.article&&p.article.image_url));
+  box.style.display="";
+  box.innerHTML=`
+    <label class="sgl" data-i18n="board.ceLayout" style="display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;font-weight:600;margin:.7rem 0 .3rem">${esc2(I18n.t("board.ceLayout"))}</label>
+    <div class="cefld"><span class="cel">${esc2(I18n.t("board.colSpan"))}</span><span class="cectl">${opt(p.col_span,maxCols,"mceColSpan")}</span></div>
+    ${hasImg?`
+    <div class="cefld"><span class="cel">${esc2(I18n.t("board.ceImgPos"))}</span><span class="cectl">${posBtn("top",I18n.t("board.posTop"))}${posBtn("left",I18n.t("board.posLeft"))}${posBtn("right",I18n.t("board.posRight"))}</span></div>
+    <div class="cefld"><span class="cel">${esc2(I18n.t("board.imgSize"))}</span><span class="cectl">${opt(p.img_cols,span,"mceImgCols")}</span></div>
+    <div class="cefld"><span class="cel">${esc2(I18n.t("board.ceCrop"))}</span><span class="cectl">${cropBtns(p.img_crop,"mceImgCrop")}</span></div>`:""}`;
+}
+async function mceLayout(patch){ if(!editChronPid) return; try{ await Placements.update(editChronPid,patch); await load(); reloadPreview(); renderCeLayout(); if(currentEdit&&currentEdit.kind==="placement") renderEditBody(); }catch(e){ $("#ce_err").textContent=I18n.t("board.error",{msg:e.message}); } }
+function mceColSpan(n){ mceLayout({col_span:n}); }
+function mceImgCols(n){ mceLayout({img_cols:n}); }
+function mceImgPos(v){ mceLayout({img_pos:v}); }
+function mceImgCrop(v){ mceLayout({img_crop:v}); }
+function closeChronEditor(){ $("#chronModal").classList.remove("open"); editChronId=null; editChronPid=null; }
+const isAISource = s => ["ia","ai"].includes(String(s||"").trim().toLowerCase());
+// transparency toggles: "✦ Rédigé par IA" sets source to the IA sentinel (and
+// hides the régiment picker); "✦ Traduit par IA" flags an AI translation.
+function ceToggleAI(which){
+  if(which==="written"){
+    const b=$("#ce_ai_written"); const on=!b.classList.contains("on");
+    b.classList.toggle("on",on); $("#ce_source").disabled=on;
+  } else {
+    $("#ce_ai_translated").classList.toggle("on");
+  }
+}
+function ceShowPreview(url){ const w=$("#ce_prev"); if(!w) return; w.innerHTML = url?`<img src="${esc2(url)}" alt="" style="width:100%;height:100%;object-fit:cover">`:""; }
+// ── Edit a réclame in place (managing editor) ────────────────────────────────
+let _adPalTimer=null, editAdId=null;
+function adPalClick(id){ clearTimeout(_adPalTimer); _adPalTimer=setTimeout(()=>quickAddAd(id),220); }
+function adPalDbl(id){ clearTimeout(_adPalTimer); openAdEditor(id); }
+function openAdEditor(adId){
+  let a=(ADS.find(x=>x.id===adId))||((ADPLACEMENTS.find(p=>p.ad&&p.ad.id===adId)||{}).ad);
+  if(!a){ toast(I18n.t("board.error",{msg:"ad not found"})); return; }
+  editAdId=adId;
+  const cats=window.DAIHBI_AD_CATEGORIES||[{key:"fabricant",label:"Fabricant"}];
+  $("#ae_cat").innerHTML=cats.map(c=>`<option value="${esc2(c.key)}" ${c.key===a.category?"selected":""}>${esc2(c.label)}</option>`).join("");
+  $("#ae_cat").value=a.category||"fabricant";
+  $("#ae_title").value=a.title||""; $("#ae_maker").value=a.maker||a.advertiser_name||"";
+  $("#ae_body").value=a.body||""; $("#ae_link").value=a.link||""; $("#ae_image").value=a.image_url||"";
+  $("#ae_lang").innerHTML=I18n.contentOptionsHTML(a.lang||"fr",false); $("#ae_lang").value=a.lang||"fr";
+  $("#ae_approved").classList.toggle("on", !!a.approved);
+  aeShowPreview(a.image_url||"");
+  $("#ae_err").textContent="";
+  $("#ae_title_h").textContent=I18n.t("board.aeTitle",{t:a.title||I18n.t("board.anAd")});
+  $("#adModal").classList.add("open"); $("#ae_title").focus();
+}
+function closeAdEditor(){ $("#adModal").classList.remove("open"); editAdId=null; }
+function aeShowPreview(url){ const w=$("#ae_prev"); if(!w) return; w.innerHTML = url?`<img src="${esc2(url)}" alt="" style="width:100%;height:100%;object-fit:cover">`:""; }
+function aeToggleApproved(){ $("#ae_approved").classList.toggle("on"); }
+async function saveAd(){
+  if(!editAdId) return;
+  const title=$("#ae_title").value.trim();
+  if(!title){ $("#ae_err").textContent=I18n.t("board.aeNeedTitle"); return; }
+  const approved=$("#ae_approved").classList.contains("on");
+  const patch={ category:$("#ae_cat").value, title, maker:$("#ae_maker").value.trim(),
+    body:$("#ae_body").value.trim(), link:$("#ae_link").value.trim(), image_url:$("#ae_image").value.trim(),
+    lang:$("#ae_lang").value, approved, status: approved?"approved":"review" };
+  try{
+    await Ads.update(editAdId, patch);   // RLS: editors may edit/approve any ad
+    closeAdEditor();
+    await load(); reloadPreview();
+    if(currentEdit && currentEdit.kind==="ad") renderEditBody();
+    toast(I18n.t("board.aeSaved"));
+  }catch(e){ $("#ae_err").textContent=I18n.t("board.error",{msg:e.message}); }
+}
+async function saveChronicle(){
+  if(!editChronId) return;
+  const headline=$("#ce_headline").value.trim();
+  if(!headline){ $("#ce_err").textContent=I18n.t("board.ceNeedHeadline"); return; }
+  const aiWritten = $("#ce_ai_written").classList.contains("on");
+  const patch={ kicker:$("#ce_kicker").value.trim(), headline, subhead:$("#ce_subhead").value.trim(),
+    byline:$("#ce_byline").value.trim(), source:aiWritten ? "IA" : $("#ce_source").value,
+    lang:$("#ce_lang").value, body:$("#ce_body").value, image_url:$("#ce_image").value.trim(),
+    ai_translated:$("#ce_ai_translated").classList.contains("on") };
+  try{
+    await Chronicles.update(editChronId, patch);   // RLS: author or managing editor
+    closeChronEditor();
+    await load(); reloadPreview();
+    if(currentEdit && currentEdit.kind==="placement") renderEditBody();
+    toast(I18n.t("board.ceSaved"));
+  }catch(e){ $("#ce_err").textContent=I18n.t("board.error",{msg:e.message}); }
+}
 
 async function deleteChronicle(id){
   const a = (PLACEMENTS.find(p=>p.article_id===id)||{}).article || POOL.find(x=>x.id===id) || {};
@@ -734,6 +1058,11 @@ window.addEventListener("message", e=>{
   if(e.origin!==location.origin) return;
   const d=e.data||{};
   if(d.type==="daihbi-edit" && d.pid){ openEdit(d.kind==="ad-placement"?"ad":"placement", d.pid); }
+  // double-click on a preview story/ad → open its content editor
+  if(d.type==="daihbi-edit-text" && d.pid){
+    if(d.kind==="ad-placement"){ const p=getAp(d.pid); if(p&&p.ad) openAdEditor(p.ad.id); }
+    else { const p=getPl(d.pid); if(p&&p.article) openChronicleEditor(p.article.id, p.id); }
+  }
 });
 function renderEditBody(){
   if(!currentEdit) return;
@@ -743,13 +1072,32 @@ function renderEditBody(){
     const a=p.article||{}; const photo=p.image_url||a.image_url||"";
     $("#editTitle").textContent = I18n.t("board.layoutChron",{h:a.headline||I18n.t("board.chronicle")});
     const wbtns=WEIGHTS.map(([w])=>`<button class="ebtn ${p.weight===w?'on':''}" onclick="mWeight('${w}')">${esc2(wLabel(w))}</button>`).join("");
+    // editor-controlled layout: how many columns the story spans, and the photo's
+    // width in columns (snaps to the grid). 0 = auto (span by weight; photo full width).
+    const span=(p.col_span>0?p.col_span:(p.weight==="major"?2:1));
+    const maxCols=(PAPER&&PAPER.gridCols)>0?PAPER.gridCols:4;
+    const optBtns=(cur,max,fn)=>[[0,I18n.t("board.colsAuto")]].concat(Array.from({length:max},(_,i)=>[i+1,String(i+1)]))
+      .map(([v,l])=>`<button class="ebtn ${(cur||0)===v?'on':''}" onclick="${fn}(${v})">${esc2(l)}</button>`).join("");
+    const colBtns=optBtns(p.col_span,maxCols,"mColSpan");
+    const posOn=v=>(p.img_pos||"top")===v?"on":"";
+    const imgRow=photo?`
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.ceImgPos"))}</div><div class="ctl">
+        <button class="ebtn ${posOn("top")}" onclick="mImgPos('top')">${esc2(I18n.t("board.posTop"))}</button>
+        <button class="ebtn ${posOn("left")}" onclick="mImgPos('left')">${esc2(I18n.t("board.posLeft"))}</button>
+        <button class="ebtn ${posOn("right")}" onclick="mImgPos('right')">${esc2(I18n.t("board.posRight"))}</button></div></div>
+      ${span>1?`<div class="erow"><div class="lbl">${esc2(I18n.t("board.imgSize"))}</div><div class="ctl">${optBtns(p.img_cols,span,"mImgCols")}
+        <span class="enote">${esc2(I18n.t("board.imgSizeHint"))}</span></div></div>`:""}
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.ceCrop"))}</div><div class="ctl">
+        ${[["",I18n.t("board.cropAuto")],["16x9",I18n.t("board.cropLand")],["1x1",I18n.t("board.cropSquare")],["3x4",I18n.t("board.cropPortrait")]].map(([v,l])=>`<button class="ebtn ${(p.img_crop||"")===v?"on":""}" onclick="mImgCrop('${v}')">${esc2(l)}</button>`).join("")}</div></div>`:"";
     $("#editBody").innerHTML=`
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.prominence"))}</div><div class="ctl">${wbtns}</div></div>
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.colSpan"))}</div><div class="ctl">${colBtns}
+        <span class="enote">${esc2(I18n.t("board.colSpanHint"))}</span></div></div>
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.photo"))}</div><div class="ctl">
         ${photo?`<img class="ethumb" src="${esc2(photo)}">`:`<span class="enote">${esc2(I18n.t("board.photoSuggested"))}</span>`}
         <button class="ebtn" onclick="openPhoto('${p.id}')">${esc2(I18n.t("board.choose"))}</button>
         ${p.image_url?`<button class="ebtn danger" onclick="mPhoto('')">${esc2(I18n.t("board.removeOverride"))}</button>`:""}
-      </div></div>
+      </div></div>${imgRow}
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.order"))}</div><div class="ctl">
         <button class="ebtn" onclick="mOrder(-1)">${esc2(I18n.t("board.up"))}</button>
         <button class="ebtn" onclick="mOrder(1)">${esc2(I18n.t("board.down"))}</button>
@@ -783,8 +1131,8 @@ function renderEditBody(){
           : `<button class="ebtn pub" onclick="mPub(true)">${esc2(I18n.t("board.publish"))}</button>`}
       </div></div>
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.content"))}</div><div class="ctl">
+        <button class="ebtn" onclick="openAdEditor('${a.id}')">${esc2(I18n.t("board.aeEdit"))}</button>
         <a class="ebtn link" href="ads.html" target="_blank">${esc2(I18n.t("board.editInStudio"))}</a>
-        <span class="enote">${esc2(I18n.t("board.adOwnedByAdvertiser"))}</span>
       </div></div>
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.remove"))}</div><div class="ctl">
         <button class="ebtn danger" onclick="mRemove()">${esc2(I18n.t("board.removeFromEdition"))}</button>
@@ -794,6 +1142,10 @@ function renderEditBody(){
 async function afterEdit(){ await load(); reloadPreview(); renderEditBody(); }
 async function mWeight(w){ const p=getPl(currentEdit.id); if(!p) return; try{ await moveArticle(p.id,w,1e9); await afterEdit(); }catch(e){ toast(e.message); } }
 async function mPhoto(url){ try{ await Placements.update(currentEdit.id,{image_url:url}); await afterEdit(); }catch(e){ toast(e.message); } }
+async function mColSpan(n){ try{ await Placements.update(currentEdit.id,{col_span:n}); await afterEdit(); }catch(e){ toast(e.message); } }
+async function mImgCols(n){ try{ await Placements.update(currentEdit.id,{img_cols:n}); await afterEdit(); }catch(e){ toast(e.message); } }
+async function mImgPos(v){ try{ await Placements.update(currentEdit.id,{img_pos:v}); await afterEdit(); }catch(e){ toast(e.message); } }
+async function mImgCrop(v){ try{ await Placements.update(currentEdit.id,{img_crop:v}); await afterEdit(); }catch(e){ toast(e.message); } }
 async function mPub(pub){
   try{
     if(currentEdit.kind==="placement") await Placements.update(currentEdit.id,{published:pub});
@@ -838,8 +1190,8 @@ async function setPhoto(url){
 }
 
 // close modals on backdrop click / Escape
-document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{ if(e.target===m){ if(m.id==="photoModal") closePhoto(); else if(m.id==="poolModal") closePool(); else if(m.id==="styleModal") closeStyleModal(); } }));
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#styleModal").classList.contains("open")) closeStyleModal(); else if($("#photoModal").classList.contains("open")) closePhoto(); else if($("#poolModal").classList.contains("open")) closePool(); else if(currentEdit) closeEdit(); } });
+document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{ if(e.target===m){ if(m.id==="photoModal") closePhoto(); else if(m.id==="poolModal") closePool(); else if(m.id==="styleModal") closeStyleModal(); else if(m.id==="chronModal") closeChronEditor(); else if(m.id==="adModal") closeAdEditor(); } }));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#adModal").classList.contains("open")) closeAdEditor(); else if($("#chronModal").classList.contains("open")) closeChronEditor(); else if($("#styleModal").classList.contains("open")) closeStyleModal(); else if($("#photoModal").classList.contains("open")) closePhoto(); else if($("#poolModal").classList.contains("open")) closePool(); else if(currentEdit) closeEdit(); } });
 
 async function runExport(){
   const s=await Auth.session(); if(!s) return;
@@ -867,6 +1219,8 @@ async function boot(){
   const prof=await Profiles.me(); const role=(prof&&prof.role)||"reader";
   I18n.adoptProfile(prof);
   if(prof && prof.preferred_lang && !Prefs.contentLangLocal()){ poolLang=prof.preferred_lang; populatePoolLangFilter(); }
+  if(PAPER && PAPER.lang){ poolLang=PAPER.lang; populatePoolLangFilter(); }   // default the pool to this edition's language
+  try{ USED = await Placements.usedArticleIds(); }catch(e){ USED=new Set(); }  // for the "jamais utilisée" filter
   let managed=[]; try{ managed=await Papers.myManaged(); }catch(e){}
   if(role!=="editor" || !managed.includes(ISSUE)){
     showGate(`<h2>${esc(I18n.t("board.editorOnly"))}</h2>
@@ -887,6 +1241,7 @@ async function boot(){
   $("#manageJournal").href=`editor.html?manage=${encodeURIComponent(ISSUE)}`;
   try{ STYLES=await Styles.list(); }catch(e){ STYLES=[]; }   // reusable custom styles for the picker
   populateThemeSel();
+  populateColsSel();
   applyPinUI(); if(PINNED){ $("#editPanel").classList.add("open"); showDockHint(); }   // restore pinned dock
   reloadPreview();
   // another editor's change → refresh our cache + the preview canvas

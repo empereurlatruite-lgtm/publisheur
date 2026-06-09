@@ -6,7 +6,7 @@
 <title>Le Petit Daihbi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=PT+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=PT+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700;900&family=Abril+Fatface&family=Marcellus&family=Yeseva+One&family=Bebas+Neue&family=Pirata+One&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1a1714; --paper:#f5efe1; --rule:#2a2622;
@@ -148,20 +148,46 @@
   @media(max-width:760px){.front{grid-template-columns:1fr}
     .front .zone-ai{border-left:none;border-top:2px dashed var(--dash);padding-left:0;padding-top:.8rem}}
   @media(max-width:820px){.well{--wellcols:2}}
-  @media(max-width:520px){.well,.well2{--wellcols:1}}
+  @media(max-width:520px){.well,.well2{--wellcols:1!important}}   /* beats the inline grid_cols on phones */
   /* each story is a grid card; align-items:start keeps it content-height inside
      its (taller) spanned grid area, so the divider hugs the text. */
   .story{break-inside:avoid;margin:0;padding-bottom:1rem;border-bottom:1px solid var(--hair)}
   .story .kicker{text-align:left;margin-bottom:.15rem}
-  .story h3{font-family:var(--font-head);line-height:1.04;margin:.1rem 0 .35rem}
+  /* headlines: left-aligned & balanced, never justified/hyphenated (the .well sets
+     justify+hyphens for body text, which the h3 would otherwise inherit → ugly
+     word gaps and mid-word breaks like "se-ront-ils"). */
+  .story h3{font-family:var(--font-head);line-height:1.04;margin:.1rem 0 .35rem;text-align:left;text-wrap:balance;hyphens:none}
   .story.major h3{font-size:1.8rem;font-weight:900}
   .story.minor h3{font-size:1.28rem;font-weight:700}
   .story.brief h3{font-size:1.05rem;font-weight:700}
   .story .byline{font-variant:small-caps;letter-spacing:.06em;font-size:.78rem;color:var(--muted);margin-bottom:.3rem}
-  .story .body{font-size:.95rem;line-height:1.46}
+  /* body flows into --bodycols internal text columns (set inline per story to
+     match its column span); single column when an inset photo is floated. */
+  .story .body{font-size:.95rem;line-height:1.46;column-count:var(--bodycols,1);column-gap:var(--col-gap)}
   .story .body p{margin:0 0 .5rem}
   .story.brief .body{font-size:.9rem}
   .story img,.lead img{width:100%;height:auto;filter:var(--photo-filter);margin:.3rem 0 .5rem;border:1px solid var(--imgborder)}
+  /* photo inside the body is a banner that spans all text columns (so the text
+     keeps flowing in `--bodycols` columns below it); .inset snaps it to fewer
+     columns (narrower banner), .full fills the story width. The deck spans all. */
+  .story .body > img{column-span:all;display:block;margin:.1rem 0 .55rem;border:1px solid var(--imgborder);filter:var(--photo-filter)}
+  .story .body > img.full{width:100%}
+  .story .body > img.inset{width:var(--inset)}
+  /* Word-style float positions: image hugs a side, text wraps (single-column body) */
+  .story .body > img.flt-left{column-span:none;float:left;width:var(--inset);margin:.15rem .8rem .4rem 0}
+  .story .body > img.flt-right{column-span:none;float:right;width:var(--inset);margin:.15rem 0 .4rem .8rem}
+  .story .body > .deckline{column-span:all;margin:.1rem 0 .45rem;font-size:.92rem;text-align:left;hyphens:none}
+  @media(max-width:520px){.story .body{column-count:1!important}}
+  /* foot-of-page feuilleton band (full-width brief), under the well */
+  .footband{grid-column:auto;border-top:3px double var(--rule);border-bottom:none;
+    margin-top:1.3rem;padding:.7rem 0 0;break-inside:avoid}
+  .footband > h3{font-family:var(--font-head);font-weight:900;font-size:1.55rem;text-align:left;text-wrap:balance;margin:.1rem 0 .2rem}
+  .footband .deckline{font-style:italic;color:var(--muted);margin:.1rem 0 .45rem}
+  .footband .band-body{column-count:5;column-gap:var(--col-gap);column-rule:1px solid var(--hair);
+    text-align:justify;hyphens:auto;font-size:.86rem;line-height:1.46;margin-top:.3rem}
+  .footband .band-body p{margin:0 0 .5rem;break-inside:avoid}
+  @media(max-width:760px){.footband .band-body{column-count:2}}
+  @media(max-width:520px){.footband .band-body{column-count:1}}
   .byline .avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #2a2620;
     filter:var(--avatar-filter);vertical-align:middle;margin-right:.4rem;background:#e9e1cd}
   .lead .byline .avatar{width:32px;height:32px;margin-right:.55rem}
@@ -169,16 +195,18 @@
     padding:.05rem .42rem;border-radius:999px;margin-left:.4rem;vertical-align:middle;border:1px solid var(--imgborder);color:#6a6253}
   .byline .src.reg{background:#e7decb}
   .byline .src.ai{background:#efe4d2;border-style:dashed;border-color:var(--dash);color:#7a5a2a}
+  .byline .src.tr{background:#e7eef0;border-style:dashed;border-color:#9fb3bd;color:#3a5560}
   /* tiny content-language badge — shown only when a story's lang differs from the edition's */
   .lbadge{font-family:"Oswald",system-ui,sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.06em;
     background:#1f3a5f;color:#fff;border-radius:3px;padding:.08rem .3rem;
     vertical-align:middle;margin-left:.4rem}
   .lead img{max-height:380px;object-fit:cover;margin:.5rem 0 .2rem}
   /* a "major" story is a wide card spanning two grid columns (full width in the
-     2-col human zone); its body still flows in two internal text columns. */
-  .story.major{grid-column:span 2;border-bottom:2px solid var(--rule);padding-bottom:.9rem}
-  @media(max-width:520px){.story.major{grid-column:span 1}}
-  .story.major .body{column-count:2;column-gap:var(--col-gap)}
+     2-col human zone); its body flows in matching internal text columns. The
+     grid-column span is set inline per story by renderStory (editor-controlled),
+     so the static span here is only the auto/no-JS fallback. */
+  .story.major{border-bottom:2px solid var(--rule);padding-bottom:.9rem}
+  @media(max-width:520px){.story[style*="grid-column"]{grid-column:span 1 !important}}
 
   /* sponsor réclame box in the well */
   .adbox{break-inside:avoid;border:2px solid var(--rule);padding:.5rem .6rem;margin:0;
@@ -356,7 +384,7 @@ I18n.register({
     "paper.loading":"Chargement de la presse…","paper.lettersTitle":"Courrier des lecteurs",
     "paper.aiHead":"✦ Rédigé par l’IA","paper.aiBadge":"✦ Rédigé par IA",
     "paper.aiTitle":"Texte généré par intelligence artificielle","paper.regTitle":"Régiment d’origine",
-    "paper.byAuthor":"par {name}","paper.adFallback":"Réclame","paper.draft":"Brouillon",
+    "paper.byAuthor":"de {name}","paper.adFallback":"Réclame","paper.draft":"Brouillon",
     "paper.noArticles":"Aucun article publié.","paper.writeOne":"En écrire un →",
     "paper.loadFail":"Impossible de charger les articles.","paper.notConnected":"Pas encore connecté.",
     "paper.addKeys":"Ajoutez votre URL Supabase + clé anon dans","paper.editionLabel":"ÉDITION « {issue} »",
@@ -415,11 +443,17 @@ if (ALL) {
   document.body.classList.add("allmode");
   // localized "DRAFT" ribbon text consumed by the .draft::after CSS
   try{ document.body.style.setProperty("--drafttxt", JSON.stringify(window.Daihbi.I18n.t("paper.draft"))); }catch(e){}
-  // clicking any tagged article asks the parent board to open its edit panel
+  // clicking any tagged article asks the parent board to open its layout panel
   document.addEventListener("click", (e)=>{
     const el = e.target.closest("[data-pid]"); if(!el) return;
     e.preventDefault();
     try{ parent.postMessage({ type:"daihbi-edit", pid: el.dataset.pid, kind: el.dataset.kind || "placement" }, location.origin); }catch(_){}
+  });
+  // double-clicking a story/ad asks the board to open its content editor
+  document.addEventListener("dblclick", (e)=>{
+    const el = e.target.closest("[data-pid]"); if(!el) return;
+    e.preventDefault();
+    try{ parent.postMessage({ type:"daihbi-edit-text", pid: el.dataset.pid, kind: el.dataset.kind || "placement" }, location.origin); }catch(_){}
   });
 }
 function fallbackPaper(){ return {
@@ -510,12 +544,12 @@ let PAPER_LANG = "fr";
 // CONTENT language (like the dateline) — NOT the reader's UI chrome language.
 // (The shared I18n only ships fr/en chrome; content can be pt/es/de/… too.)
 const PRESS_L10N = {
-  fr:{ai:"✦ Rédigé par IA", aiT:"Texte généré par intelligence artificielle", reg:"Régiment d’origine", by:"par",  head:"✦ Rédigé par l’IA",  ed:"ÉDITION « {0} »"},
-  en:{ai:"✦ Written by AI", aiT:"Text generated by artificial intelligence",  reg:"Originating regiment", by:"by",  head:"✦ Written by AI",  ed:"EDITION “{0}”"},
-  pt:{ai:"✦ Escrito por IA", aiT:"Texto gerado por inteligência artificial",   reg:"Regimento de origem",  by:"por", head:"✦ Escrito pela IA", ed:"EDIÇÃO « {0} »"},
-  es:{ai:"✦ Escrito por IA", aiT:"Texto generado por inteligencia artificial", reg:"Regimiento de origen", by:"por", head:"✦ Escrito por IA",  ed:"EDICIÓN « {0} »"},
-  de:{ai:"✦ Von KI verfasst", aiT:"Von künstlicher Intelligenz erzeugter Text", reg:"Ursprungsregiment",  by:"von", head:"✦ Von KI verfasst", ed:"AUSGABE „{0}“"},
-  it:{ai:"✦ Scritto dall’IA", aiT:"Testo generato dall’intelligenza artificiale", reg:"Reggimento d’origine", by:"di", head:"✦ Scritto dall’IA", ed:"EDIZIONE « {0} »"},
+  fr:{ai:"✦ Rédigé par IA", aiT:"Texte généré par intelligence artificielle", tr:"✦ Traduit par IA", trT:"Traduit par intelligence artificielle", reg:"Régiment d’origine", by:"de",  head:"✦ Rédigé par l’IA",  ed:"ÉDITION « {0} »"},
+  en:{ai:"✦ Written by AI", aiT:"Text generated by artificial intelligence",  tr:"✦ Translated by AI", trT:"Translated by artificial intelligence", reg:"Originating regiment", by:"by",  head:"✦ Written by AI",  ed:"EDITION “{0}”"},
+  pt:{ai:"✦ Escrito por IA", aiT:"Texto gerado por inteligência artificial",   tr:"✦ Traduzido por IA", trT:"Traduzido por inteligência artificial", reg:"Regimento de origem",  by:"por", head:"✦ Escrito pela IA", ed:"EDIÇÃO « {0} »"},
+  es:{ai:"✦ Escrito por IA", aiT:"Texto generado por inteligencia artificial", tr:"✦ Traducido por IA", trT:"Traducido por inteligencia artificial", reg:"Regimiento de origen", by:"por", head:"✦ Escrito por IA",  ed:"EDICIÓN « {0} »"},
+  de:{ai:"✦ Von KI verfasst", aiT:"Von künstlicher Intelligenz erzeugter Text", tr:"✦ Von KI übersetzt", trT:"Von künstlicher Intelligenz übersetzt", reg:"Ursprungsregiment",  by:"von", head:"✦ Von KI verfasst", ed:"AUSGABE „{0}“"},
+  it:{ai:"✦ Scritto dall’IA", aiT:"Testo generato dall’intelligenza artificiale", tr:"✦ Tradotto dall’IA", trT:"Tradotto dall’intelligenza artificiale", reg:"Reggimento d’origine", by:"di", head:"✦ Scritto dall’IA", ed:"EDIZIONE « {0} »"},
 };
 const pressL = lang => PRESS_L10N[lang] || PRESS_L10N.en;
 
@@ -534,12 +568,31 @@ function srcBadge(a){
     ? `<span class="src ai" title="${esc(t.aiT)}">${esc(t.ai)}</span>`
     : `<span class="src reg" title="${esc(t.reg)}">${esc(a.source)}</span>`;
 }
+// "✦ Traduit par IA" transparency badge — shown when an editor flagged the
+// chronicle as AI-translated (articles.ai_translated). Follows content language.
+function trBadge(a){
+  if(!a.ai_translated) return "";
+  const t = pressL(a.lang || PAPER_LANG);
+  return ` <span class="src tr" title="${esc(t.trT)}">${esc(t.tr)}</span>`;
+}
+// Compose the byline prefix + name. French/Italian "de"/"di" elide to "d'" before
+// a vowel ("de Adam" → "d'Adam"); and if the byline is already an elided credit
+// ("d'après …"), the prefix is dropped so it doesn't read "de d'après".
+function bylineName(a){
+  if(!a.byline) return "";
+  const pre = pressL(a.lang || PAPER_LANG).by;        // de / by / di / por / von …
+  const b = a.byline.trim();
+  const elides = (pre === "de" || pre === "di");
+  if(elides && /^d['’]/i.test(b)) return esc(a.byline);                      // already "d'…" → no prefix
+  if(elides && /^[aeiouyàâäéèêëîïîôöùûü]/i.test(b)) return `d’${esc(a.byline)}`;  // de + voyelle → d'
+  return `${esc(pre)} ${esc(a.byline)}`;
+}
 function byline(a){
-  if(!a.byline && !a.author_avatar && !a.source) return "";
+  if(!a.byline && !a.author_avatar && !a.source && !a.ai_translated) return "";
   const av = a.author_avatar ? `<img class="avatar" src="${esc(a.author_avatar)}" alt="">` : "";
   const sb = srcBadge(a);
-  const name = a.byline ? `${esc(pressL(a.lang || PAPER_LANG).by)} ${esc(a.byline)}` : "";
-  return `<div class="byline">${av}${name}${sb ? ` ${sb}` : ""}${langBadge(a)}</div>`;
+  const name = bylineName(a);
+  return `<div class="byline">${av}${name}${sb ? ` ${sb}` : ""}${trBadge(a)}${langBadge(a)}</div>`;
 }
 
 // In board ALL mode, tag each rendered article with its placement id/kind (so a click
@@ -573,11 +626,57 @@ function renderLead(a){
   </section>`;
 }
 function renderStory(a){
-  return `<article class="story ${esc(a.weight)}${draftCls(a)}"${editAttrs(a)}>
-    ${kicker(a)}<h3>${esc(a.headline)}</h3>${byline(a)}${imgTag(a.image_url)}
-    ${a.subhead ? `<p><em>${esc(a.subhead)}</em></p>` : ""}
-    <div class="body">${md(a.body)}</div>
+  // Editor-chosen layout is carried as data-* and APPLIED by applyStorySpans()
+  // once the well's real column count is known — so a span can never exceed the
+  // columns actually available (e.g. the 2-col human zone), which would overflow
+  // the grid and collide. data-span 0 = auto by weight (major=2, else 1).
+  const span = a.col_span > 0 ? a.col_span : (a.weight === "major" ? 2 : 1);
+  const imgc = a.image_url ? (a.img_cols > 0 ? a.img_cols : span) : 0;  // 0 = no photo
+  const img = a.image_url ? `<img data-imgc="${imgc}" data-imgpos="${esc(a.img_pos||"top")}" data-crop="${esc(a.img_crop||"")}" src="${esc(a.image_url)}" alt="">` : "";
+  return `<article class="story ${esc(a.weight)}${draftCls(a)}" data-span="${span}"${editAttrs(a)}>
+    ${kicker(a)}<h3>${esc(a.headline)}</h3>${byline(a)}
+    <div class="body">${a.subhead ? `<p class="deckline"><em>${esc(a.subhead)}</em></p>` : ""}${img}${md(a.body)}</div>
   </article>`;
+}
+// Apply each story's column span (clamped to its well's real column count), its
+// matching internal text-column count, and the photo banner width. Runs before
+// packWell so heights are measured against the final widths.
+function applyStorySpans(){
+  document.querySelectorAll(".well").forEach(well=>{
+    const cols = parseInt(getComputedStyle(well).getPropertyValue("--wellcols")) || 3;
+    well.querySelectorAll(":scope > .story").forEach(el=>{
+      const want = parseInt(el.dataset.span) || 1;
+      const span = Math.max(1, Math.min(want, cols));
+      el.style.gridColumn = "span " + span;
+      el.style.setProperty("--bodycols", span);
+      const img = el.querySelector(":scope > .body > img");
+      if(img){
+        const imgc = Math.max(1, Math.min(parseInt(img.dataset.imgc) || span, span));
+        const pos = img.dataset.imgpos || "top";
+        const insetCalc = `calc(((${imgc} * (100% - ${span-1} * var(--col-gap))) / ${span}) + ${imgc-1} * var(--col-gap))`;
+        if(pos === "left" || pos === "right"){
+          // float + wrap (Word-style): single-column body so the text flows around it
+          el.style.setProperty("--bodycols", 1);
+          img.className = pos === "left" ? "flt-left" : "flt-right";
+          el.style.setProperty("--inset", imgc >= span ? "55%" : insetCalc);
+        } else if(imgc < span){ img.className = "inset"; el.style.setProperty("--inset", insetCalc); }
+        else { img.className = "full"; el.style.removeProperty("--inset"); }
+        // crop-to-fill (img_crop.sql): force an aspect ratio, cover the box
+        const crop = img.dataset.crop || "";
+        const RAT = { "16x9":"16/9", "3x2":"3/2", "4x3":"4/3", "1x1":"1/1", "3x4":"3/4" };
+        if(RAT[crop]){ img.style.aspectRatio = RAT[crop]; img.style.objectFit = "cover"; img.style.height = "auto"; }
+        else { img.style.aspectRatio = ""; img.style.objectFit = ""; }
+      }
+    });
+  });
+}
+// Full-width feuilleton band at the foot of the page (a brief spanning the well).
+function renderBand(a){
+  return `<section class="story footband${draftCls(a)}"${editAttrs(a)}>
+    ${kicker(a)}<h3>${esc(a.headline)}</h3>${byline(a)}
+    ${a.subhead ? `<p class="deckline"><em>${esc(a.subhead)}</em></p>` : ""}
+    <div class="band-body">${md(a.body)}</div>
+  </section>`;
 }
 function fmtDate(d){
   return I18n.fmtDate(d,{weekday:"long",year:"numeric",month:"long",day:"numeric"}, PAPER_LANG);
@@ -614,9 +713,22 @@ function applyEmbed(){
   const sheet = document.querySelector(".sheet"); if(!sheet) return;
   sheet.style.zoom = String(Math.min(1, (window.innerWidth || 1100) / 1100));
 }
+// Apply the editor's chosen well column count (papers.grid_cols). Opt-in only:
+// when 0 we leave --wellcols to the responsive CSS, so non-customised editions
+// are byte-for-byte unchanged. The AI-sidebar human zone (.well2) keeps its
+// dedicated 2-column layout regardless.
+function setWellCols(){
+  const n = (PAPER && PAPER.gridCols) || 0;
+  document.querySelectorAll(".well").forEach(w=>{
+    if(w.classList.contains("well2")) return;
+    if(n>0) w.style.setProperty("--wellcols", n); else w.style.removeProperty("--wellcols");
+  });
+}
 let _packRAF;
 function schedulePack(){
   applyEmbed();   // scale first so the masonry measures in the scaled space
+  setWellCols();  // set track count before measuring so spans resolve correctly
+  applyStorySpans();   // clamp each story's span to its well's real column count
   cancelAnimationFrame(_packRAF);
   _packRAF = requestAnimationFrame(()=>requestAnimationFrame(packWell));
   // images and webfonts change card heights — re-pack as they settle
@@ -626,7 +738,7 @@ function schedulePack(){
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(packWell);
 }
 let _packResize;
-window.addEventListener("resize", ()=>{ clearTimeout(_packResize); _packResize = setTimeout(()=>{ applyEmbed(); packWell(); }, 150); });
+window.addEventListener("resize", ()=>{ clearTimeout(_packResize); _packResize = setTimeout(()=>{ applyEmbed(); setWellCols(); applyStorySpans(); packWell(); }, 150); });
 
 async function load(){
   if(!configured){
@@ -644,6 +756,7 @@ async function load(){
     // Keep the placement id/kind/published so the board can edit a clicked element.
     arts = placed.filter(p=>p.article).map(p => ({ ...p.article,
       weight: p.weight, position: p.position,
+      col_span: p.col_span || 0, img_cols: p.img_cols || 0, img_pos: p.img_pos || "top", img_crop: p.img_crop || "",   // editor layout (columns.sql / img_pos.sql / img_crop.sql)
       pid: p.id, kind: "placement", published: p.published !== false,
       lang: (p.article.lang)||"fr",
       image_url: p.image_url || p.article.image_url || "" }));
@@ -679,17 +792,30 @@ async function load(){
     const rst = list.filter(a=>a!==ld).map(a=> a.weight==="lead" ? {...a,weight:"major"} : a);
     return [ld, rst];
   };
-  const aiArts = arts.filter(isAI);
-  const humanArts = arts.filter(a=>!isAI(a));
+  // A "brief" spanning the full well (col_span ≥ the well's columns) is laid out
+  // as a full-width FEUILLETON band UNDER the well — like the foot-of-page serial
+  // novel of the old papers — instead of inside the masonry grid (where a span-all
+  // item collides with the dense packing).
+  const effCols = (PAPER.gridCols>0 ? PAPER.gridCols : 3);
+  const isBand = a => a.weight==="brief" && a.col_span>0 && a.col_span>=effCols;
+  const bandArts = arts.filter(isBand);
+  const mainArts = arts.filter(a=>!isBand(a));
+  const bandHTML = bandArts.map(renderBand).join("");
+  const aiArts = mainArts.filter(isAI);
+  const humanArts = mainArts.filter(a=>!isAI(a));
+  // Two-zone layout (AI chronicles in a separate sidebar) is OPT-IN per edition
+  // (papers.ai_zone). Off by default → AI chronicles flow in the well like any
+  // other, just wearing the "✦ Rédigé par IA" badge. (ai_zone.sql)
+  const splitAI = !!PAPER.aiZone && aiArts.length>0 && humanArts.length>0;
   let bodyHTML;
   if(arts.length===0){
     bodyHTML = `<div class="empty">${esc(I18n.t("paper.noArticles"))}<br><a href="editor.html?issue=${encodeURIComponent(ISSUE)}">${esc(I18n.t("paper.writeOne"))}</a></div>`;
-  } else if(aiArts.length===0 || humanArts.length===0){
+  } else if(!splitAI){
     // classic full-width layout when the page is all-human OR all-AI; each story
     // still carries its own source badge (régiment or ✦ AI), so transparency holds.
-    const [lead,rest] = leadAndRest(arts);
+    const [lead,rest] = leadAndRest(mainArts);
     bodyHTML = (lead?renderLead(lead):"") +
-      ((rest.length||ads.length)?`<div class="well">${rest.map(renderStory).join("")}${ads.map(renderAd).join("")}</div>`:"");
+      ((rest.length||ads.length)?`<div class="well">${rest.map(renderStory).join("")}${ads.map(renderAd).join("")}</div>`:"") + bandHTML;
   } else {
     const [hLead,hRest] = leadAndRest(humanArts);
     bodyHTML = `<div class="front">
@@ -701,7 +827,7 @@ async function load(){
         <div class="ai-head">${esc(pressL(PAPER_LANG).head)}</div>
         ${aiArts.map(renderStory).join("")}
       </aside>
-    </div>`;
+    </div>` + bandHTML;
   }
 
   const footer = PAPER.slogans && PAPER.slogans.length
