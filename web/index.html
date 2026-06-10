@@ -81,6 +81,8 @@
   .card .read{background:var(--accent);color:#fff;text-decoration:none;border-radius:6px;padding:.45rem .9rem;font-weight:700}
   .card.echo .read{background:#1f3a5f}
   .card .read:hover{filter:brightness(1.1)}
+  .card .flip{text-decoration:none;font-size:1.05rem;line-height:1;padding:.3rem .35rem;border-radius:6px;border:1px solid #cbbfa3}
+  .card .flip:hover{background:#efe7d4}
   .card.empty .lead{opacity:.5}
   .badge{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;background:#e7dcc2;color:#6a5;border:1px solid #cbbfa3;border-radius:4px;padding:.1rem .35rem;color:var(--muted)}
   .card .meta .langs{display:inline-flex;gap:.2rem}
@@ -157,7 +159,7 @@ I18n.register({
     "kiosk.days7":"7 jours","kiosk.filterByDay":"Filtrer par jour","kiosk.filterByLang":"Filtrer par langue",
     "kiosk.opening":"Ouverture du kiosque…","kiosk.footer":"Publisheur · presse collaborative Warden",
     "kiosk.papers":"{n} journaux","kiosk.paper":"{n} journal",
-    "kiosk.upcoming":"À paraître","kiosk.empty":"vide","kiosk.read":"Lire →",
+    "kiosk.upcoming":"À paraître","kiosk.empty":"vide","kiosk.read":"Lire →","kiosk.flip":"Feuilleter les pages",
     "kiosk.articles":"{n} articles","kiosk.article":"{n} article",
     "kiosk.updatedToday":"Mise à jour aujourd’hui","kiosk.hot":"🔥 Tout chaud",
     "kiosk.newToday":"🔥 Nouveau · aujourd’hui","kiosk.editionOf":"édition du ",
@@ -177,7 +179,7 @@ I18n.register({
     "kiosk.days7":"7 days","kiosk.filterByDay":"Filter by day","kiosk.filterByLang":"Filter by language",
     "kiosk.opening":"Opening the newsstand…","kiosk.footer":"Publisheur · collaborative Warden press",
     "kiosk.papers":"{n} papers","kiosk.paper":"{n} paper",
-    "kiosk.upcoming":"Coming soon","kiosk.empty":"empty","kiosk.read":"Read →",
+    "kiosk.upcoming":"Coming soon","kiosk.empty":"empty","kiosk.read":"Read →","kiosk.flip":"Flip through the pages",
     "kiosk.articles":"{n} articles","kiosk.article":"{n} article",
     "kiosk.updatedToday":"Updated today","kiosk.hot":"🔥 Hot off the press",
     "kiosk.newToday":"🔥 New · today","kiosk.editionOf":"edition of ",
@@ -288,6 +290,7 @@ function cardHTML(ed){
       <span>${ed.count? esc(I18n.t(ed.count>1?"kiosk.articles":"kiosk.article",{n:ed.count})) : `<span class="badge">${esc(I18n.t("kiosk.empty"))}</span>`}${ed.latest?` · ${fresh?"":esc(I18n.t("kiosk.editionOf"))}${fmtDate(ed.latest)}`:""}</span>
       ${langBadges?`<span class="langs">${langBadges}</span>`:""}
       <span class="grow"></span>
+      ${ed.count?`<a class="flip" href="flip.html?issue=${encodeURIComponent(ed.issue)}" title="${esc(I18n.t("kiosk.flip"))}">📖</a>`:""}
       <a class="read" href="paper.html?issue=${encodeURIComponent(ed.issue)}">${esc(I18n.t("kiosk.read"))}</a>
     </div>
   </article>`;

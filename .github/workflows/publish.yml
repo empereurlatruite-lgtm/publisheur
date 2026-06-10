@@ -32,7 +32,7 @@ jobs:
       - name: Install Scribus + tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends scribus poppler-utils xvfb
+          sudo apt-get install -y --no-install-recommends scribus poppler-utils xvfb imagemagick fontconfig
 
       - name: Publish
         env:
@@ -56,6 +56,34 @@ jobs:
             -H "x-upsert: true" \
             --data-binary @publish/out/issue.pdf
           echo "→ ${SUPABASE_URL%/}/storage/v1/object/public/media/exports/${ISSUE}.pdf"
+
+      - name: Upload page images + manifest (flipbook)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          ISSUE="${{ github.event.inputs.issue || 'current' }}"
+          base="${SUPABASE_URL%/}/storage/v1/object/media/exports/${ISSUE}"
+          # Re-number page-*.png to a clean 1..N sequence (pdftoppm zero-pads
+          # variably) so web/flip.html can fetch page-1.png … page-N.png.
+          i=0
+          for f in $(ls -1v publish/out/page-*.png); do
+            i=$((i+1))
+            curl -sS -X POST "${base}/page-${i}.png" \
+              -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+              -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+              -H "Content-Type: image/png" \
+              -H "x-upsert: true" \
+              --data-binary @"$f"
+          done
+          printf '{"issue":"%s","pages":%d}' "$ISSUE" "$i" > /tmp/manifest.json
+          curl -sS -X POST "${base}/manifest.json" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "x-upsert: true" \
+            --data-binary @/tmp/manifest.json
+          echo "→ ${SUPABASE_URL%/}/storage/v1/object/public/media/exports/${ISSUE}/ (${i} pages) — feuilleter: /flip.html?issue=${ISSUE}"
 
       - name: Upload issue (CI artifact)
         uses: actions/upload-artifact@v4

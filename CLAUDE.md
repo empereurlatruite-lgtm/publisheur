@@ -46,14 +46,39 @@ photo = `placement.image_url || article.image_url`.
   → in-place **edit modal** (chronicle text incl. ✦ Rédigé/Traduit par IA toggles;
   or réclame content + approve). Pool cards: single-click places, double-click edits.
 - `web/paper.html` — the rendered paper (from placements). `web/index.html` — kiosque.
+- `web/flip.html` — **flipbook reader** (page-turn, no PDF for the reader): a
+  [StPageFlip](https://github.com/Nodlik/StPageFlip) book of the Scribus page
+  images. Reads `?issue=`, fetches `media/exports/<issue>/manifest.json`
+  (`{issue,pages}`) from public Storage and loads `page-1.png … page-N.png`.
+  Degrades gracefully to a "pas encore imprimée" notice (with web-view + kiosque
+  links) when an edition has no published pages yet. Linked from the `paper.html`
+  toolbar (📖 Feuilleter) and each kiosque card. The page PNGs + manifest are
+  published by `publish.yml` (see below) — the print pipeline now feeds both the
+  PDF *and* the flipbook.
+- `web/illustrateurs.html` — **illustrators' board**: a flat **infinite-scroll image
+  wall** (CSS-column masonry, ~48/page via an IntersectionObserver sentinel; author
+  shown on hover). **Nav-bar filter chips** (by `tags` type — historical/fanart/ai/
+  official — and by `clan`/régiment) + search rebuild the wall. **Double-click a tile
+  → fullscreen** with an **info panel on the left** (caption, author, type tags,
+  régiment, license, source link) + actions (copy-URL, open-source, approve, remove).
+  Pending-moderation badges + Approve (`can_moderate`); **add-image modal**
+  (`can_upload`): URL or `Media.upload`, plus author, type (tags), régiment, source,
+  license, caption. Gated to editors + illustrators; linked from the editor nav
+  (🎨 Illustrateurs). The `tags`/`source`/`license` columns come from
+  `illustrator_meta.sql`.
 - `web/ads.html` — ad studio. `web/papers.js` — fallback editions registry.
 - `web/functions/api/export.js` — Cloudflare Pages Function: verifies an editor JWT,
   dispatches `publish.yml` to render the print PDF.
+- `.github/workflows/publish.yml` — Scribus CI: gathers placements → lays out →
+  PDF + page PNGs. Uploads `exports/<issue>.pdf` **and** the flipbook assets
+  (`exports/<issue>/page-N.png` + `manifest.json`) to the public `media` bucket
+  with the `SUPABASE_SERVICE_KEY`.
 - `supabase/*.sql` — migrations, applied by pasting into the Supabase SQL Editor **in
   order**: `schema → roles → comments → portfolio → ads → papers → revisions →
   edited_by → pool → transparency → authors → ad_placements → media → i18n →
   theme → styles → regiments → columns → chronicle_edit → ai_labels →
-  paper_purpose → ai_zone → image_moderation → img_pos → img_crop`.
+  paper_purpose → ai_zone → image_moderation → img_pos → img_crop →
+  img_crop_tool → illustrator_meta`.
   (`i18n` adds content `lang` to articles/ads/papers + `preferred_lang`/`ui_lang`
   to profiles, and opens chronicle writing to any signed-in user — editors still
   publish. `theme` adds `papers.theme` — the per-edition visual skin the
@@ -129,6 +154,30 @@ photo = `placement.image_url || article.image_url`.
   — Word-style **crop-to-fill**: the photo is cropped (`object-fit:cover` + a forced
   `aspect-ratio`) to that ratio so blocks line up. Set via the **Recadrage** control
   in the dock + edit-modal layout section; applied in `applyStorySpans()`.)
+  `img_crop_tool` adds `placements.img_focus` (CSS `object-position`, e.g.
+  `"50% 35%"`) and `placements.img_zoom` (scale, 1 = none) for the **interactive
+  crop tool** — a slide-up **image panel below the board preview** (`#imgPanel` in
+  `board.html`), opened by **double-clicking a photo** in the preview or the **✎**
+  corner button on hover (paper.html posts `daihbi-edit-image`). The panel has a
+  drag-the-focal-point + zoom **crop stage** (WYSIWYG, mirrors the render) plus
+  position / ratio / size / photo-source controls; each change saves to the
+  placement and reloads the iframe so the change shows live (the double-click text
+  modal used to hide the preview). In `paper.html` the **lead** now honours
+  `img_pos="top"` as a **full-width banner above the text** (was always float-right);
+  focus/zoom are applied to the lead banner and to story photos via a `.cropwrap`
+  frame. Defaults are neutral, so editions are unchanged except leads, which move
+  from float-right to a top banner unless the editor picks Gauche/Droite.
+  Story photos in the preview also get a **drag-to-resize grip** (bottom-right
+  corner, edit mode): dragging scales the photo live keeping its proportion and
+  **snaps the width to the story's column span** (paper.html posts
+  `daihbi-resize-image` → board sets `img_cols`). The snap uses the story's applied
+  span (`data-applied`), not `--bodycols` (a floated photo forces that to 1).
+  Every newspaper photo is a `<figure class="photo">` wrapping the image (or
+  `.cropwrap`) **plus an author credit** (`<figcaption class="credit">Illustration :
+  …</figcaption>`); the author is resolved by image URL via `Media.creditsFor()`
+  (portfolio `images` then `media`, by `uploader_name`; anon sees approved provenance
+  only) for the lead + stories. `web/illustrateurs.html` also gained a **double-click
+  fullscreen lightbox** (image + caption + author).)
 
 ## Roles
 `reader` (read anon, comment signed-in) · `writer` / `illustrator` (write chronicles;

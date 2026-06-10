@@ -16,7 +16,29 @@
   header .grow{flex:1}
   /* preview-as-canvas: the rendered paper fills the page; the edit panel docks right */
   #app{display:flex;height:calc(100vh - 52px)}
+  #pvwrap{flex:1;min-width:0;display:flex;flex-direction:column}
   #pv.canvas{flex:1;min-width:0;border:none;background:#efe8d6}
+  /* crop-tool panel: docks under the preview (preview shrinks above, stays visible) */
+  .imgpanel{display:none;flex:0 0 auto;max-height:48%;overflow:auto;border-top:2px solid var(--accent);background:var(--panel)}
+  .imgpanel.open{display:block}
+  .imgpanel .iph{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:.5rem;padding:.5rem .8rem;
+    background:var(--panel);border-bottom:1px solid var(--line);font-family:"Playfair Display",serif;font-size:.98rem}
+  .imgpanel .iph .grow{flex:1}
+  .imgpanel .iph .x{border:1px solid var(--line);background:#fff;border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:.95rem}
+  .imgpanel .ipbody{display:flex;gap:1rem;flex-wrap:wrap;padding:.7rem .8rem 1rem}
+  /* crop stage: WYSIWYG — clips a cover-fit image, drag the dot to set focus */
+  .cropstage{position:relative;flex:0 0 auto;width:300px;max-width:46vw;overflow:hidden;border:1px solid var(--line);
+    background:#efe8d6 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="8" height="8" fill="%23e3dac2"/><rect x="8" y="8" width="8" height="8" fill="%23e3dac2"/></svg>');border-radius:6px;cursor:grab;user-select:none}
+  .cropstage.drag{cursor:grabbing}
+  .cropstage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+  .cropstage .focusdot{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
+    border:2px solid #fff;background:rgba(122,31,26,.85);box-shadow:0 0 0 1px rgba(0,0,0,.4);pointer-events:none}
+  .cropctl{flex:1;min-width:240px;display:flex;flex-direction:column;gap:.55rem}
+  .cropctl .crow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+  .cropctl .clbl{flex:0 0 5.2rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:#6a6253;font-weight:600}
+  .cropctl input[type=range]{flex:1;min-width:120px}
+  .cropctl .cval{font-size:.74rem;color:#6a6253;min-width:2.4rem;text-align:right}
+  .cropctl .ethumb{width:46px;height:34px;object-fit:cover;border:1px solid var(--line);border-radius:3px}
   .dock{flex:0 0 360px;display:none;flex-direction:column;background:var(--panel);border-left:1px solid var(--line);overflow:auto}
   .dock.open{display:flex}
   .dock .dh{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:.4rem;padding:.6rem .8rem;
@@ -152,11 +174,13 @@
   .ethumb{width:96px;height:72px;object-fit:cover;border:1px solid #b9ad90;border-radius:5px;background:#efe7d5}
   .enote{font-size:.78rem;color:#8a8070;line-height:1.4}
   /* photo picker grid */
-  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.7rem;padding:0;overflow:auto}
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem;padding:0;overflow:auto}
   .pgrid figure{margin:0;cursor:pointer;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
   .pgrid figure:hover{border-color:var(--accent)}
-  .pgrid img{width:100%;height:90px;object-fit:cover}
+  .pgrid img{width:100%;height:115px;object-fit:cover}
   .pgrid figcaption{font-size:.72rem;padding:.25rem .4rem;color:#6a6253}
+  .illusgrp{margin-bottom:.6rem}
+  .illusgrp>h5{margin:.55rem 0 .4rem;font-size:.72rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line);padding-bottom:.22rem}
 
   .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#211f1c;color:#f3ead6;padding:.55rem 1rem;border-radius:8px;opacity:0;transition:opacity .2s;font-size:.85rem;z-index:90}
   .toast.show{opacity:1}
@@ -207,7 +231,11 @@
 
 <!-- the rendered paper IS the canvas: click an article to edit it in the docked panel -->
 <main id="app" style="display:none">
-  <iframe id="pv" class="canvas" src="about:blank" title="Aperçu de la une"></iframe>
+  <div id="pvwrap">
+    <iframe id="pv" class="canvas" src="about:blank" title="Aperçu de la une"></iframe>
+    <!-- crop tool: slides up UNDER the preview so the change stays visible -->
+    <section id="imgPanel" class="imgpanel" aria-hidden="true"></section>
+  </div>
   <aside class="dock" id="editPanel">
     <div class="dh">
       <span id="editTitle" data-i18n="board.clickToEdit">Cliquez un article</span>
@@ -293,7 +321,7 @@
 
 <!-- edit a chronicle's text in place (double-click a story or pool card) -->
 <div class="modal" id="chronModal">
-  <div class="card" style="max-width:640px">
+  <div class="card" style="max-width:860px;width:94vw">
     <div class="h"><span id="ce_title" data-i18n="board.ceTitle">Modifier la chronique</span><span class="grow"></span><button class="x" onclick="closeChronEditor()" data-i18n-aria="auth.close">✕</button></div>
     <div class="body" style="padding:1rem 1.1rem 1.2rem;overflow:auto;max-height:82vh">
       <div class="sfield"><label data-i18n="board.ceKicker">Surtitre (kicker)</label><input id="ce_kicker"></div>
@@ -311,9 +339,20 @@
         </div>
       </div>
       <div class="sfield"><label data-i18n="board.ceBody">Texte</label><textarea id="ce_body" rows="9" style="font:inherit;padding:.55rem;border:1px solid #c9bda0;border-radius:6px;background:#fff;color:var(--ink);resize:vertical"></textarea></div>
-      <div class="srow">
-        <div class="sfield grow"><label data-i18n="board.cePhoto">Photo suggérée (URL)</label><input id="ce_image" oninput="ceShowPreview(this.value)" placeholder="https://…"></div>
-        <div id="ce_prev" style="width:96px;height:64px;border:1px solid #c9bda0;border-radius:6px;overflow:hidden;flex:none;background:#f3ead6"></div>
+      <div class="sfield">
+        <label data-i18n="board.cePhotoLabel">Photo suggérée</label>
+        <div style="display:flex;gap:.4rem;margin-bottom:.45rem;flex-wrap:wrap">
+          <button type="button" class="ebtn on" id="ce_pm_url"   onclick="cePhotoMode('url')"   data-i18n="board.cePhotoUrl">🔗 URL</button>
+          <button type="button" class="ebtn"    id="ce_pm_media" onclick="cePhotoMode('media')" data-i18n="board.cePhotoMedia">🖼 Médiathèque approuvée</button>
+          <button type="button" class="ebtn"    id="ce_pm_illus" onclick="cePhotoMode('illus')" data-i18n="board.cePhotoIllus">🎨 Illustrateur</button>
+        </div>
+        <div class="srow">
+          <div class="sfield grow" id="ce_url_field"><input id="ce_image" oninput="ceShowPreview(this.value)" placeholder="https://…"></div>
+          <div id="ce_prev" style="width:150px;height:100px;border:1px solid #c9bda0;border-radius:6px;overflow:hidden;flex:none;background:#f3ead6"></div>
+        </div>
+        <input id="ce_illus_search" oninput="ceIllusFilter(this.value)" style="display:none;width:100%;margin-top:.5rem" placeholder="Rechercher un illustrateur ou un mot-clé (drapeau, flag…)" data-i18n-ph="board.cePhotoSearch">
+        <div id="ce_photo_grid" class="pgrid" style="display:none;margin-top:.5rem;max-height:42vh;overflow:auto"></div>
+        <p id="ce_photo_note" style="font-size:.74rem;color:#8a7f68;font-style:italic;margin:.5rem 0 0;line-height:1.35" data-i18n="board.cePhotoDisclaimer">⚠ Les images ne sont ni hébergées ni contrôlées par Publisheur ; la responsabilité de leur contenu et de leurs droits revient à leur auteur.</p>
       </div>
       <div id="ce_layout" style="display:none"></div>
       <div class="jerr" id="ce_err" style="color:#b33;font-size:.82rem;min-height:1em;margin-top:.4rem"></div>
@@ -363,7 +402,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Ads, NavUser, Styles, Regiments, configured, esc, I18n, Prefs } = window.Daihbi;
+const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Media, Ads, NavUser, Styles, Regiments, configured, esc, I18n, Prefs } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
@@ -436,11 +475,17 @@ I18n.register({
     "board.ceTitle":"Modifier : {h}","board.ceKicker":"Surtitre (kicker)","board.ceHeadline":"Titre",
     "board.ceSubhead":"Chapô / sous-titre","board.ceByline":"Signature","board.ceSource":"Régiment",
     "board.ceLang":"Langue","board.ceBody":"Texte","board.cePhoto":"Photo suggérée (URL)",
+    "board.cePhotoLabel":"Photo suggérée","board.cePhotoUrl":"🔗 URL","board.cePhotoMedia":"🖼 Médiathèque approuvée","board.cePhotoIllus":"🎨 Illustrateur",
+    "board.cePhotoLoading":"Chargement…","board.cePhotoEmpty":"Aucune image disponible.","board.cePhotoSearch":"Rechercher un illustrateur ou un mot-clé (drapeau, flag…)","board.cePhotoUnknown":"Sans illustrateur",
+    "board.cePhotoDisclaimer":"⚠ Les images ne sont ni hébergées ni contrôlées par Publisheur ; la responsabilité de leur contenu et de leurs droits revient à leur auteur.",
     "board.ceNoRegiment":"— régiment —","board.ceSave":"Enregistrer",
     "board.ceNeedHeadline":"Donnez un titre à la chronique.","board.ceSaved":"Chronique enregistrée ✓",
     "board.ceTransparency":"Transparence (IA)","board.ceAiWritten":"✦ Rédigé par IA","board.ceAiTranslated":"✦ Traduit par IA",
     "board.ceLayout":"Mise en page","board.ceImgPos":"Position image","board.posTop":"Haut","board.posLeft":"Gauche","board.posRight":"Droite",
     "board.ceCrop":"Recadrage","board.cropAuto":"Auto","board.cropLand":"Paysage","board.cropSquare":"Carré","board.cropPortrait":"Portrait",
+    "board.cropPano":"Pano 2:1","board.crop32":"3:2",
+    "board.imgPanelTitle":"Image — {h}","board.ipDragHint":"Glissez l’image pour choisir la zone visible ; molette de zoom ci-dessous.",
+    "board.ipZoom":"Zoom","board.ipRecenter":"↺ Recentrer",
     "board.aeTitle":"Modifier : {t}","board.aeEdit":"✎ Modifier","board.aeCat":"Type de réclame","board.aeLang":"Langue",
     "board.aeAdTitle":"Titre","board.aeMaker":"Fabricant / sponsor / chaîne","board.aeBody":"Texte","board.aeLink":"Lien (optionnel)",
     "board.aeImage":"Image (URL)","board.aeApproval":"Validation (éditeur)","board.aeApproved":"✓ Approuvée (visible)",
@@ -523,11 +568,17 @@ I18n.register({
     "board.ceTitle":"Edit: {h}","board.ceKicker":"Kicker","board.ceHeadline":"Headline",
     "board.ceSubhead":"Standfirst / subhead","board.ceByline":"Byline","board.ceSource":"Regiment",
     "board.ceLang":"Language","board.ceBody":"Body","board.cePhoto":"Suggested photo (URL)",
+    "board.cePhotoLabel":"Suggested photo","board.cePhotoUrl":"🔗 URL","board.cePhotoMedia":"🖼 Approved media","board.cePhotoIllus":"🎨 Illustrator",
+    "board.cePhotoLoading":"Loading…","board.cePhotoEmpty":"No image available.","board.cePhotoSearch":"Search an illustrator or keyword (flag, drapeau…)","board.cePhotoUnknown":"No illustrator",
+    "board.cePhotoDisclaimer":"⚠ Images are neither hosted nor controlled by Publisheur; responsibility for their content and rights lies with their author.",
     "board.ceNoRegiment":"— regiment —","board.ceSave":"Save",
     "board.ceNeedHeadline":"Give the chronicle a headline.","board.ceSaved":"Chronicle saved ✓",
     "board.ceTransparency":"Transparency (AI)","board.ceAiWritten":"✦ Written by AI","board.ceAiTranslated":"✦ Translated by AI",
     "board.ceLayout":"Layout","board.ceImgPos":"Image position","board.posTop":"Top","board.posLeft":"Left","board.posRight":"Right",
     "board.ceCrop":"Crop","board.cropAuto":"Auto","board.cropLand":"Landscape","board.cropSquare":"Square","board.cropPortrait":"Portrait",
+    "board.cropPano":"Pano 2:1","board.crop32":"3:2",
+    "board.imgPanelTitle":"Image — {h}","board.ipDragHint":"Drag the image to choose what stays in frame; zoom below.",
+    "board.ipZoom":"Zoom","board.ipRecenter":"↺ Recenter",
     "board.aeTitle":"Edit: {t}","board.aeEdit":"✎ Edit","board.aeCat":"Ad type","board.aeLang":"Language",
     "board.aeAdTitle":"Title","board.aeMaker":"Maker / sponsor / channel","board.aeBody":"Body","board.aeLink":"Link (optional)",
     "board.aeImage":"Image (URL)","board.aeApproval":"Approval (editor)","board.aeApproved":"✓ Approved (visible)",
@@ -914,6 +965,7 @@ async function openChronicleEditor(articleId, pid){
   $("#ce_ai_translated").classList.toggle("on", !!a.ai_translated);
   $("#ce_source").disabled = aiWritten;   // AI-written → régiment is the "IA" label
   ceShowPreview(a.image_url||"");
+  cePhotoMode("url");
   renderCeLayout();
   $("#ce_err").textContent="";
   $("#ce_title").textContent=I18n.t("board.ceTitle",{h:a.headline||I18n.t("board.chronicle")});
@@ -962,6 +1014,56 @@ function ceToggleAI(which){
   }
 }
 function ceShowPreview(url){ const w=$("#ce_prev"); if(!w) return; w.innerHTML = url?`<img src="${esc2(url)}" alt="" style="width:100%;height:100%;object-fit:cover">`:""; }
+// Photo source switcher: type a URL, pick from the approved media library, or pick
+// from an illustrator's portfolio. Every mode just fills #ce_image (the saved value);
+// the disclaimer below stays visible regardless of source.
+let ceIllusImgs=[];   // illustrator portfolio, loaded once per editor open, filtered client-side
+async function cePhotoMode(mode){
+  ["url","media","illus"].forEach(m=>{ const b=$("#ce_pm_"+m); if(b) b.classList.toggle("on",m===mode); });
+  const grid=$("#ce_photo_grid"), search=$("#ce_illus_search"), urlField=$("#ce_url_field"); if(!grid) return;
+  if(urlField) urlField.style.display = mode==="url" ? "" : "none";
+  search.style.display = mode==="illus" ? "" : "none";
+  if(mode==="url"){ grid.style.display="none"; grid.innerHTML=""; return; }
+  grid.style.display="";
+  grid.innerHTML=`<div style="padding:.6rem;color:#9a907c">${esc2(I18n.t("board.cePhotoLoading"))}</div>`;
+  if(mode==="media"){
+    let imgs=[];
+    try{ imgs = await Media.listApproved(); }
+    catch(e){ grid.innerHTML=`<div style="padding:.6rem;color:#b33">${esc2(e.message)}</div>`; return; }
+    if(!imgs.length){ grid.innerHTML=`<div style="padding:.6rem;color:#9a907c">${esc2(I18n.t("board.cePhotoEmpty"))}</div>`; return; }
+    grid.innerHTML=imgs.map(ceCard).join("");
+    return;
+  }
+  // illustrator mode — load the portfolio, show a searchable list by illustrator
+  try{ ceIllusImgs = (await Portfolio.list()).filter(im=>im.approved!==false); }   // editors/owners may see pending
+  catch(e){ ceIllusImgs=[]; grid.innerHTML=`<div style="padding:.6rem;color:#b33">${esc2(e.message)}</div>`; return; }
+  search.value=""; ceRenderIllus("");
+}
+// media-library card: lead with the contributor's name then the caption.
+function ceCard(im){
+  const who=esc2(im.uploader_name||""), cap=esc2(im.caption||"");
+  const label = who ? `<strong>${who}</strong>${cap?` — ${cap}`:""}` : cap;
+  return `<figure onclick="cePick('${esc2(im.url)}')"><img src="${esc2(im.url)}" loading="lazy"><figcaption>${label||""}</figcaption></figure>`;
+}
+// illustrator card: name shown by the group header, so caption only.
+function ceIllusCard(im){
+  return `<figure onclick="cePick('${esc2(im.url)}')"><img src="${esc2(im.url)}" loading="lazy"><figcaption>${esc2(im.caption||"")}</figcaption></figure>`;
+}
+// Illustrateur picker — filter by name/caption/régiment, then GROUP by illustrator.
+function ceRenderIllus(q){
+  const grid=$("#ce_photo_grid"); if(!grid) return;
+  grid.style.display="block";   // group blocks, not a flat grid
+  const term=(q||"").trim().toLowerCase();
+  const list=term ? ceIllusImgs.filter(im=>((im.uploader_name||"")+" "+(im.caption||"")+" "+(im.clan||"")).toLowerCase().includes(term)) : ceIllusImgs;
+  if(!list.length){ grid.innerHTML=`<div style="padding:.6rem;color:#9a907c">${esc2(I18n.t("board.cePhotoEmpty"))}</div>`; return; }
+  const groups=new Map();
+  list.forEach(im=>{ const k=im.uploader_name||I18n.t("board.cePhotoUnknown"); (groups.get(k)||groups.set(k,[]).get(k)).push(im); });
+  grid.innerHTML=[...groups.entries()].map(([name,ims])=>
+    `<div class="illusgrp"><h5>${esc2(name)} <span style="opacity:.55;font-weight:400">(${ims.length})</span></h5>`
+    +`<div class="pgrid">${ims.map(ceIllusCard).join("")}</div></div>`).join("");
+}
+function ceIllusFilter(q){ ceRenderIllus(q); }
+function cePick(url){ $("#ce_image").value=url; ceShowPreview(url); }
 // ── Edit a réclame in place (managing editor) ────────────────────────────────
 let _adPalTimer=null, editAdId=null;
 function adPalClick(id){ clearTimeout(_adPalTimer); _adPalTimer=setTimeout(()=>quickAddAd(id),220); }
@@ -1063,7 +1165,108 @@ window.addEventListener("message", e=>{
     if(d.kind==="ad-placement"){ const p=getAp(d.pid); if(p&&p.ad) openAdEditor(p.ad.id); }
     else { const p=getPl(d.pid); if(p&&p.article) openChronicleEditor(p.article.id, p.id); }
   }
+  // double-click / ✎ on a preview PHOTO → open the crop panel below the preview
+  if(d.type==="daihbi-edit-image" && d.pid && d.kind!=="ad-placement"){ openImagePanel(d.pid); }
+  // drag-resize handle on a preview photo → set its column width (snaps to columns)
+  if(d.type==="daihbi-resize-image" && d.pid && d.kind!=="ad-placement"){ ipResize(d.pid, d.cols); }
 });
+async function ipResize(pid, cols){
+  const p=getPl(pid); if(p) p.img_cols=cols;
+  try{ await Placements.update(pid,{img_cols:cols}); reloadPreview(); if(imgPanelPid===pid) renderImagePanel(); if(currentEdit&&currentEdit.kind==="placement"&&currentEdit.id===pid) renderEditBody(); }
+  catch(e){ toast(I18n.t("board.error",{msg:e.message})); }
+}
+
+/* ── Crop tool: slide-up image panel below the preview (img_crop_tool.sql) ──────
+   WYSIWYG cropper — drag the focal point + zoom; ratio / position / size mirror
+   the dock. Saving reloads the iframe above so the change shows live. */
+let imgPanelPid=null;
+const IP_RAT={ "2x1":"2/1", "16x9":"16/9", "3x2":"3/2", "1x1":"1/1", "3x4":"3/4" };
+const IP_RATIOS=[["","board.cropAuto"],["2x1","board.cropPano"],["16x9","board.cropLand"],["3x2","board.crop32"],["1x1","board.cropSquare"],["3x4","board.cropPortrait"]];
+function ipPhoto(p){ return (p.image_url||(p.article&&p.article.image_url)||""); }
+function ipFocusOf(p){ const m=String(p.img_focus||"").match(/(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/); return m?{x:+m[1],y:+m[2]}:{x:50,y:50}; }
+function ipZoomOf(p){ const z=parseFloat(p.img_zoom); return (z>1)?z:1; }
+function ipPatchLocal(patch){ const p=getPl(imgPanelPid); if(p) Object.assign(p,patch); }
+async function ipCommit(patch){ if(!imgPanelPid) return; ipPatchLocal(patch);
+  try{ await Placements.update(imgPanelPid,patch); reloadPreview(); }catch(e){ toast(I18n.t("board.error",{msg:e.message})); } }
+async function ipStruct(patch){ await ipCommit(patch); renderImagePanel(); }   // ratio/pos/size change the stage → re-render
+function ipSetCrop(v){ ipStruct({img_crop:v}); }
+function ipSetPos(v){ ipStruct({img_pos:v}); }
+function ipSetCols(n){ ipStruct({img_cols:n}); }
+function ipRecenter(){ ipCommit({img_focus:"", img_zoom:1}); renderImagePanel(); }
+async function openImagePanel(pid){
+  imgPanelPid=pid;
+  if(!getPl(pid)){ try{ await load(); }catch(_){} }
+  renderImagePanel();
+  const ip=$("#imgPanel"); ip.classList.add("open"); ip.setAttribute("aria-hidden","false");
+}
+function closeImagePanel(){ imgPanelPid=null; const ip=$("#imgPanel"); ip.classList.remove("open"); ip.setAttribute("aria-hidden","true"); ip.innerHTML=""; }
+function renderImagePanel(){
+  const ip=$("#imgPanel"); const p=imgPanelPid?getPl(imgPanelPid):null;
+  if(!p){ closeImagePanel(); return; }
+  const a=p.article||{}; const photo=ipPhoto(p);
+  const title=`<div class="iph"><span>${esc2(I18n.t("board.imgPanelTitle",{h:a.headline||I18n.t("board.chronicle")}))}</span>
+    <span class="grow"></span><button class="x" onclick="closeImagePanel()" aria-label="✕">✕</button></div>`;
+  if(!photo){
+    ip.innerHTML=title+`<div class="ipbody"><div class="cropctl">
+      <span class="enote">${esc2(I18n.t("board.photoSuggested"))}</span>
+      <div class="crow"><button class="ebtn" onclick="openPhoto('${p.id}')">${esc2(I18n.t("board.choose"))}</button></div></div></div>`;
+    return;
+  }
+  const crop=p.img_crop||""; const isBanner=(p.img_pos||"top")==="top";
+  const stageRatio = IP_RAT[crop] || (isBanner ? "2/1" : "3/2");
+  const f=ipFocusOf(p), z=ipZoomOf(p);
+  const span=(p.col_span>0?p.col_span:(p.weight==="major"?2:1));
+  const posOn=v=>(p.img_pos||"top")===v?"on":"";
+  const ratBtns=IP_RATIOS.map(([v,k])=>`<button class="ebtn ${(crop)===v?"on":""}" onclick="ipSetCrop('${v}')">${esc2(I18n.t(k))}</button>`).join("");
+  const sizeBtns=(span>1)?[[0,I18n.t("board.colsAuto")]].concat(Array.from({length:span},(_,i)=>[i+1,String(i+1)]))
+      .map(([v,l])=>`<button class="ebtn ${(p.img_cols||0)===v?"on":""}" onclick="ipSetCols(${v})">${esc2(l)}</button>`).join(""):"";
+  ip.innerHTML=title+`<div class="ipbody">
+    <div class="cropstage" id="ipStage" style="aspect-ratio:${stageRatio}">
+      <img id="ipImg" src="${esc2(photo)}" alt="" style="object-position:${f.x}% ${f.y}%;transform:scale(${z});transform-origin:${f.x}% ${f.y}%">
+      <div class="focusdot" id="ipDot" style="left:${f.x}%;top:${f.y}%"></div>
+    </div>
+    <div class="cropctl">
+      <div class="enote">${esc2(I18n.t("board.ipDragHint"))}</div>
+      <div class="crow"><span class="clbl">${esc2(I18n.t("board.ipZoom"))}</span>
+        <input type="range" id="ipZoom" min="1" max="3" step="0.05" value="${z}">
+        <span class="cval" id="ipZoomVal">${z.toFixed(2)}×</span></div>
+      <div class="crow"><span class="clbl">${esc2(I18n.t("board.ceImgPos"))}</span>
+        <button class="ebtn ${posOn("top")}" onclick="ipSetPos('top')">${esc2(I18n.t("board.posTop"))}</button>
+        <button class="ebtn ${posOn("left")}" onclick="ipSetPos('left')">${esc2(I18n.t("board.posLeft"))}</button>
+        <button class="ebtn ${posOn("right")}" onclick="ipSetPos('right')">${esc2(I18n.t("board.posRight"))}</button></div>
+      <div class="crow"><span class="clbl">${esc2(I18n.t("board.ceCrop"))}</span>${ratBtns}</div>
+      ${sizeBtns?`<div class="crow"><span class="clbl">${esc2(I18n.t("board.imgSize"))}</span>${sizeBtns}</div>`:""}
+      <div class="crow">
+        <button class="ebtn" onclick="ipRecenter()">${esc2(I18n.t("board.ipRecenter"))}</button>
+        <button class="ebtn" onclick="openPhoto('${p.id}')">${esc2(I18n.t("board.choose"))}</button>
+        ${p.image_url?`<button class="ebtn danger" onclick="mPhotoPanel('')">${esc2(I18n.t("board.removeOverride"))}</button>`:""}
+      </div>
+    </div></div>`;
+  wireCropStage();
+}
+async function mPhotoPanel(url){ if(!imgPanelPid) return; try{ await Placements.update(imgPanelPid,{image_url:url}); await load(); reloadPreview(); renderImagePanel(); }catch(e){ toast(e.message); } }
+// drag the focal point + live zoom; commit once per gesture (one preview reload).
+function wireCropStage(){
+  const stage=$("#ipStage"), img=$("#ipImg"), dot=$("#ipDot"), zr=$("#ipZoom"), zv=$("#ipZoomVal");
+  if(!stage) return;
+  let cur=ipFocusOf(getPl(imgPanelPid));
+  const apply=(x,y,z)=>{ img.style.objectPosition=`${x}% ${y}%`; img.style.transformOrigin=`${x}% ${y}%`;
+    if(z!=null) img.style.transform=`scale(${z})`; dot.style.left=x+"%"; dot.style.top=y+"%"; };
+  let dragging=false;
+  const moveTo=(ev)=>{ const r=stage.getBoundingClientRect();
+    const x=Math.max(0,Math.min(100,((ev.clientX-r.left)/r.width)*100));
+    const y=Math.max(0,Math.min(100,((ev.clientY-r.top)/r.height)*100));
+    cur={x:+x.toFixed(1),y:+y.toFixed(1)}; apply(cur.x,cur.y,null); };
+  stage.addEventListener("pointerdown",(ev)=>{ dragging=true; stage.classList.add("drag");
+    try{ stage.setPointerCapture(ev.pointerId); }catch(_){}; moveTo(ev); });
+  stage.addEventListener("pointermove",(ev)=>{ if(dragging) moveTo(ev); });
+  const end=()=>{ if(!dragging) return; dragging=false; stage.classList.remove("drag"); ipCommit({img_focus:`${cur.x}% ${cur.y}%`}); };
+  stage.addEventListener("pointerup",end); stage.addEventListener("pointercancel",end);
+  if(zr){
+    zr.addEventListener("input",()=>{ const z=parseFloat(zr.value); zv.textContent=z.toFixed(2)+"×"; apply(cur.x,cur.y,z); });
+    zr.addEventListener("change",()=>{ ipCommit({img_zoom:parseFloat(zr.value)}); });
+  }
+}
 function renderEditBody(){
   if(!currentEdit) return;
   const {kind,id}=currentEdit;
@@ -1185,13 +1388,13 @@ async function openPhoto(id){
 function closePhoto(){ $("#photoModal").classList.remove("open"); photoTarget=null; }
 async function setPhoto(url){
   if(!photoTarget) return;
-  try{ await Placements.update(photoTarget,{image_url:url}); closePhoto(); await load(); reloadPreview(); if(currentEdit) renderEditBody(); }
+  try{ await Placements.update(photoTarget,{image_url:url}); closePhoto(); await load(); reloadPreview(); if(currentEdit) renderEditBody(); if(imgPanelPid) renderImagePanel(); }
   catch(e){ toast(e.message); }
 }
 
 // close modals on backdrop click / Escape
 document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{ if(e.target===m){ if(m.id==="photoModal") closePhoto(); else if(m.id==="poolModal") closePool(); else if(m.id==="styleModal") closeStyleModal(); else if(m.id==="chronModal") closeChronEditor(); else if(m.id==="adModal") closeAdEditor(); } }));
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#adModal").classList.contains("open")) closeAdEditor(); else if($("#chronModal").classList.contains("open")) closeChronEditor(); else if($("#styleModal").classList.contains("open")) closeStyleModal(); else if($("#photoModal").classList.contains("open")) closePhoto(); else if($("#poolModal").classList.contains("open")) closePool(); else if(currentEdit) closeEdit(); } });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#adModal").classList.contains("open")) closeAdEditor(); else if($("#chronModal").classList.contains("open")) closeChronEditor(); else if($("#styleModal").classList.contains("open")) closeStyleModal(); else if($("#photoModal").classList.contains("open")) closePhoto(); else if($("#poolModal").classList.contains("open")) closePool(); else if(imgPanelPid) closeImagePanel(); else if(currentEdit) closeEdit(); } });
 
 async function runExport(){
   const s=await Auth.session(); if(!s) return;

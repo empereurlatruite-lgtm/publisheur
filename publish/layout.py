@@ -15,6 +15,7 @@ import json
 import math
 import os
 import re
+import subprocess
 import tempfile
 import urllib.request
 import scribus
@@ -32,12 +33,22 @@ PW, PH, M = 297.0, 420.0, 15.0
 CX, CW = M, PW - 2 * M                # content x, width  (15 .. 282, width 267)
 COLS, CGAP = 5, 5.0                   # well: 5 columns
 
-# ── Fonts (verified present in this Scribus) ────────────────────────────
-F_HEAD = "Liberation Serif Bold"
-F_HEAD_IT = "Liberation Serif Bold Italic"
-F_BODY = "Liberation Serif Regular"
-F_BODY_IT = "Liberation Serif Italic"
-F_SANS = "Liberation Sans Bold"
+# ── Fonts ───────────────────────────────────────────────────────────────
+# Match the web edition's type (paper.html role vars): Playfair Display for
+# heads/masthead, PT Serif for body, Old Standard TT for meta. Installed from
+# Google Fonts (see publish/fonts/ + publish.yml); Liberation is the fallback
+# if a face is missing so the layout never crashes.
+def _font(preferred, fallback):
+    try:
+        return preferred if preferred in scribus.getFontNames() else fallback
+    except Exception:
+        return fallback
+
+F_HEAD = _font("Playfair Display Black", "Liberation Serif Bold")
+F_HEAD_IT = _font("Playfair Display Black Italic", "Liberation Serif Bold Italic")
+F_BODY = _font("PT Serif Regular", "Liberation Serif Regular")
+F_BODY_IT = _font("PT Serif Italic", "Liberation Serif Italic")
+F_SANS = _font("Old Standard TT Bold", "Liberation Sans Bold")
 
 ALIGN_L, ALIGN_C, ALIGN_R, ALIGN_BLOCK = 0, 1, 2, 3
 
@@ -56,6 +67,34 @@ def rgb_to_cmyk(r, g, b):
 def defc(name, r, g, b):
     c, m, y, k = rgb_to_cmyk(r, g, b)
     scribus.defineColor(name, c, m, y, k)
+
+
+def _hex(h):
+    h = h.lstrip("#")
+    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+
+# Per-edition theme palettes — mirror the `.sheet.theme-*` role variables in
+# web/paper.html (--ink/--paper/--accent/--rule) so the print edition matches
+# the web skin the rédacteur en chef picked. Fonts/masthead plate can't be
+# matched (Scribus lacks the web fonts), so this is colour-accurate only.
+THEME_PALETTES = {
+    "classic":  {"ink": "#1a1714", "paper": "#f5efe1", "accent": "#7a1f1a", "rule": "#aa9c82"},
+    "fujimoto": {"ink": "#2B2D31", "paper": "#EADFC9", "accent": "#C87A65", "rule": "#626D71"},
+    "noir":     {"ink": "#0d0d0d", "paper": "#ffffff", "accent": "#c01818", "rule": "#0d0d0d"},
+    "gazette":  {"ink": "#23303a", "paper": "#f3f5f7", "accent": "#2f6f8f", "rule": "#9fb0bb"},
+    "brasil":   {"ink": "#173f1f", "paper": "#fbf7e6", "accent": "#009c3b", "rule": "#2e7d32"},
+}
+
+
+def define_theme(theme):
+    """Define Ink/Paper/Accent/Hair from the edition's theme (classic fallback;
+    custom `style:<id>` themes fall back to classic too)."""
+    pal = THEME_PALETTES.get((theme or "classic").lower(), THEME_PALETTES["classic"])
+    defc("Ink", *_hex(pal["ink"]))
+    defc("Accent", *_hex(pal["accent"]))
+    defc("Paper", *_hex(pal["paper"]))
+    defc("Hair", *_hex(pal["rule"]))
 
 
 # ── Style helpers ───────────────────────────────────────────────────────
@@ -110,17 +149,54 @@ def byline_text(a):
     return " · ".join(parts).upper()
 
 
+def _sniff_ext(data):
+    """Real image extension from magic bytes — don't trust the URL. A `.jpg` URL
+    on foxhole.wiki.gg serves WebP via content negotiation."""
+    if data[:2] == b"\xff\xd8":
+        return ".jpg"
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return ".png"
+    if data[:6] in (b"GIF87a", b"GIF89a"):
+        return ".gif"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return ".webp"
+    if data[:4] in (b"II*\x00", b"MM\x00*"):
+        return ".tif"
+    return ".png"
+
+
 def fetch_image(url):
-    """Download an emblem URL to a temp file; return its path (or None)."""
+    """Download an image URL to a temp file Scribus can decode (or None). Sends a
+    browser User-Agent (hosts like foxhole.wiki.gg 403 the default urllib UA) and
+    an Accept that avoids WebP/AVIF. Scribus picks its decoder from the file
+    extension, so the extension is set from the real magic bytes — and WebP, which
+    Scribus can't read, is converted to PNG with ImageMagick."""
     if not url:
         return None
     try:
-        fd, path = tempfile.mkstemp(suffix=".png")
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/124 Safari/537.36",
+            "Accept": "image/jpeg,image/png,image/gif,image/tiff,image/*;q=0.8",
+        })
+        with urllib.request.urlopen(req, timeout=20) as r:
+            data = r.read()
+        ext = _sniff_ext(data)
+        fd, path = tempfile.mkstemp(suffix=ext)
         os.close(fd)
-        urllib.request.urlretrieve(url, path)
+        with open(path, "wb") as f:
+            f.write(data)
+        if ext == ".webp":                       # Scribus can't decode WebP
+            png = path[:-5] + ".png"
+            try:
+                subprocess.run(["convert", path, png], check=True,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return png
+            except Exception as e:
+                print("  (webp->png convert failed: %s)" % e)
         return path
     except Exception as e:
-        print("  (emblem fetch failed: %s)" % e)
+        print("  (image fetch failed: %s)" % e)
         return None
 
 
@@ -136,6 +212,85 @@ def place_emblem(path, x, y, size):
         print("  (emblem place failed: %s)" % e)
 
 
+def image_size(path):
+    """Native (w, h) in pixels for PNG/GIF/JPEG/WEBP, or None. Pure stdlib so it
+    works inside Scribus's interpreter."""
+    import struct
+    try:
+        with open(path, "rb") as f:
+            head = f.read(30)
+            if head[:8] == b"\x89PNG\r\n\x1a\n":
+                return struct.unpack(">II", head[16:24])
+            if head[:6] in (b"GIF87a", b"GIF89a"):
+                return struct.unpack("<HH", head[6:10])
+            if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+                fmt = head[12:16]
+                if fmt == b"VP8 ":
+                    return (struct.unpack("<H", head[26:28])[0] & 0x3fff,
+                            struct.unpack("<H", head[28:30])[0] & 0x3fff)
+                if fmt == b"VP8L":
+                    b = head[21:25]; bits = b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24
+                    return (bits & 0x3fff) + 1, ((bits >> 14) & 0x3fff) + 1
+                if fmt == b"VP8X":
+                    return ((head[24] | head[25] << 8 | head[26] << 16) + 1,
+                            (head[27] | head[28] << 8 | head[29] << 16) + 1)
+            if head[:2] == b"\xff\xd8":          # JPEG: scan to a SOF marker
+                f.seek(2); b = f.read(1)
+                while b:
+                    while b and b != b"\xff": b = f.read(1)
+                    while b == b"\xff": b = f.read(1)
+                    if not b: break
+                    m = b[0]
+                    if 0xC0 <= m <= 0xCF and m not in (0xC4, 0xC8, 0xCC):
+                        f.read(3); hh, ww = struct.unpack(">HH", f.read(4)); return ww, hh
+                    seg = struct.unpack(">H", f.read(2))[0]; f.seek(seg - 2, 1); b = f.read(1)
+    except Exception:
+        pass
+    return None
+
+
+def place_photo(path, x, y, w, h, cover=False):
+    """Place a story photo. cover=True fills the whole w×h box crop-to-fill (like
+    the web's object-fit:cover) by pre-cropping to the box aspect with ImageMagick;
+    otherwise fit proportionally, centred. Aspect ratio is always preserved (equal
+    x/y scale). Returns True if placed."""
+    if not path:
+        return False
+    try:
+        if cover:
+            tw, th = max(1, int(w / 25.4 * 200)), max(1, int(h / 25.4 * 200))  # 200dpi target
+            cropped = path + ".cover.jpg"
+            try:
+                subprocess.run(["convert", path, "-resize", "%dx%d^" % (tw, th),
+                                "-gravity", "center", "-extent", "%dx%d" % (tw, th), cropped],
+                               check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                path = cropped
+            except Exception as e:
+                print("  (cover crop failed, fitting instead: %s)" % e); cover = False
+        # Frame sized to the displayed image (no letterbox), scale set explicitly
+        # from the native size (setScaleImageToFrame is unreliable in a busy doc).
+        dims = image_size(path)
+        fx, fy, fw, fh, s = x, y, w, h, None
+        if dims and dims[0] and dims[1]:
+            iw, ih = dims
+            fit = min(w * 72.0 / (25.4 * iw), h * 72.0 / (25.4 * ih))
+            s = fit
+            fw, fh = iw * s / 72.0 * 25.4, ih * s / 72.0 * 25.4
+            fx, fy = x + (w - fw) / 2.0, y + (h - fh) / 2.0
+        fr = scribus.createImage(fx, fy, fw, fh)
+        scribus.loadImage(path, fr)
+        if s is not None:
+            scribus.setImageScale(s, s, fr)
+        else:
+            scribus.setScaleImageToFrame(scaletoframe=1, proportional=1, name=fr)
+        scribus.setLineColor("Hair", fr)
+        scribus.setLineWidth(0.4, fr)
+        return True
+    except Exception as e:
+        print("  (photo place failed: %s)" % e)
+        return False
+
+
 # ════════════════════════════════════════════════════════════════════════
 def main():
     with open(ISSUE, encoding="utf-8") as f:
@@ -146,10 +301,7 @@ def main():
                         scribus.UNIT_MILLIMETERS, scribus.PAGE_1, 0, 1)
     scribus.setUnit(scribus.UNIT_MILLIMETERS)
 
-    defc("Ink", 26, 23, 20)
-    defc("Accent", 122, 31, 26)
-    defc("Paper", 245, 239, 225)
-    defc("Hair", 170, 156, 130)
+    define_theme(data.get("theme"))
 
     # paper background
     bg = scribus.createRect(0, 0, PW, PH)
@@ -238,6 +390,11 @@ def main():
             add(bf, lead_by, "BylineC")
             y += 5
         y += 1
+        # lead hero photo — the prominent image the web edition shows under the
+        # headline (was previously dropped by the print layout).
+        lead_ph_h = 120
+        if place_photo(fetch_image(lead.get("image_url")), CX, y, CW, lead_ph_h, cover=True):
+            y += lead_ph_h + 2
         rule(CX, y, CX + CW, 0.4, "Hair")
         y += 2
         lb_h = 66

@@ -50,6 +50,19 @@
   body.allmode .lead,body.allmode .story,body.allmode .adbox{position:relative;cursor:pointer;border-radius:2px;transition:outline-color .1s}
   body.allmode .lead:hover,body.allmode .story:hover,body.allmode .adbox:hover{outline:2px solid var(--accent);outline-offset:3px}
   body.allmode .draft{opacity:.5}
+  /* floating "edit image" affordance shown on photo hover (board edit mode) */
+  .img-edit-btn{position:absolute;z-index:9;width:28px;height:28px;padding:0;line-height:1;font-size:.95rem;cursor:pointer;
+    border:1px solid var(--imgborder);background:rgba(255,255,255,.94);color:#3a342a;border-radius:7px;
+    box-shadow:0 1px 5px rgba(0,0,0,.3);display:none}
+  .img-edit-btn:hover{background:#fff;outline:2px solid var(--accent);outline-offset:1px}
+  /* drag-to-resize grip (bottom-right of a photo) — width snaps to the story's columns */
+  .img-resize-grip{position:absolute;z-index:9;width:18px;height:18px;cursor:nwse-resize;display:none;
+    background:#fff;border:1.5px solid var(--accent);border-radius:0 0 4px 0;box-shadow:0 1px 4px rgba(0,0,0,.35);touch-action:none}
+  .img-resize-grip::after{content:"";position:absolute;right:3px;bottom:3px;width:7px;height:7px;
+    border-right:2px solid var(--accent);border-bottom:2px solid var(--accent)}
+  .rsz-badge{position:absolute;z-index:10;background:var(--accent);color:#fff;font-family:var(--font-meta),system-ui;
+    font-size:.66rem;font-weight:700;letter-spacing:.04em;padding:.1rem .4rem;border-radius:4px;pointer-events:none;display:none;white-space:nowrap}
+  body.allmode.resizing{cursor:nwse-resize!important;user-select:none}
   body.allmode .draft::after{content:var(--drafttxt,"DRAFT");position:absolute;top:.25rem;right:.25rem;z-index:3;
     background:var(--accent);color:#fff;font-family:var(--font-meta);font-size:.6rem;font-weight:700;
     letter-spacing:.1em;text-transform:uppercase;padding:.06rem .42rem;border-radius:2px;pointer-events:none}
@@ -125,9 +138,15 @@
   .lead-flow{max-width:62rem;margin:0 auto;text-align:justify;hyphens:auto;font-size:1.02rem;line-height:1.55}
   .lead-flow p{margin:0 0 .6rem}
   .lead-flow .lead-open{max-width:none;margin:0}
-  .lead-flow .lead-photo{float:right;width:42%;max-width:380px;height:auto;max-height:none;
-    margin:.2rem 0 .7rem 1.4rem;border:1px solid var(--imgborder)}
+  /* lead photo wrappers are <figure>; border/filter live on the inner image */
+  .lead-flow .lead-photo{float:right;width:42%;max-width:380px;margin:.2rem 0 .7rem 1.4rem}
+  .lead-flow .lead-photo.flt-left{float:left;margin:.2rem 1.4rem .7rem 0}
+  .lead-flow .lead-photo > img{max-height:none}
   @media(max-width:640px){.lead-flow .lead-photo{float:none;width:100%;margin:.4rem 0}}
+  /* lead hero banner: photo above the text, full width and bigger than the float */
+  .lead-banner{display:block;width:100%;margin:.55rem 0 .95rem}
+  .lead-banner > img{max-height:520px;object-fit:cover}
+  .lead .cropwrap > img{max-height:none}
 
   /* masonry "snap" grid: stories are cards packed into the shortest column via
      dense flow + JS row-spans (packWell); DOM order is preserved (the grid only
@@ -170,12 +189,20 @@
   /* photo inside the body is a banner that spans all text columns (so the text
      keeps flowing in `--bodycols` columns below it); .inset snaps it to fewer
      columns (narrower banner), .full fills the story width. The deck spans all. */
-  .story .body > img{column-span:all;display:block;margin:.1rem 0 .55rem;border:1px solid var(--imgborder);filter:var(--photo-filter)}
-  .story .body > img.full{width:100%}
-  .story .body > img.inset{width:var(--inset)}
+  /* a photo is a <figure class="photo"> wrapping the image (or crop frame) + its
+     author credit, so the caption stays under the image in every position. */
+  .story .body > figure.photo{column-span:all;display:block;margin:.1rem 0 .55rem;padding:0}
+  .story .body > figure.photo.full{width:100%}
+  .story .body > figure.photo.inset{width:var(--inset)}
   /* Word-style float positions: image hugs a side, text wraps (single-column body) */
-  .story .body > img.flt-left{column-span:none;float:left;width:var(--inset);margin:.15rem .8rem .4rem 0}
-  .story .body > img.flt-right{column-span:none;float:right;width:var(--inset);margin:.15rem 0 .4rem .8rem}
+  .story .body > figure.photo.flt-left{column-span:none;float:left;width:var(--inset);margin:.15rem .8rem .4rem 0}
+  .story .body > figure.photo.flt-right{column-span:none;float:right;width:var(--inset);margin:.15rem 0 .4rem .8rem}
+  figure.photo > img,figure.photo > .cropwrap{display:block;width:100%;height:auto;margin:0;border:1px solid var(--imgborder);filter:var(--photo-filter)}
+  /* crop frame: clips a cover-fit image so a forced aspect-ratio + focal point + zoom apply */
+  .cropwrap{overflow:hidden;line-height:0;background:#0000000d}
+  .cropwrap > img{width:100%;height:100%;object-fit:cover;display:block;border:0;margin:0;filter:none}
+  /* photo credit (illustrator) under every image */
+  figure.photo > .credit{font-size:.62rem;line-height:1.3;color:var(--muted);font-style:italic;margin:.16rem 0 0;text-align:left;hyphens:none}
   .story .body > .deckline{column-span:all;margin:.1rem 0 .45rem;font-size:.92rem;text-align:left;hyphens:none}
   @media(max-width:520px){.story .body{column-count:1!important}}
   /* foot-of-page feuilleton band (full-width brief), under the well */
@@ -353,6 +380,7 @@
   <button onclick="load()" data-i18n="paper.refresh">↻ Refresh</button>
   <label class="themepick" data-i18n-title="paper.themeTitle" title="Style du journal">🎨 <select id="themeSel" onchange="setTheme(this.value)"></select></label>
   <a class="btn" id="layoutLink" href="#" target="_top" data-i18n="paper.editLayout">✎ Éditer la mise en page</a>
+  <a class="btn" id="flipLink" href="#" target="_top" data-i18n="paper.flip">📖 Feuilleter</a>
   <button onclick="savePNG()" data-i18n="paper.png">🖼 PNG</button>
   <button class="primary" onclick="window.print()" data-i18n="paper.print">⎙ Print / PDF</button>
 </div>
@@ -375,16 +403,18 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = (s,r=document)=>r.querySelector(s);
-const { Placements, AdPlacements, Auth, Profiles, Comments, Ads, Papers, Styles, esc, md, configured, I18n, Prefs } = window.Daihbi;
+const { Placements, AdPlacements, Auth, Profiles, Comments, Ads, Papers, Styles, Media, esc, md, configured, I18n, Prefs } = window.Daihbi;
+let CREDITS = {};   // image URL → author (filled in load(); credited under each photo)
+function creditLine(url){ const a = url && CREDITS[url]; return a ? `<figcaption class="credit">${esc(I18n.t("paper.illusCredit",{name:a}))}</figcaption>` : ""; }
 
 I18n.register({
   fr: {
     "paper.kiosk":"📰 Kiosque","paper.refresh":"↻ Rafraîchir","paper.themeTitle":"Style du journal",
-    "paper.editLayout":"✎ Éditer la mise en page","paper.png":"🖼 PNG","paper.print":"⎙ Imprimer / PDF",
+    "paper.editLayout":"✎ Éditer la mise en page","paper.flip":"📖 Feuilleter","paper.png":"🖼 PNG","paper.print":"⎙ Imprimer / PDF",
     "paper.loading":"Chargement de la presse…","paper.lettersTitle":"Courrier des lecteurs",
     "paper.aiHead":"✦ Rédigé par l’IA","paper.aiBadge":"✦ Rédigé par IA",
     "paper.aiTitle":"Texte généré par intelligence artificielle","paper.regTitle":"Régiment d’origine",
-    "paper.byAuthor":"de {name}","paper.adFallback":"Réclame","paper.draft":"Brouillon",
+    "paper.byAuthor":"de {name}","paper.adFallback":"Réclame","paper.draft":"Brouillon","paper.editImage":"✎ Modifier l’image","paper.illusCredit":"Illustration : {name}",
     "paper.noArticles":"Aucun article publié.","paper.writeOne":"En écrire un →",
     "paper.loadFail":"Impossible de charger les articles.","paper.notConnected":"Pas encore connecté.",
     "paper.addKeys":"Ajoutez votre URL Supabase + clé anon dans","paper.editionLabel":"ÉDITION « {issue} »",
@@ -404,11 +434,11 @@ I18n.register({
   },
   en: {
     "paper.kiosk":"📰 Newsstand","paper.refresh":"↻ Refresh","paper.themeTitle":"Paper style",
-    "paper.editLayout":"✎ Edit layout","paper.png":"🖼 PNG","paper.print":"⎙ Print / PDF",
+    "paper.editLayout":"✎ Edit layout","paper.flip":"📖 Flip-through","paper.png":"🖼 PNG","paper.print":"⎙ Print / PDF",
     "paper.loading":"Loading the press…","paper.lettersTitle":"Readers’ mail",
     "paper.aiHead":"✦ Written by AI","paper.aiBadge":"✦ Written by AI",
     "paper.aiTitle":"Text generated by artificial intelligence","paper.regTitle":"Originating regiment",
-    "paper.byAuthor":"by {name}","paper.adFallback":"Advertisement","paper.draft":"Draft",
+    "paper.byAuthor":"by {name}","paper.adFallback":"Advertisement","paper.draft":"Draft","paper.editImage":"✎ Edit image","paper.illusCredit":"Illustration: {name}",
     "paper.noArticles":"No article published.","paper.writeOne":"Write one →",
     "paper.loadFail":"Could not load articles.","paper.notConnected":"Not connected yet.",
     "paper.addKeys":"Add your Supabase URL + anon key to","paper.editionLabel":"EDITION “{issue}”",
@@ -449,12 +479,102 @@ if (ALL) {
     e.preventDefault();
     try{ parent.postMessage({ type:"daihbi-edit", pid: el.dataset.pid, kind: el.dataset.kind || "placement" }, location.origin); }catch(_){}
   });
-  // double-clicking a story/ad asks the board to open its content editor
+  // double-clicking a PHOTO opens the image crop panel (below the preview, so the
+  // change is visible); double-clicking anything else opens the content editor.
   document.addEventListener("dblclick", (e)=>{
     const el = e.target.closest("[data-pid]"); if(!el) return;
     e.preventDefault();
-    try{ parent.postMessage({ type:"daihbi-edit-text", pid: el.dataset.pid, kind: el.dataset.kind || "placement" }, location.origin); }catch(_){}
+    const type = photoHost(e.target) ? "daihbi-edit-image" : "daihbi-edit-text";
+    try{ parent.postMessage({ type, pid: el.dataset.pid, kind: el.dataset.kind || "placement" }, location.origin); }catch(_){}
   });
+  // a story/lead photo (not an avatar) inside a tagged element → its host element
+  function photoHost(t){
+    if(!t) return null;
+    const img = t.tagName === "IMG" ? t
+      : (t.classList && t.classList.contains("cropwrap")) ? t.querySelector("img") : null;
+    if(!img || img.closest(".byline")) return null;       // skip byline avatars
+    return img.closest("[data-pid]");
+  }
+  // floating "✎" affordance on photo hover → same image panel
+  const imgBtn = document.createElement("button");
+  imgBtn.className = "img-edit-btn"; imgBtn.type = "button"; imgBtn.textContent = "✎";
+  try{ imgBtn.title = window.Daihbi.I18n.t("paper.editImage"); }catch(_){ imgBtn.title = "✎"; }
+  document.body.appendChild(imgBtn);
+  // drag-to-resize grip + a "N col" badge, both shared/floating
+  const grip = document.createElement("div"); grip.className = "img-resize-grip"; document.body.appendChild(grip);
+  const badge = document.createElement("div"); badge.className = "rsz-badge"; document.body.appendChild(badge);
+  let imgBtnHost = null, gripBox = null, resizing = false;
+  // the resizable photo box of a STORY (lead banners have no per-column size)
+  function storyPhotoBox(t){
+    const host = photoHost(t); if(!host || !host.classList.contains("story")) return null;
+    const img = t.tagName === "IMG" ? t : t.querySelector("img");
+    const fig = img && img.closest("figure.photo"); if(!fig) return null;
+    return { host, box: fig };   // width snaps the whole figure (image + credit)
+  }
+  document.addEventListener("mouseover", (e)=>{
+    if(resizing || e.target === imgBtn || e.target === grip) return;
+    const host = photoHost(e.target);
+    if(host){
+      imgBtnHost = host;
+      const box = (e.target.closest(".cropwrap") || e.target);
+      const r = box.getBoundingClientRect();
+      imgBtn.style.left = (window.scrollX + r.right - 34) + "px";
+      imgBtn.style.top  = (window.scrollY + r.top  + 6)  + "px";
+      imgBtn.style.display = "block";
+      // resize grip only for story photos (they carry img_cols)
+      const sp = storyPhotoBox(e.target);
+      if(sp){ gripBox = sp; grip.style.left = (window.scrollX + r.right - 16) + "px";
+        grip.style.top = (window.scrollY + r.bottom - 16) + "px"; grip.style.display = "block"; }
+      else { grip.style.display = "none"; gripBox = null; }
+    } else { imgBtn.style.display = "none"; grip.style.display = "none"; imgBtnHost = null; gripBox = null; }
+  });
+  imgBtn.addEventListener("click", (e)=>{
+    e.preventDefault(); e.stopPropagation();
+    if(!imgBtnHost) return;
+    try{ parent.postMessage({ type:"daihbi-edit-image", pid: imgBtnHost.dataset.pid, kind: imgBtnHost.dataset.kind || "placement" }, location.origin); }catch(_){}
+  });
+  // ── drag-resize: width snaps to the story's columns, image keeps its proportion ──
+  let rz = null;
+  grip.addEventListener("pointerdown", (e)=>{
+    if(!gripBox) return;
+    e.preventDefault(); e.stopPropagation();
+    const { host, box } = gripBox;
+    const bodyEl = box.closest(".body") || host;
+    const cs = getComputedStyle(host);
+    // snap to the story's real column SPAN (a floated photo forces --bodycols=1, so use the applied span)
+    const avail = Math.max(1, parseInt(host.dataset.applied) || parseInt(cs.getPropertyValue("--bodycols")) || parseInt(host.dataset.span) || 1);
+    const gap = parseFloat(getComputedStyle(bodyEl).columnGap) || parseFloat(cs.getPropertyValue("--col-gap")) || 18;
+    const W = bodyEl.clientWidth;
+    const colW = (W - (avail - 1) * gap) / avail;
+    const left = box.getBoundingClientRect().left;
+    rz = { host, box, bodyEl, avail, gap, W, colW, left, cols: 1 };
+    resizing = true; document.body.classList.add("resizing");
+    badge.style.display = "block";
+    try{ grip.setPointerCapture(e.pointerId); }catch(_){}
+  });
+  grip.addEventListener("pointermove", (e)=>{
+    if(!rz) return;
+    const newW = Math.max(rz.colW * 0.5, Math.min(e.clientX - rz.left, rz.W));
+    rz.cols = Math.max(1, Math.min(Math.round((newW + rz.gap) / (rz.colW + rz.gap)), rz.avail));
+    const snapW = Math.min(rz.W, rz.cols * rz.colW + (rz.cols - 1) * rz.gap);
+    rz.box.style.width = snapW + "px"; rz.box.style.maxWidth = "none";
+    badge.textContent = rz.cols + " / " + rz.avail + " col";
+    badge.style.left = (window.scrollX + e.clientX + 12) + "px";
+    badge.style.top  = (window.scrollY + e.clientY + 12) + "px";
+    const gr = rz.box.getBoundingClientRect();
+    grip.style.left = (window.scrollX + gr.right - 16) + "px";
+    grip.style.top  = (window.scrollY + gr.bottom - 16) + "px";
+  });
+  const endResize = ()=>{
+    if(!rz) return;
+    const cols = rz.cols, avail = rz.avail, host = rz.host; rz = null;
+    resizing = false; document.body.classList.remove("resizing"); badge.style.display = "none";
+    // imgc spanning the full width → 0 (auto/full); else the chosen column count
+    const imgcols = cols >= avail ? 0 : cols;
+    try{ parent.postMessage({ type:"daihbi-resize-image", pid: host.dataset.pid, cols: imgcols }, location.origin); }catch(_){}
+  };
+  grip.addEventListener("pointerup", endResize);
+  grip.addEventListener("pointercancel", endResize);
 }
 function fallbackPaper(){ return {
   name: ISSUE.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()),
@@ -515,6 +635,7 @@ function applyPaper(){
   document.title = PAPER.name;
   $(".toolbar b").innerHTML = PAPER.name;
   const ll = $("#layoutLink"); if(ll) ll.href = "board.html?issue=" + encodeURIComponent(ISSUE);
+  const fl = $("#flipLink"); if(fl) fl.href = "flip.html?issue=" + encodeURIComponent(ISSUE);
   THEME = resolveTheme();
   const isCustom = !!CUSTOM[THEME];
   $("#sheet").className = "sheet " + (PAPER.plate || "") + (isCustom ? " theme-custom" : " theme-" + THEME);
@@ -612,18 +733,62 @@ function renderLead(a){
     ${a.subhead ? `<div class="deck">${esc(a.subhead)}</div>` : ""}
     ${byline(a)}`;
   if (a.image_url) {
-    // photo inset (floated), text wraps around it — like the hand-made originals
+    const pos = a.img_pos || "top";
+    if (pos === "left" || pos === "right") {
+      // photo inset (floated), text wraps around it — like the hand-made originals
+      return `<section class="lead${draftCls(a)}"${editAttrs(a)}>${head}
+        <div class="lead-flow">
+          ${leadPhoto(a, "lead-photo " + (pos === "left" ? "flt-left" : "flt-right"))}
+          <div class="lead-open">${open}</div>${rest}
+        </div>
+      </section>`;
+    }
+    // pos "top" → full-width hero banner above the text (bigger)
     return `<section class="lead${draftCls(a)}"${editAttrs(a)}>${head}
-      <div class="lead-flow">
-        <img class="lead-photo" src="${esc(a.image_url)}" alt="">
-        <div class="lead-open">${open}</div>${rest}
-      </div>
+      ${leadPhoto(a, "lead-banner")}
+      <div class="lead-open">${open}</div>
+      ${rest ? `<div class="lead-cols">${rest}</div>` : ""}
     </section>`;
   }
   return `<section class="lead${draftCls(a)}"${editAttrs(a)}>${head}
     <div class="lead-open">${open}</div>
     ${rest ? `<div class="lead-cols">${rest}</div>` : ""}
   </section>`;
+}
+// Lead photo with the crop tool baked in at render (the lead isn't inside a .well,
+// so applyStorySpans never touches it). A forced ratio or a zoom → clipping frame.
+function leadPhoto(a, cls){
+  const data = `data-imgpos="${esc(a.img_pos||"top")}" data-crop="${esc(a.img_crop||"")}" data-focus="${esc(imgFocus(a))}" data-zoom="${imgZoom(a)}"`;
+  const z = imgZoom(a), crop = a.img_crop||"";
+  let inner;
+  if(crop || z>1){
+    const ratio = CROP_RAT[crop] || (cls.indexOf("lead-banner")>=0 ? "2/1" : "3/2");
+    const istyle = `object-position:${esc(imgFocus(a))};transform:scale(${z});transform-origin:${esc(imgFocus(a))}`;
+    inner = `<span class="cropwrap" style="aspect-ratio:${ratio}"><img src="${esc(a.image_url)}" alt="" style="${istyle}"></span>`;
+  } else {
+    inner = `<img src="${esc(a.image_url)}" alt="" style="object-position:${esc(imgFocus(a))}">`;
+  }
+  return `<figure class="${cls} photo" ${data}>${inner}${creditLine(a.image_url)}</figure>`;
+}
+// Crop-tool ratios (img_crop) + neutral helpers shared by stories and the lead.
+const CROP_RAT = { "2x1":"2/1", "16x9":"16/9", "3x2":"3/2", "4x3":"4/3", "1x1":"1/1", "3x4":"3/4" };
+function imgFocus(a){ return a.img_focus || "50% 50%"; }
+function imgZoom(a){ const z = parseFloat(a.img_zoom); return (z>1) ? z : 1; }
+// A photo carrying the editor's crop settings as data-*; when a ratio is forced
+// OR a zoom is applied it becomes a clipping .cropwrap frame (so object-position +
+// scale crop inside it), otherwise a plain <img> (focus still set, harmless).
+function storyPhoto(a, imgc){
+  const data = `data-imgc="${imgc}" data-imgpos="${esc(a.img_pos||"top")}" data-crop="${esc(a.img_crop||"")}" data-focus="${esc(imgFocus(a))}" data-zoom="${imgZoom(a)}"`;
+  const z = imgZoom(a), crop = a.img_crop||"";
+  let inner;
+  if(crop || z>1){
+    const istyle = `object-position:${esc(imgFocus(a))};transform:scale(${z});transform-origin:${esc(imgFocus(a))}`;
+    inner = `<span class="cropwrap"><img src="${esc(a.image_url)}" alt="" style="${istyle}"></span>`;
+  } else {
+    inner = `<img src="${esc(a.image_url)}" alt="" style="object-position:${esc(imgFocus(a))}">`;
+  }
+  // figure wraps the photo + its author credit so the caption sits under the image
+  return `<figure class="photo" ${data}>${inner}${creditLine(a.image_url)}</figure>`;
 }
 function renderStory(a){
   // Editor-chosen layout is carried as data-* and APPLIED by applyStorySpans()
@@ -632,7 +797,7 @@ function renderStory(a){
   // the grid and collide. data-span 0 = auto by weight (major=2, else 1).
   const span = a.col_span > 0 ? a.col_span : (a.weight === "major" ? 2 : 1);
   const imgc = a.image_url ? (a.img_cols > 0 ? a.img_cols : span) : 0;  // 0 = no photo
-  const img = a.image_url ? `<img data-imgc="${imgc}" data-imgpos="${esc(a.img_pos||"top")}" data-crop="${esc(a.img_crop||"")}" src="${esc(a.image_url)}" alt="">` : "";
+  const img = a.image_url ? storyPhoto(a, imgc) : "";
   return `<article class="story ${esc(a.weight)}${draftCls(a)}" data-span="${span}"${editAttrs(a)}>
     ${kicker(a)}<h3>${esc(a.headline)}</h3>${byline(a)}
     <div class="body">${a.subhead ? `<p class="deckline"><em>${esc(a.subhead)}</em></p>` : ""}${img}${md(a.body)}</div>
@@ -649,23 +814,28 @@ function applyStorySpans(){
       const span = Math.max(1, Math.min(want, cols));
       el.style.gridColumn = "span " + span;
       el.style.setProperty("--bodycols", span);
-      const img = el.querySelector(":scope > .body > img");
-      if(img){
-        const imgc = Math.max(1, Math.min(parseInt(img.dataset.imgc) || span, span));
-        const pos = img.dataset.imgpos || "top";
+      el.dataset.applied = span;   // the story's real column span (resize snaps the photo to it)
+      // photo block = a <figure class="photo"> wrapping the <img>/.cropwrap + credit
+      const ph = el.querySelector(":scope > .body > figure.photo");
+      if(ph){
+        const inner = ph.querySelector(":scope > .cropwrap, :scope > img");
+        const isFrame = inner && inner.classList.contains("cropwrap");
+        const imgc = Math.max(1, Math.min(parseInt(ph.dataset.imgc) || span, span));
+        const pos = ph.dataset.imgpos || "top";
         const insetCalc = `calc(((${imgc} * (100% - ${span-1} * var(--col-gap))) / ${span}) + ${imgc-1} * var(--col-gap))`;
         if(pos === "left" || pos === "right"){
           // float + wrap (Word-style): single-column body so the text flows around it
           el.style.setProperty("--bodycols", 1);
-          img.className = pos === "left" ? "flt-left" : "flt-right";
+          ph.className = "photo " + (pos === "left" ? "flt-left" : "flt-right");
           el.style.setProperty("--inset", imgc >= span ? "55%" : insetCalc);
-        } else if(imgc < span){ img.className = "inset"; el.style.setProperty("--inset", insetCalc); }
-        else { img.className = "full"; el.style.removeProperty("--inset"); }
-        // crop-to-fill (img_crop.sql): force an aspect ratio, cover the box
-        const crop = img.dataset.crop || "";
-        const RAT = { "16x9":"16/9", "3x2":"3/2", "4x3":"4/3", "1x1":"1/1", "3x4":"3/4" };
-        if(RAT[crop]){ img.style.aspectRatio = RAT[crop]; img.style.objectFit = "cover"; img.style.height = "auto"; }
-        else { img.style.aspectRatio = ""; img.style.objectFit = ""; }
+        } else if(imgc < span){ ph.className = "photo inset"; el.style.setProperty("--inset", insetCalc); }
+        else { ph.className = "photo full"; el.style.removeProperty("--inset"); }
+        // crop-to-fill: a forced aspect-ratio goes on the inner box being clipped.
+        const crop = ph.dataset.crop || "";
+        if(isFrame){
+          // frame needs a height: forced ratio, else a sane default so zoom-only crops show
+          inner.style.aspectRatio = CROP_RAT[crop] || "3/2";
+        }
       }
     });
   });
@@ -757,6 +927,7 @@ async function load(){
     arts = placed.filter(p=>p.article).map(p => ({ ...p.article,
       weight: p.weight, position: p.position,
       col_span: p.col_span || 0, img_cols: p.img_cols || 0, img_pos: p.img_pos || "top", img_crop: p.img_crop || "",   // editor layout (columns.sql / img_pos.sql / img_crop.sql)
+      img_focus: p.img_focus || "", img_zoom: (p.img_zoom>0 ? p.img_zoom : 1),   // crop tool (img_crop_tool.sql)
       pid: p.id, kind: "placement", published: p.published !== false,
       lang: (p.article.lang)||"fr",
       image_url: p.image_url || p.article.image_url || "" }));
@@ -783,6 +954,9 @@ async function load(){
     ads = ap.map(p=> p.ad ? { ...p.ad, pid:p.id, kind:"ad-placement", published:p.published!==false } : null).filter(Boolean);
     if(!ALL && !ads.length) ads = await Ads.listApproved(ISSUE);
   }catch(e){ if(!ALL){ try{ ads = await Ads.listApproved(ISSUE); }catch(_){} } }
+
+  // photo credits: map each used image URL → its author (portfolio/media provenance)
+  try{ CREDITS = await Media.creditsFor([...arts.map(a=>a.image_url), ...ads.map(d=>d.image_url)]); }catch(e){ CREDITS = {}; }
 
   // transparency: AI-written chronicles go in a 1-column sidebar on the right,
   // human chronicles fill a 2-column well on the left.

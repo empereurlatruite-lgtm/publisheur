@@ -15,6 +15,15 @@ ISSUE="${1:-current}"
 OUT="out"
 mkdir -p "$OUT"
 
+# Register the bundled web fonts (Playfair Display / PT Serif / Old Standard TT)
+# so Scribus renders the print edition with the same type as paper.html. No-op
+# if already installed; harmless without them (layout.py falls back to Liberation).
+if [ -d fonts ]; then
+  mkdir -p "$HOME/.fonts/publisheur"
+  cp -f fonts/*.ttf "$HOME/.fonts/publisheur/" 2>/dev/null || true
+  fc-cache -f "$HOME/.fonts" >/dev/null 2>&1 || true
+fi
+
 echo "▶ 1/3  Gathering articles (issue: $ISSUE) …"
 python3 build_issue.py --issue "$ISSUE" --out "$OUT/issue.json"
 

@@ -14,8 +14,7 @@
   header{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.1rem}
   header h1{font-size:1.25rem;margin:0}
   header .grow{flex:1}
-  main{max-width:1000px;margin:1.4rem auto;padding:0 1rem;display:grid;grid-template-columns:1fr 1fr;gap:1.4rem}
-  @media(max-width:760px){main{grid-template-columns:1fr}}
+  main{max-width:1760px;margin:1.4rem auto;padding:0 1.2rem}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem 1.1rem}
   .card h2{font-family:"Playfair Display",serif;margin:.1rem 0 .8rem;font-size:1.2rem}
   label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;margin:.6rem 0 .25rem;font-weight:600}
@@ -51,6 +50,58 @@
   .gate .authtabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
   .gate button.full{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:.65rem;font:inherit;font-weight:600;cursor:pointer;margin-top:.3rem}
   .gate a{color:#e8b9b2}
+  /* ── réclame preview: a faithful mini of paper.html's .adbox ── */
+  .adbox{break-inside:avoid;border:2px solid #b9ad90;padding:.55rem .65rem;margin:0;background:#f7f2e6;
+    font-family:"PT Serif",Georgia,serif;color:#1f1c18;
+    background-image:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(120,100,70,.05) 6px,rgba(120,100,70,.05) 12px)}
+  .adbox .ad-label{text-align:center;font-family:system-ui,sans-serif;text-transform:uppercase;letter-spacing:.3em;
+    font-size:.55rem;color:#6a6253;border-bottom:1px solid #b9ad90;padding-bottom:.25rem;margin-bottom:.4rem}
+  .adbox img{width:100%;display:block;margin:.2rem 0 .4rem;border:1px solid #b9ad90;filter:grayscale(.25) sepia(.12)}
+  .adbox .ad-title{font-family:"Playfair Display",serif;font-weight:900;text-align:center;font-size:1.25rem;line-height:1.05;margin:.1rem 0;word-break:break-word}
+  .adbox .ad-maker{text-align:center;font-variant:small-caps;letter-spacing:.06em;color:var(--accent);font-size:.82rem;margin-bottom:.3rem}
+  .adbox .body{font-size:.86rem;line-height:1.4;text-align:center}
+  .adbox .body p{margin:.2rem 0}
+  .adbox .ad-link{text-align:center;font-size:.68rem;color:#6a6253;word-break:break-all;margin-top:.3rem}
+  /* live preview inside the form */
+  .livewrap{margin-top:1rem;border-top:1px dashed #c9bda0;padding-top:.7rem}
+  #livePrev{max-width:280px;margin:.3rem auto 0}
+  /* list: a masonry wall of réclame previews + infinite scroll (like illustrateurs) */
+  .lhead{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.4rem}
+  .lhead h2{margin:0;flex:none}
+  .lhead input[type=search]{flex:1;min-width:10rem;font:inherit;padding:.45rem .6rem;border:1px solid #c9bda0;border-radius:7px;background:#fff;color:var(--ink)}
+  .chk{display:flex;align-items:center;gap:.35rem;font-size:.82rem;color:#6a6253;cursor:pointer;white-space:nowrap}
+  .filters{display:flex;gap:.35rem;flex-wrap:wrap;margin:.1rem 0 .5rem}
+  .chip{font:inherit;font-size:.8rem;border:1px solid #c9bda0;background:#fff;color:#5a5246;border-radius:999px;padding:.25rem .65rem;cursor:pointer;white-space:nowrap}
+  .chip:hover{background:#efe7d4}
+  .chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .chip .c{opacity:.6;margin-left:.2rem}
+  .summary{font-size:.82rem;color:#8a8070;margin:.1rem 0 .6rem}
+  #wall{column-width:220px;column-gap:14px}
+  .adtile{break-inside:avoid;-webkit-column-break-inside:avoid;margin:0 0 14px;background:#fff;
+    border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .adtile .adbox{border-radius:0;border-width:0;cursor:pointer}
+  .adtile:hover{border-color:var(--accent)}
+  .adtools{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;padding:.45rem .55rem;border-top:1px solid var(--line);background:var(--panel)}
+  .adtools button{font:inherit;font-size:.74rem;border:1px solid #c9bda0;background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer}
+  .adtools .ok{background:#2f6b3f;color:#fff;border-color:#2f6b3f}
+  .adtools .no{color:#b33}
+  .adtools .tmeta{flex-basis:100%;font-size:.7rem;color:#6a6253;margin-top:.1rem}
+  #sentinel{height:1px}
+  .empty{color:#8a8070;font-style:italic;text-align:center;padding:2.2rem}
+  /* + Nouvelle réclame: modal (mirrors illustrateurs' add-image modal) */
+  .lhead button.go{background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:7px;padding:.5rem .85rem;font:inherit;font-weight:600;cursor:pointer;flex:none}
+  .amodal{position:fixed;inset:0;background:rgba(20,18,16,.75);z-index:140;display:none;align-items:flex-start;justify-content:center;padding:1.2rem;overflow:auto}
+  .amodal.open{display:flex}
+  .acard{background:#fbf8ef;border:1px solid #c9bda0;border-radius:12px;width:min(840px,96vw);margin:auto;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 72px rgba(0,0,0,.5)}
+  .ahead{display:flex;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--line);font-family:"Playfair Display",serif;font-size:1.15rem}
+  .ahead .grow{flex:1}
+  .ahead .x{border:1px solid var(--line);background:#fff;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:1rem;line-height:1}
+  .abody{padding:.9rem 1.1rem 1.1rem;overflow:auto;max-height:84vh}
+  .adgrid{display:grid;grid-template-columns:1fr 280px;gap:1.4rem;align-items:start}
+  @media(max-width:680px){.adgrid{grid-template-columns:1fr}}
+  .adprevcol{position:sticky;top:0}
+  .adprevcol > label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;margin:0 0 .35rem;font-weight:600}
+  .adprevcol #livePrev{max-width:none;margin:0}
 </style>
 <link rel="stylesheet" href="nav.css">
 </head>
@@ -66,38 +117,58 @@
 </header>
 
 <main id="app" style="display:none">
-  <div class="card" id="formCard">
-    <h2 id="formTitle" data-i18n="ads.formNew">Nouvelle réclame</h2>
-    <label data-i18n="ads.category">Type de réclame</label><select id="f_category"></select>
-    <label data-i18n="ads.title">Titre</label><input id="f_title" placeholder="Ex. Aciéries de la Bleusaille" data-i18n-ph="ads.titlePh">
-    <label data-i18n="ads.maker">Fabricant / sponsor / chaîne</label><input id="f_maker" placeholder="Fabricant, régiment, chaîne…" data-i18n-ph="ads.makerPh">
-    <label data-i18n="ads.body">Texte</label><textarea id="f_body" placeholder="Votre message publicitaire…" data-i18n-ph="ads.bodyPh"></textarea>
-    <label data-i18n="ads.link">Lien (optionnel)</label><input id="f_link" placeholder="https://… (Discord, boutique…)" data-i18n-ph="ads.linkPh">
-    <label data-i18n="ads.issue">Édition ciblée</label><select id="f_issue"></select>
-    <label data-i18n="ads.lang">Langue de la réclame</label><select id="f_lang"></select>
-    <label data-i18n="ads.visual">Visuel</label>
-    <div class="dz" id="dz">
-      <div class="bar"><input id="f_image" placeholder="https://… ou téléversez" oninput="prev(this.value)" style="flex:1" data-i18n-ph="ads.imagePh">
-        <button class="ghost" onclick="document.querySelector('#file').click()">📷</button>
-        <input id="file" type="file" accept="image/*" style="display:none" onchange="pick(this.files[0])"></div>
-      <img id="preview" style="display:none">
-      <div class="err" id="imgErr"></div>
-    </div>
-    <div class="bar">
-      <span class="grow"></span>
-      <button class="ghost" id="delBtn" style="display:none" onclick="delAd()" data-i18n="ads.delete">Supprimer</button>
-      <button class="ghost" onclick="save('draft')" data-i18n="ads.draft">Brouillon</button>
-      <button class="go" onclick="save('review')" data-i18n="ads.submit">Soumettre à un éditeur</button>
-    </div>
-    <div class="err" id="formErr"></div>
-    <div class="bar"><button class="ghost" onclick="newAd()" data-i18n="ads.newAd">+ Nouvelle réclame</button></div>
-  </div>
-
   <div class="card">
-    <h2 id="listTitle" data-i18n="ads.listMine">Mes réclames</h2>
-    <div id="list"></div>
+    <div class="lhead">
+      <h2 id="listTitle" data-i18n="ads.listMine">Mes réclames</h2>
+      <button class="go" id="newAdBtn" onclick="openNew()" data-i18n="ads.newAd">➕ Nouvelle réclame</button>
+      <input type="search" id="q" oninput="render()" data-i18n-ph="ads.searchPh" placeholder="Rechercher un titre, un sponsor, un texte…">
+      <label class="chk" id="pendingWrap" style="display:none"><input type="checkbox" id="pendingOnly" onchange="render()"> <span data-i18n="ads.pendingOnly">À valider seulement</span></label>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="summary" id="summary"></div>
+    <div id="wall"></div>
+    <div id="sentinel"></div>
   </div>
 </main>
+
+<!-- + Nouvelle réclame: create / edit modal -->
+<div class="amodal" id="adModal">
+  <div class="acard">
+    <div class="ahead"><b id="formTitle" data-i18n="ads.formNew">Nouvelle réclame</b><span class="grow"></span><button class="x" onclick="closeForm()" aria-label="✕">✕</button></div>
+    <div class="abody" id="adFormBody">
+      <div class="adgrid">
+        <div class="adfields">
+          <label data-i18n="ads.category">Type de réclame</label><select id="f_category"></select>
+          <label data-i18n="ads.title">Titre</label><input id="f_title" placeholder="Ex. Aciéries de la Bleusaille" data-i18n-ph="ads.titlePh">
+          <label data-i18n="ads.maker">Fabricant / sponsor / chaîne</label><input id="f_maker" placeholder="Fabricant, régiment, chaîne…" data-i18n-ph="ads.makerPh">
+          <label data-i18n="ads.body">Texte</label><textarea id="f_body" placeholder="Votre message publicitaire…" data-i18n-ph="ads.bodyPh"></textarea>
+          <label data-i18n="ads.link">Lien (optionnel)</label><input id="f_link" placeholder="https://… (Discord, boutique…)" data-i18n-ph="ads.linkPh">
+          <label data-i18n="ads.issue">Édition ciblée</label><select id="f_issue"></select>
+          <label data-i18n="ads.lang">Langue de la réclame</label><select id="f_lang"></select>
+          <label data-i18n="ads.visual">Visuel</label>
+          <div class="dz" id="dz">
+            <div class="bar"><input id="f_image" placeholder="https://… ou téléversez" oninput="prev(this.value)" style="flex:1" data-i18n-ph="ads.imagePh">
+              <button class="ghost" onclick="document.querySelector('#file').click()">📷</button>
+              <input id="file" type="file" accept="image/*" style="display:none" onchange="pick(this.files[0])"></div>
+            <img id="preview" style="display:none">
+            <div class="err" id="imgErr"></div>
+          </div>
+        </div>
+        <div class="adprevcol">
+          <label data-i18n="ads.previewLabel">Aperçu dans le journal</label>
+          <div id="livePrev"></div>
+        </div>
+      </div>
+      <div class="bar">
+        <span class="grow"></span>
+        <button class="ghost" id="delBtn" style="display:none" onclick="delAd()" data-i18n="ads.delete">Supprimer</button>
+        <button class="ghost" onclick="save('draft')" data-i18n="ads.draft">Brouillon</button>
+        <button class="go" onclick="save('review')" data-i18n="ads.submit">Soumettre à un éditeur</button>
+      </div>
+      <div class="err" id="formErr"></div>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
@@ -218,8 +289,27 @@ I18n.register({
   },
 });
 
+I18n.register({
+  fr: {
+    "ads.searchPh":"Rechercher un titre, un sponsor, un texte…",
+    "ads.pendingOnly":"À valider seulement",
+    "ads.previewLabel":"Aperçu dans le journal",
+    "ads.filterAll":"Toutes",
+    "ads.summary":"{n} réclame(s)",
+  },
+  en: {
+    "ads.searchPh":"Search a title, a sponsor, a text…",
+    "ads.pendingOnly":"Pending only",
+    "ads.previewLabel":"Preview in the paper",
+    "ads.filterAll":"All",
+    "ads.summary":"{n} ad(s)",
+  },
+});
+
 let PAPERS = window.DAIHBI_PAPERS || {};
 let MYROLE="reader", MYPROFILE=null, ME=null, current=null, pendingImg="";
+let ADS=[], FILTERED=[], SHOWN=0, _io=null; const PAGE=36;
+const activeCats=new Set();
 
 const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function showGate(h){ $("#gate").style.display="flex"; $("#gc").innerHTML=h; }
@@ -272,13 +362,30 @@ function newAd(){ current=null; $("#formTitle").textContent=I18n.t("ads.formNew"
   ["f_title","f_maker","f_body","f_link","f_image"].forEach(i=>$("#"+i).value=""); $("#f_issue").value="all"; $("#f_category").value="fabricant";
   $("#f_lang").value=Prefs.contentLangLocal()||I18n.lang();
   Prefs.contentLang().then(l=>{ if(l && !current) $("#f_lang").value=l; }).catch(()=>{});
-  prev(""); $("#delBtn").style.display="none"; $("#formErr").textContent=""; }
+  prev(""); $("#delBtn").style.display="none"; $("#formErr").textContent=""; adPreviewLive(); }
 function editAd(a){ current=a.id; $("#formTitle").textContent=I18n.t("ads.formEdit");
   $("#f_title").value=a.title||""; $("#f_maker").value=a.maker||""; $("#f_body").value=a.body||"";
   $("#f_link").value=a.link||""; $("#f_image").value=a.image_url||""; $("#f_issue").value=a.issue||"all";
   $("#f_category").value=a.category||"fabricant";
   $("#f_lang").value=a.lang||(Prefs.contentLangLocal()||I18n.lang());
-  prev(a.image_url||""); $("#delBtn").style.display=""; $("#formErr").textContent=""; window.scrollTo(0,0); }
+  prev(a.image_url||""); $("#delBtn").style.display=""; $("#formErr").textContent=""; adPreviewLive(); openForm(); }
+// ── create / edit modal open & close ──
+function openForm(){ $("#adModal").classList.add("open"); }
+function closeForm(){ $("#adModal").classList.remove("open"); }
+function openNew(){ newAd(); openForm(); $("#f_title").focus(); }
+// ── réclame preview: a faithful mini of paper.html's renderAd() ──
+function renderAdBox(a){
+  const cat = (window.DAIHBI_AD_CAT_LABEL && a.category) ? window.DAIHBI_AD_CAT_LABEL(a.category) : "";
+  return `<div class="adbox cat-${esc2(a.category||"fabricant")}">
+    <div class="ad-label">${esc2(cat)}</div>
+    ${a.image_url?`<img src="${esc2(a.image_url)}" alt="">`:""}
+    <h3 class="ad-title">${esc2(a.title||I18n.t("ads.untitled"))}</h3>
+    ${a.maker?`<div class="ad-maker">${esc2(a.maker)}</div>`:""}
+    ${a.body?`<div class="body"><p>${esc2(a.body)}</p></div>`:""}
+    ${a.link?`<div class="ad-link">${esc2(a.link)}</div>`:""}
+  </div>`;
+}
+function adPreviewLive(){ const lp=$("#livePrev"); if(lp) lp.innerHTML=renderAdBox(adData()); }
 function adData(){ return { title:$("#f_title").value.trim(), maker:$("#f_maker").value.trim(),
   body:$("#f_body").value.trim(), link:$("#f_link").value.trim(), image_url:$("#f_image").value.trim(),
   category:$("#f_category").value, issue:$("#f_issue").value, lang:$("#f_lang").value||(Prefs.contentLangLocal()||I18n.lang()),
@@ -289,12 +396,11 @@ async function save(action){
   if(MYROLE==="editor"){ data.status = action==="review"?"approved":"draft"; data.approved = action==="review"; }
   else { data.status = action==="review"?"review":"draft"; data.approved=false; }
   try{ const saved = current==null ? await Ads.create(data) : await Ads.update(current,data);
-    current=saved.id; $("#delBtn").style.display=""; $("#formErr").textContent="";
-    $("#formTitle").textContent=I18n.t("ads.formEdit"); await loadList();
+    current=saved.id; $("#formErr").textContent=""; closeForm(); await loadList();
   }catch(e){ $("#formErr").textContent=e.message; }
 }
 async function delAd(){ if(current==null)return; if(!confirm(I18n.t("ads.confirmDelete")))return;
-  try{ await Ads.remove(current); newAd(); await loadList(); }catch(e){ $("#formErr").textContent=e.message; } }
+  try{ await Ads.remove(current); closeForm(); newAd(); await loadList(); }catch(e){ $("#formErr").textContent=e.message; } }
 async function approve(id,ok){ try{ await Ads.update(id,{approved:ok, status: ok?"approved":"rejected"}); await loadList(); }catch(e){ alert(e.message); } }
 
 function statusBadge(a){ const s=a.approved?"approved":(a.status||"draft");
@@ -302,23 +408,76 @@ function statusBadge(a){ const s=a.approved?"approved":(a.status||"draft");
   return `<span class="st ${s}">${esc2(lbl)}</span>`; }
 
 async function loadList(){
-  let ads=[]; try{ ads = MYROLE==="editor" ? await Ads.listAll() : await Ads.listMine(); }
-  catch(e){ $("#list").innerHTML=`<div class="err">${esc2(e.message)}</div>`; return; }
+  try{ ADS = MYROLE==="editor" ? await Ads.listAll() : await Ads.listMine(); }
+  catch(e){ $("#wall").innerHTML=`<div class="err">${esc2(e.message)}</div>`; return; }
   $("#listTitle").textContent = MYROLE==="editor" ? I18n.t("ads.listAll") : I18n.t("ads.listMine");
-  $("#list").innerHTML = ads.length ? ads.map(a=>`
-    <div class="ad">
-      ${a.image_url?`<img src="${esc2(a.image_url)}" alt="">`:""}
-      <div class="info">
-        <div class="t">${esc2(a.title||I18n.t("ads.untitled"))} ${statusBadge(a)}</div>
-        <div class="m">${esc2(catLabel(a.category))}${a.maker?" · "+esc2(a.maker):""} · ${a.issue==="all"?esc2(I18n.t("ads.allEditions")):esc2((PAPERS[a.issue]&&PAPERS[a.issue].name)||a.issue)} · ${esc2(I18n.langLabel(a.lang||"fr"))}${MYROLE==="editor"&&a.advertiser_name?" · "+esc2(a.advertiser_name):""}</div>
-        <div class="acts">
-          <button onclick='editAd(${JSON.stringify(a).replace(/'/g,"&#39;")})'>${esc2(I18n.t("ads.edit"))}</button>
-          ${MYROLE==="editor" && !a.approved ? `<button class="ok" onclick="approve('${a.id}',true)">${esc2(I18n.t("ads.approve"))}</button>`:""}
-          ${MYROLE==="editor" && a.approved ? `<button class="no" onclick="approve('${a.id}',false)">${esc2(I18n.t("ads.withdraw"))}</button>`:""}
-        </div>
-      </div>
-    </div>`).join("") : `<div class="m">${esc2(I18n.t("ads.none"))}</div>`;
+  $("#pendingWrap").style.display = MYROLE==="editor" ? "" : "none";
+  renderFilters(); render();
 }
+
+// filter chips: by réclame category (counts from the loaded set)
+function renderFilters(){
+  const box=$("#filters"); if(!box) return;
+  const cnt={}; ADS.forEach(a=>{ const c=a.category||"fabricant"; cnt[c]=(cnt[c]||0)+1; });
+  let html=`<button class="chip ${activeCats.size?"":"on"}" data-cat="*">${esc2(I18n.t("ads.filterAll"))}</button>`;
+  (window.DAIHBI_AD_CATEGORIES||[]).forEach(c=>{ const n=cnt[c.key]||0; if(!n) return;
+    html+=`<button class="chip ${activeCats.has(c.key)?"on":""}" data-cat="${c.key}">${esc2(I18n.t("adcat."+c.key))}<span class="c">${n}</span></button>`; });
+  box.innerHTML=html;
+}
+function filteredAds(){
+  const term=($("#q").value||"").trim().toLowerCase();
+  const pendingOnly=$("#pendingOnly")&&$("#pendingOnly").checked;
+  let list=ADS.slice();
+  if(pendingOnly) list=list.filter(a=>!a.approved);
+  if(activeCats.size) list=list.filter(a=>activeCats.has(a.category||"fabricant"));
+  if(term) list=list.filter(a=>((a.title||"")+" "+(a.maker||"")+" "+(a.body||"")+" "+(a.advertiser_name||"")).toLowerCase().includes(term));
+  return list;
+}
+function adMeta(a){
+  const ed = a.issue==="all" ? I18n.t("ads.allEditions") : ((PAPERS[a.issue]&&PAPERS[a.issue].name)||a.issue);
+  return `${esc2(ed)} · ${esc2(I18n.langLabel(a.lang||"fr"))}${MYROLE==="editor"&&a.advertiser_name?" · "+esc2(a.advertiser_name):""}`;
+}
+function adTile(a){
+  return `<figure class="adtile" data-id="${esc2(a.id)}">
+    ${renderAdBox(a)}
+    <div class="adtools">
+      ${statusBadge(a)}
+      <button data-act="edit" data-id="${esc2(a.id)}">${esc2(I18n.t("ads.edit"))}</button>
+      ${MYROLE==="editor" && !a.approved ? `<button class="ok" data-act="approve" data-id="${esc2(a.id)}">${esc2(I18n.t("ads.approve"))}</button>`:""}
+      ${MYROLE==="editor" && a.approved ? `<button class="no" data-act="withdraw" data-id="${esc2(a.id)}">${esc2(I18n.t("ads.withdraw"))}</button>`:""}
+      <span class="tmeta">${adMeta(a)}</span>
+    </div>
+  </figure>`;
+}
+function render(){
+  FILTERED=filteredAds(); SHOWN=0;
+  $("#summary").textContent=I18n.t("ads.summary",{n:FILTERED.length});
+  const wall=$("#wall");
+  if(!FILTERED.length){ wall.innerHTML=`<div class="empty">${esc2(I18n.t("ads.none"))}</div>`; if(_io){_io.disconnect();_io=null;} return; }
+  wall.innerHTML=""; showMore();
+  if(_io) _io.disconnect();
+  _io=new IntersectionObserver(es=>{ if(es.some(e=>e.isIntersecting)) showMore(); }, {rootMargin:"600px"});
+  _io.observe($("#sentinel"));
+}
+function showMore(){
+  const wall=$("#wall"); if(!wall) return;
+  const next=FILTERED.slice(SHOWN, SHOWN+PAGE);
+  wall.insertAdjacentHTML("beforeend", next.map(adTile).join(""));
+  SHOWN+=next.length;
+  if(SHOWN>=FILTERED.length && _io){ _io.disconnect(); _io=null; }
+}
+// chip filter clicks
+document.addEventListener("click", e=>{
+  const chip=e.target.closest("#filters .chip"); if(chip){ const c=chip.dataset.cat;
+    if(c==="*") activeCats.clear(); else { activeCats.has(c)?activeCats.delete(c):activeCats.add(c); }
+    renderFilters(); render(); return; }
+  const t=e.target.closest(".adtile"); if(!t) return;
+  const btn=e.target.closest("[data-act]");
+  const a=ADS.find(x=>String(x.id)===t.dataset.id); if(!a) return;
+  if(!btn || btn.dataset.act==="edit"){ editAd(a); }
+  else if(btn.dataset.act==="approve"){ approve(a.id,true); }
+  else if(btn.dataset.act==="withdraw"){ approve(a.id,false); }
+});
 
 async function boot(){
   I18n.apply(document);
@@ -335,6 +494,8 @@ async function boot(){
     roleLabel: r => I18n.t("role."+r), onLogout: signOut,
   });
   try{ PAPERS = await Papers.map(); }catch(e){}
+  $("#adFormBody").addEventListener("input", adPreviewLive);
+  $("#adFormBody").addEventListener("change", adPreviewLive);
   fillIssues(); fillLangs(); fillCategories(); newAd(); await loadList();
 }
 document.addEventListener("daihbi:langchange", ()=>{
@@ -344,9 +505,11 @@ document.addEventListener("daihbi:langchange", ()=>{
   if($("#app").style.display!=="none"){
     const cat=$("#f_category").value; fillCategories(); $("#f_category").value=cat;
     if(current==null){ $("#formTitle").textContent=I18n.t("ads.formNew"); }
-    loadList();
+    adPreviewLive(); loadList();
   }
 });
+$("#adModal").addEventListener("click", e=>{ if(e.target.id==="adModal") closeForm(); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && $("#adModal").classList.contains("open")) closeForm(); });
 boot();
 </script>
 </body>

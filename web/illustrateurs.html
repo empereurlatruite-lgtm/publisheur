@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publisheur — Illustrateurs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nav.css">
+<style>
+  :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6;--ok:#2f6b3f;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  header{display:flex;align-items:center;gap:1rem;padding:.6rem 1.1rem;flex:none}
+  header h1{font-size:1.3rem;margin:0}
+  header .grow{flex:1}
+  /* toolbar */
+  .toolbar{flex:none;display:flex;flex-direction:column;gap:.5rem;padding:.6rem 1.1rem;border-bottom:1px solid var(--line);background:var(--panel)}
+  .toolbar .trow{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+  .toolbar input[type=search]{flex:1;min-width:14rem;font:inherit;padding:.5rem .7rem;border:1px solid #c9bda0;border-radius:7px;background:#fff}
+  .toolbar .chk{display:flex;align-items:center;gap:.4rem;font-size:.85rem;color:#6a6253;cursor:pointer}
+  .toolbar button{font:inherit;border:1px solid #c9bda0;background:#fff;border-radius:6px;padding:.45rem .7rem;cursor:pointer}
+  .toolbar button.go{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .toolbar .st{font-size:.78rem;color:#6a6253}
+  /* filter chips */
+  .filters{gap:.35rem}
+  .filters .flabel{font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:#9a907c;margin-right:.1rem;align-self:center}
+  .chip{font:inherit;font-size:.8rem;border:1px solid #c9bda0;background:#fff;color:#5a5246;border-radius:999px;padding:.28rem .7rem;cursor:pointer;white-space:nowrap}
+  .chip:hover{background:#efe7d4}
+  .chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .chip .c{opacity:.6;font-size:.92em;margin-left:.15rem}
+  /* add-image modal */
+  .amodal{position:fixed;inset:0;background:rgba(20,18,16,.75);z-index:140;display:none;align-items:center;justify-content:center;padding:1.2rem}
+  .amodal.open{display:flex}
+  .acard{background:#fbf8ef;border:1px solid #c9bda0;border-radius:12px;width:min(640px,96vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 72px rgba(0,0,0,.5)}
+  .ahead{display:flex;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--line);font-family:"Playfair Display",serif;font-size:1.1rem}
+  .ahead .grow{flex:1}.ahead .x{border:1px solid var(--line);background:#fff;border-radius:6px;width:26px;height:26px;cursor:pointer}
+  .abody{padding:.9rem 1.1rem 1.1rem;overflow:auto}
+  .abody label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;margin:.55rem 0 .2rem;font-weight:600}
+  .abody input,.abody select{width:100%;font:inherit;padding:.5rem .6rem;border:1px solid #c9bda0;border-radius:6px;background:#fff}
+  .arow{display:flex;gap:.7rem;align-items:flex-start}.arow .grow{flex:1}.afield.grow{flex:1}
+  .aprev{width:96px;height:72px;flex:none;border:1px solid #c9bda0;border-radius:6px;overflow:hidden;background:#efe8d6;margin-top:1.2rem}
+  .aprev img{width:100%;height:100%;object-fit:cover}
+  .aor{display:flex;align-items:center;gap:.5rem;margin:.5rem 0;color:#9a907c;font-size:.82rem}
+  .aor button{font:inherit;border:1px solid #c9bda0;background:#fff;border-radius:6px;padding:.4rem .6rem;cursor:pointer}
+  .abody .chips{display:flex;gap:.35rem;flex-wrap:wrap}
+  .aerr{color:#b33;font-size:.82rem;min-height:1em;margin-top:.5rem}
+  .abar{display:flex;gap:.5rem;margin-top:.8rem}.abar .grow{flex:1}
+  .abar .go{background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:7px;padding:.55rem 1rem;font:inherit;cursor:pointer}
+  /* board: a flat infinite-scroll image wall, masonry columns (Pinterest) */
+  main{flex:1;min-height:0;overflow:auto;padding:.7rem 1.1rem 2rem}
+  .summary{font-size:.82rem;color:#8a8070;margin:.1rem 0 .6rem}
+  #wall{column-width:220px;column-gap:8px}
+  .tile{position:relative;break-inside:avoid;-webkit-column-break-inside:avoid;margin:0 0 8px;
+    border-radius:6px;overflow:hidden;cursor:zoom-in;background:#efe8d6;border:1px solid #d8cdb2;line-height:0}
+  .tile img{width:100%;display:block;filter:grayscale(.25) sepia(.12)}
+  .tile:hover{border-color:var(--accent)}
+  .tile .ov{position:absolute;left:0;right:0;bottom:0;padding:1.3rem .5rem .35rem;line-height:1.2;
+    background:linear-gradient(transparent,rgba(15,13,11,.82));color:#f3ead6;font-size:.7rem;
+    opacity:0;transition:opacity .15s;pointer-events:none}
+  .tile:hover .ov{opacity:1}
+  .tile.pending{border-color:#d8b06a;box-shadow:0 0 0 1px #e7c98a inset}
+  .tile .pendtag{position:absolute;top:.3rem;left:.3rem;background:#b9772a;color:#fff;font-size:.6rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:.05em;padding:.1rem .4rem;border-radius:3px;line-height:1.2}
+  #sentinel{height:1px}
+  .empty{color:#8a8070;font-style:italic;text-align:center;padding:2.4rem}
+  /* gate */
+  .gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:1.2rem;z-index:50;
+    background:radial-gradient(62% 52% at 50% 26%, #38332c 0%, #1b1916 72%)}
+  .gate .gc{background:#f7f2e6;color:#26231f;border:1px solid #c9bda0;border-radius:16px;padding:2.2rem;max-width:460px;width:100%;text-align:center;box-shadow:0 24px 72px rgba(0,0,0,.55)}
+  .gate .gc .brand{font-family:"Playfair Display",serif;font-weight:900;text-transform:uppercase;letter-spacing:.14em;font-size:.74rem;color:#7a1f1a;padding-bottom:.7rem;margin-bottom:1rem;border-bottom:2px solid #26231f}
+  .gate .gc h2{font-family:"Playfair Display",serif;font-size:1.4rem;line-height:1.15;margin:.2rem 0 .5rem}
+  .gate .gc p{color:#6a6253;font-size:.94rem;line-height:1.5}
+  .gate .gc .acts{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:1.2rem}
+  .gate .gc .acts a{font:inherit;font-size:.88rem;text-decoration:none;border:1px solid #c9bda0;background:#fff;color:#26231f;border-radius:8px;padding:.55rem .95rem}
+  .gate .gc .acts .primary{background:#7a1f1a;border-color:#7a1f1a;color:#fff;font-weight:600}
+  .toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%);background:#26231f;color:#f3ead6;padding:.55rem 1rem;border-radius:8px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:80}
+  .toast.show{opacity:1}
+  /* fullscreen lightbox: image on the right, info panel on the left */
+  .lightbox{position:fixed;inset:0;background:rgba(12,11,9,.95);display:none;z-index:200;cursor:zoom-out}
+  .lightbox.open{display:flex}
+  .lbwrap{display:flex;width:100%;height:100%}
+  .lbinfo{flex:0 0 320px;max-width:34vw;background:#15130f;color:#e9e1cd;overflow:auto;padding:1.4rem 1.2rem;cursor:default;border-right:1px solid #2c2820}
+  .lbinfo h3{font-family:"Playfair Display",serif;font-size:1.15rem;margin:.2rem 0 .1rem;color:#fff;line-height:1.2}
+  .lbinfo .lbby{color:#d8c9a8;font-size:.85rem;margin-bottom:.9rem}
+  .lbinfo .row{margin:.55rem 0;font-size:.82rem;line-height:1.4}
+  .lbinfo .k{display:block;font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;color:#9a907c;margin-bottom:.15rem}
+  .lbinfo a{color:#e7b2a8;word-break:break-all}
+  .lbinfo .tagrow{display:flex;gap:.3rem;flex-wrap:wrap}
+  .lbinfo .tg{font-size:.7rem;border:1px solid #3a342a;background:#221f19;color:#d8c9a8;border-radius:999px;padding:.12rem .55rem}
+  .lbinfo .acts{display:flex;flex-direction:column;gap:.45rem;margin-top:1.1rem}
+  .lbinfo .acts button,.lbinfo .acts a{font:inherit;font-size:.84rem;text-align:center;text-decoration:none;border:1px solid #4a4438;background:#221f19;color:#e9e1cd;border-radius:7px;padding:.5rem .7rem;cursor:pointer}
+  .lbinfo .acts .go{background:var(--ok);border-color:var(--ok);color:#fff}
+  .lbinfo .acts .rm{color:#e79a90;border-color:#5a3a36}
+  .lbstage{position:relative;flex:1;min-width:0;display:flex;align-items:center;justify-content:center;padding:2rem}
+  .lbstage img{max-width:100%;max-height:92vh;object-fit:contain;box-shadow:0 12px 56px rgba(0,0,0,.6);cursor:default;-webkit-user-drag:none}
+  /* loader shown until the full image has loaded */
+  .lbspin{position:absolute;width:46px;height:46px;border:4px solid rgba(255,255,255,.18);border-top-color:#e7b2a8;border-radius:50%;animation:lbspin .8s linear infinite;display:none}
+  .lbstage.loading .lbspin{display:block}
+  .lbstage.loading img{visibility:hidden}
+  @keyframes lbspin{to{transform:rotate(360deg)}}
+  /* images must never highlight blue when (double-)clicked; info text stays selectable */
+  .tile,.tile img,.lbstage,.lbstage img,.lbx{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  .lbinfo,.lbinfo *{user-select:text;-webkit-user-select:text}
+  .lightbox .lbx{position:absolute;top:1rem;right:1.2rem;color:#f3ead6;background:rgba(0,0,0,.45);border:1px solid #5a5246;border-radius:8px;width:2.2rem;height:2.2rem;font-size:1.2rem;cursor:pointer;z-index:2}
+  @media(max-width:640px){.lbwrap{flex-direction:column}.lbinfo{flex:0 0 auto;max-width:none;max-height:42vh;border-right:none;border-bottom:1px solid #2c2820}}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate" style="display:none"><div class="gc" id="gc"></div></div>
+
+<header style="display:none" id="hdr">
+  <a class="navhome" href="index.html" data-i18n="gal.kiosk">📰 Kiosque</a>
+  <h1>Publisheur <span style="opacity:.6;font-size:.8rem;font-family:system-ui" data-i18n="gal.sub">· Illustrateurs</span></h1>
+  <a class="navhome" href="editor.html" data-i18n="gal.newsroom">✎ Rédaction</a>
+  <span class="grow"></span>
+  <span class="navuser" id="navuser"></span>
+</header>
+
+<div class="toolbar" id="toolbar" style="display:none">
+  <div class="trow">
+    <input type="search" id="q" oninput="render()" data-i18n-ph="gal.searchPh" placeholder="Rechercher un illustrateur, une légende, un régiment…">
+    <label class="chk" id="pendingWrap" style="display:none"><input type="checkbox" id="pendingOnly" onchange="render()"> <span data-i18n="gal.pendingOnly">À valider seulement</span></label>
+    <button class="go" id="addBtn" style="display:none" onclick="openAdd()" data-i18n="gal.addImage">➕ Ajouter une image</button>
+  </div>
+  <div class="trow filters" id="filters"></div>
+</div>
+
+<main id="board" style="display:none"></main>
+
+<!-- fullscreen image preview (double-click a thumbnail) — info panel on the left -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lbx" onclick="closeLightbox()" aria-label="✕">✕</button>
+  <div class="lbwrap">
+    <aside class="lbinfo" id="lbinfo" onclick="event.stopPropagation()"></aside>
+    <div class="lbstage loading" id="lbstage"><div class="lbspin"></div><img id="lbimg" alt="" onclick="event.stopPropagation()"></div>
+  </div>
+</div>
+<!-- add-image modal -->
+<div class="amodal" id="addModal">
+  <div class="acard">
+    <div class="ahead"><b data-i18n="gal.addTitle">Ajouter une image</b><span class="grow"></span><button class="x" onclick="closeAdd()" aria-label="✕">✕</button></div>
+    <div class="abody">
+      <div class="arow">
+        <div class="afield grow"><label data-i18n="gal.fUrl">URL de l’image</label>
+          <input id="ad_url" placeholder="https://…" oninput="adPreview()"></div>
+        <div id="ad_prev" class="aprev"></div>
+      </div>
+      <div class="aor"><span data-i18n="gal.fOr">— ou —</span>
+        <button type="button" onclick="document.querySelector('#ad_file').click()" data-i18n="gal.fUpload">🖼 Téléverser un fichier</button>
+        <input id="ad_file" type="file" accept="image/*" style="display:none" onchange="adPickFile(this.files[0])">
+        <span class="st" id="ad_upstatus"></span></div>
+      <div class="arow">
+        <div class="afield grow"><label data-i18n="gal.fAuthor">Auteur</label><input id="ad_author" data-i18n-ph="gal.fAuthorPh" placeholder="Nom de l’illustrateur / archive"></div>
+        <div class="afield grow"><label data-i18n="gal.fReg">Régiment</label><select id="ad_clan"></select></div>
+      </div>
+      <div class="afield"><label data-i18n="gal.fType">Type</label>
+        <div class="chips" id="ad_types"></div></div>
+      <div class="arow">
+        <div class="afield grow"><label data-i18n="gal.fSource">Source (lien)</label><input id="ad_source" placeholder="https://…"></div>
+        <div class="afield grow"><label data-i18n="gal.fLicense">Licence</label><input id="ad_license" data-i18n-ph="gal.fLicensePh" placeholder="ex. Domaine public, CC BY, fan art…"></div>
+      </div>
+      <div class="afield"><label data-i18n="gal.fCaption">Légende</label><input id="ad_caption" data-i18n-ph="gal.fCaptionPh" placeholder="Description courte"></div>
+      <div class="aerr" id="ad_err"></div>
+      <div class="abar"><span class="grow"></span>
+        <button class="go" onclick="submitAdd()" data-i18n="gal.fSave">Ajouter au portfolio</button></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="papers.js"></script>
+<script src="daihbi.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const { Auth, Profiles, Portfolio, Media, NavUser, Regiments, configured, esc, I18n, Prefs } = window.Daihbi;
+
+I18n.register({
+  fr: {
+    "gal.kiosk":"📰 Kiosque","gal.sub":"· Illustrateurs","gal.newsroom":"✎ Rédaction",
+    "gal.searchPh":"Rechercher un illustrateur, une légende, un régiment…",
+    "gal.pendingOnly":"À valider seulement","gal.pick":"🖼 Choisir une image","gal.captionPh":"Légende (optionnelle)",
+    "gal.add":"Ajouter au portfolio","gal.empty":"Aucune image.","gal.unknown":"Sans illustrateur",
+    "gal.approve":"✓ Approuver","gal.copy":"📋 Copier l’URL","gal.copied":"URL copiée ✓","gal.removeTitle":"Retirer",
+    "gal.pending":"À valider","gal.by":"par {name}","gal.confirmRemove":"Retirer cette image du portfolio ?",
+    "gal.summary":"{img} image(s) · {ill} illustrateur(s)","gal.unavailable":"Portfolio indisponible.",
+    "gal.sending":"Envoi…","gal.ready":"✓ prête — ajoutez une légende puis « Ajouter ».","gal.added":"✓ Ajoutée — en attente de validation.",
+    "gal.pickFirst":"Choisissez d’abord une image.","gal.approved":"Image approuvée ✓","gal.error":"Erreur : {msg}",
+    "gal.signin":"Connexion requise","gal.signinHint":"Connectez-vous à la rédaction pour accéder au tableau des illustrateurs.",
+    "gal.restricted":"Réservé aux illustrateurs et à la rédaction","gal.restrictedHint":"Ce tableau est ouvert aux illustrateurs et aux rédacteurs en chef.",
+    "gal.toNewsroom":"Espace rédaction","gal.notConnected":"Non connecté",
+    "gal.addImage":"➕ Ajouter une image","gal.addTitle":"Ajouter une image",
+    "gal.fUrl":"URL de l’image","gal.fOr":"— ou —","gal.fUpload":"🖼 Téléverser un fichier",
+    "gal.fAuthor":"Auteur","gal.fAuthorPh":"Nom de l’illustrateur / archive",
+    "gal.fReg":"Régiment","gal.fRegNone":"— aucun —","gal.fType":"Type",
+    "gal.fSource":"Source (lien)","gal.fLicense":"Licence","gal.fLicensePh":"ex. Domaine public, CC BY, fan art…",
+    "gal.fCaption":"Légende","gal.fCaptionPh":"Description courte","gal.fSave":"Ajouter au portfolio",
+    "gal.fNeedUrl":"Indiquez une URL ou téléversez un fichier.","gal.fAll":"Tout",
+    "gal.kHist":"Historique","gal.kFan":"Fan art","gal.kAi":"IA","gal.kOff":"Officiel","gal.kOther":"Autre",
+    "gal.openSource":"Ouvrir la source ↗",
+  },
+  en: {
+    "gal.kiosk":"📰 Kiosk","gal.sub":"· Illustrators","gal.newsroom":"✎ Newsroom",
+    "gal.searchPh":"Search an illustrator, a caption, a regiment…",
+    "gal.pendingOnly":"Pending only","gal.pick":"🖼 Choose an image","gal.captionPh":"Caption (optional)",
+    "gal.add":"Add to portfolio","gal.empty":"No images.","gal.unknown":"No illustrator",
+    "gal.approve":"✓ Approve","gal.copy":"📋 Copy URL","gal.copied":"URL copied ✓","gal.removeTitle":"Remove",
+    "gal.pending":"Pending","gal.by":"by {name}","gal.confirmRemove":"Remove this image from the portfolio?",
+    "gal.summary":"{img} image(s) · {ill} illustrator(s)","gal.unavailable":"Portfolio unavailable.",
+    "gal.sending":"Uploading…","gal.ready":"✓ ready — add a caption then “Add”.","gal.added":"✓ Added — pending approval.",
+    "gal.pickFirst":"Pick an image first.","gal.approved":"Image approved ✓","gal.error":"Error: {msg}",
+    "gal.signin":"Sign-in required","gal.signinHint":"Sign in to the newsroom to open the illustrators' board.",
+    "gal.restricted":"Illustrators & editors only","gal.restrictedHint":"This board is open to illustrators and managing editors.",
+    "gal.toNewsroom":"Newsroom","gal.notConnected":"Not connected",
+    "gal.addImage":"➕ Add image","gal.addTitle":"Add an image",
+    "gal.fUrl":"Image URL","gal.fOr":"— or —","gal.fUpload":"🖼 Upload a file",
+    "gal.fAuthor":"Author","gal.fAuthorPh":"Illustrator / archive name",
+    "gal.fReg":"Regiment","gal.fRegNone":"— none —","gal.fType":"Type",
+    "gal.fSource":"Source (link)","gal.fLicense":"License","gal.fLicensePh":"e.g. Public domain, CC BY, fan art…",
+    "gal.fCaption":"Caption","gal.fCaptionPh":"Short description","gal.fSave":"Add to portfolio",
+    "gal.fNeedUrl":"Enter a URL or upload a file.","gal.fAll":"All",
+    "gal.kHist":"Historical","gal.kFan":"Fan art","gal.kAi":"AI","gal.kOff":"Official","gal.kOther":"Other",
+    "gal.openSource":"Open source ↗",
+  },
+});
+
+let ME=null, MYPROFILE=null, MYROLE="reader", ALLIMG=[];
+const roleLabel = r => { try{ return I18n.t("role."+r); }catch(e){ return r; } };
+function canUpload(){ return !!(MYPROFILE && (MYPROFILE.can_upload || MYROLE==="editor")); }
+function canModerate(){ return !!(MYPROFILE && (MYPROFILE.can_moderate || MYROLE==="editor")); }
+let _toastT=null;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove("show"),2200); }
+function showGate(h){ $("#gate").style.display="flex"; $("#gc").innerHTML=`<div class="brand">🎨 Publisheur · Illustrateurs</div>`+h; I18n.apply($("#gc")); }
+
+async function boot(){
+  I18n.apply(document);
+  if(!configured){ showGate(`<h2>${esc(I18n.t("gal.notConnected"))}</h2>`); return; }
+  const s = await Auth.session();
+  if(!s){
+    showGate(`<h2>${esc(I18n.t("gal.signin"))}</h2><p>${esc(I18n.t("gal.signinHint"))}</p>
+      <div class="acts"><a class="primary" href="editor.html">${esc(I18n.t("gal.toNewsroom"))}</a><a href="index.html">${esc(I18n.t("gal.kiosk"))}</a></div>`);
+    return;
+  }
+  MYPROFILE = await Profiles.me(); MYROLE = (MYPROFILE && MYPROFILE.role) || "reader"; ME = MYPROFILE && MYPROFILE.id;
+  // access: editors and illustrators only
+  if(!(MYROLE==="editor" || MYROLE==="illustrator")){
+    showGate(`<h2>${esc(I18n.t("gal.restricted"))}</h2><p>${esc(I18n.t("gal.restrictedHint"))}</p>
+      <div class="acts"><a class="primary" href="editor.html">${esc(I18n.t("gal.toNewsroom"))}</a><a href="index.html">${esc(I18n.t("gal.kiosk"))}</a></div>`);
+    return;
+  }
+  $("#hdr").style.display=""; $("#toolbar").style.display="flex"; $("#board").style.display="";
+  NavUser.render($("#navuser"), { profile:MYPROFILE, email:(s.user&&s.user.email)||"", role:MYROLE, roleLabel,
+    onLogout: async()=>{ await Auth.signOut(); location.reload(); }, onAvatar: ()=>{ location.href="editor.html"; } });
+  if(canUpload()){ $("#addBtn").style.display=""; buildAddForm(); }
+  if(canModerate()) $("#pendingWrap").style.display="";
+  await loadAll();
+}
+
+async function loadAll(){
+  try{ ALLIMG = await Portfolio.list(); }
+  catch(e){ $("#board").innerHTML=`<div class="empty">${esc(I18n.t("gal.unavailable"))}<br>${esc(e.message)}</div>`; return; }
+  renderFilters(); render();
+}
+
+// ── filters (nav-bar chips): by image type (tags) + régiment (clan) ──────────
+const KINDS = [["historical","gal.kHist"],["fanart","gal.kFan"],["ai","gal.kAi"],["official","gal.kOff"],["other","gal.kOther"]];
+const activeTags = new Set(), activeClans = new Set();
+const tagsOf = im => Array.isArray(im.tags) ? im.tags : [];
+function renderFilters(){
+  const box=$("#filters"); if(!box) return;
+  const tagCount={}, clanCount={};
+  ALLIMG.forEach(im=>{ tagsOf(im).forEach(t=>tagCount[t]=(tagCount[t]||0)+1); const c=im.clan||""; if(c) clanCount[c]=(clanCount[c]||0)+1; });
+  const allOn = !activeTags.size && !activeClans.size;
+  let html=`<button class="chip ${allOn?'on':''}" onclick="clearFilters()">${esc(I18n.t("gal.fAll"))}</button>`;
+  html+=`<span class="flabel">${esc(I18n.t("gal.fType"))}</span>`;
+  KINDS.forEach(([k,key])=>{ const n=tagCount[k]||0; if(!n && k!=='other') return;
+    html+=`<button class="chip ${activeTags.has(k)?'on':''}" onclick="toggleTag('${k}')">${esc(I18n.t(key))}${n?`<span class="c">${n}</span>`:""}</button>`; });
+  const clans=Object.keys(clanCount).sort();
+  if(clans.length){ html+=`<span class="flabel">${esc(I18n.t("gal.fReg"))}</span>`;
+    clans.forEach(c=>{ html+=`<button class="chip ${activeClans.has(c)?'on':''}" onclick="toggleClan('${esc(c)}')">${esc(c)}<span class="c">${clanCount[c]}</span></button>`; }); }
+  box.innerHTML=html;
+}
+function toggleTag(k){ activeTags.has(k)?activeTags.delete(k):activeTags.add(k); renderFilters(); render(); }
+function toggleClan(c){ activeClans.has(c)?activeClans.delete(c):activeClans.add(c); renderFilters(); render(); }
+function clearFilters(){ activeTags.clear(); activeClans.clear(); renderFilters(); render(); }
+
+// group filtered images under their illustrator (uploader_name), with search.
+// flat image wall + infinite scroll (masonry columns)
+let FILTERED=[], SHOWN=0, _io=null;
+const PAGE=48;
+function filtered(){
+  const term=($("#q").value||"").trim().toLowerCase();
+  const pendingOnly = $("#pendingOnly") && $("#pendingOnly").checked;
+  let list = ALLIMG.slice();
+  if(pendingOnly) list = list.filter(im=>im.approved===false);
+  if(activeTags.size) list = list.filter(im=>tagsOf(im).some(t=>activeTags.has(t)));
+  if(activeClans.size) list = list.filter(im=>activeClans.has(im.clan||""));
+  if(term) list = list.filter(im=>((im.uploader_name||"")+" "+(im.caption||"")+" "+(im.clan||"")).toLowerCase().includes(term));
+  return list;
+}
+function render(){
+  FILTERED = filtered(); SHOWN = 0;
+  const board=$("#board");
+  const ill = new Set(FILTERED.map(im=>im.uploader_name||"?")).size;
+  if(!FILTERED.length){ board.innerHTML=`<div class="empty">${esc(I18n.t("gal.empty"))}</div>`; return; }
+  board.innerHTML = `<div class="summary">${esc(I18n.t("gal.summary",{img:FILTERED.length, ill}))}</div>`
+    + `<div id="wall"></div><div id="sentinel"></div>`;
+  showMore();
+  // infinite scroll: load the next page when the sentinel scrolls into view
+  if(_io) _io.disconnect();
+  _io = new IntersectionObserver(es=>{ if(es.some(e=>e.isIntersecting)) showMore(); }, {root:board, rootMargin:"600px"});
+  _io.observe($("#sentinel"));
+}
+function showMore(){
+  const wall=$("#wall"); if(!wall) return;
+  const next = FILTERED.slice(SHOWN, SHOWN+PAGE);
+  wall.insertAdjacentHTML("beforeend", next.map(tile).join(""));
+  SHOWN += next.length;
+  if(SHOWN>=FILTERED.length && _io){ _io.disconnect(); _io=null; }
+}
+function tile(im){
+  const pending = im.approved===false;
+  return `<figure class="tile${pending?" pending":""}" data-id="${esc(im.id)}">
+    <img src="${esc(im.url)}" alt="" loading="lazy">
+    ${pending?`<span class="pendtag">${esc(I18n.t("gal.pending"))}</span>`:""}
+    <figcaption class="ov">${esc(im.uploader_name||"?")}</figcaption>
+  </figure>`;
+}
+async function approveImg(id){ try{ await Portfolio.approve(id); const i=ALLIMG.find(x=>x.id===id); if(i) i.approved=true; renderFilters(); render(); if(LBID===id) openLightbox(i); toast(I18n.t("gal.approved")); }catch(e){ toast(I18n.t("gal.error",{msg:e.message})); } }
+async function removeImg(id){ if(!confirm(I18n.t("gal.confirmRemove"))) return; try{ await Portfolio.remove(id); ALLIMG=ALLIMG.filter(x=>x.id!==id); if(LBID===id) closeLightbox(); renderFilters(); render(); }catch(e){ toast(I18n.t("gal.error",{msg:e.message})); } }
+function copyUrl(url){ try{ navigator.clipboard.writeText(url); toast(I18n.t("gal.copied")); }catch(e){ toast(url); } }
+
+// ── add-image modal: URL or file + structured metadata (author/type/source/…) ─
+let adUpload=null;            // {url,mime,bytes,width,height} from a file upload
+const adTags=new Set();       // selected type tags
+function buildAddForm(){
+  // régiment select (merges papers.js defaults + the regiments table)
+  Regiments.list().then(list=>{
+    const cur=(MYPROFILE&&MYPROFILE.clan)||"";
+    $("#ad_clan").innerHTML = `<option value="">${esc(I18n.t("gal.fRegNone"))}</option>` +
+      (list||[]).map(c=>`<option ${c===cur?"selected":""}>${esc(c)}</option>`).join("");
+  }).catch(()=>{ $("#ad_clan").innerHTML=`<option value="">${esc(I18n.t("gal.fRegNone"))}</option>`; });
+  // type chips (multi-select)
+  $("#ad_types").innerHTML = KINDS.map(([k,key])=>`<button type="button" class="chip" data-k="${k}" onclick="adToggle('${k}')">${esc(I18n.t(key))}</button>`).join("");
+}
+function adToggle(k){ adTags.has(k)?adTags.delete(k):adTags.add(k);
+  const b=document.querySelector(`#ad_types .chip[data-k="${k}"]`); if(b) b.classList.toggle("on",adTags.has(k)); }
+function openAdd(){
+  adUpload=null; adTags.clear();
+  ["ad_url","ad_author","ad_source","ad_license","ad_caption"].forEach(id=>{ const e=$("#"+id); if(e) e.value=""; });
+  if($("#ad_author")) $("#ad_author").value=(MYPROFILE&&MYPROFILE.display_name)||"";
+  document.querySelectorAll("#ad_types .chip").forEach(b=>b.classList.remove("on"));
+  $("#ad_upstatus").textContent=""; $("#ad_err").textContent=""; adPreview();
+  if($("#ad_clan").value==="" && MYPROFILE&&MYPROFILE.clan) $("#ad_clan").value=MYPROFILE.clan;
+  $("#addModal").classList.add("open"); $("#ad_url").focus();
+}
+function closeAdd(){ $("#addModal").classList.remove("open"); }
+function adPreview(){ const u=($("#ad_url").value||"").trim() || (adUpload&&adUpload.url) || "";
+  $("#ad_prev").innerHTML = u?`<img src="${esc(u)}" alt="">`:""; }
+async function adPickFile(file){
+  if(!file) return; $("#ad_upstatus").textContent=I18n.t("gal.sending");
+  try{ adUpload = await Media.upload(file,"portfolio"); $("#ad_url").value=""; $("#ad_upstatus").textContent=I18n.t("gal.ready"); adPreview(); }
+  catch(e){ $("#ad_upstatus").textContent=I18n.t("gal.error",{msg:e.message}); }
+}
+async function submitAdd(){
+  const url=($("#ad_url").value||"").trim() || (adUpload&&adUpload.url) || "";
+  if(!url){ $("#ad_err").textContent=I18n.t("gal.fNeedUrl"); return; }
+  $("#ad_err").textContent="";
+  try{
+    const row = await Portfolio.add({
+      url, caption:($("#ad_caption").value||"").trim(),
+      uploader_name:($("#ad_author").value||"").trim() || (MYPROFILE&&MYPROFILE.display_name) || "",
+      clan:$("#ad_clan").value||"", source:($("#ad_source").value||"").trim(),
+      license:($("#ad_license").value||"").trim(), tags:[...adTags],
+      mime:adUpload&&adUpload.mime, bytes:adUpload&&adUpload.bytes, width:adUpload&&adUpload.width, height:adUpload&&adUpload.height });
+    if(row) ALLIMG.unshift(row); else await loadAll();
+    closeAdd(); renderFilters(); render(); toast(I18n.t("gal.added"));
+  }catch(e){ $("#ad_err").textContent=I18n.t("gal.error",{msg:e.message}); }
+}
+
+// ── fullscreen lightbox (double-click any thumbnail) ─────────────────────────
+// ── fullscreen view with a left info panel (double-click a tile) ─────────────
+let LBID=null;
+const tagLabel = t => { const k=KINDS.find(x=>x[0]===t); return k?I18n.t(k[1]):t; };
+function openLightbox(im){
+  if(!im) return; LBID=im.id;
+  // loader until the full image arrives
+  const stage=$("#lbstage"), img=$("#lbimg");
+  stage.classList.add("loading");
+  img.onload = ()=>stage.classList.remove("loading");
+  img.onerror = ()=>stage.classList.remove("loading");
+  img.src = im.url;
+  if(img.complete && img.naturalWidth) stage.classList.remove("loading");   // already cached
+  // clear the blue selection the double-click leaves behind
+  try{ window.getSelection().removeAllRanges(); }catch(_){}
+  const own = im.uploader_id===ME || canModerate();
+  const pending = im.approved===false;
+  const tags = tagsOf(im);
+  const row = (k,v)=> v ? `<div class="row"><span class="k">${esc(k)}</span>${v}</div>` : "";
+  $("#lbinfo").innerHTML =
+    `<h3>${esc(im.caption||im.uploader_name||"?")}</h3>
+     <div class="lbby">${esc(I18n.t("gal.by",{name:im.uploader_name||"?"}))}</div>`
+    + (tags.length ? `<div class="row"><span class="k">${esc(I18n.t("gal.fType"))}</span><div class="tagrow">${tags.map(t=>`<span class="tg">${esc(tagLabel(t))}</span>`).join("")}</div></div>` : "")
+    + row(I18n.t("gal.fReg"), im.clan?esc(im.clan):"")
+    + row(I18n.t("gal.fLicense"), im.license?esc(im.license):"")
+    + row(I18n.t("gal.fSource"), im.source?`<a href="${esc(im.source)}" target="_blank" rel="noopener">${esc(im.source)}</a>`:"")
+    + `<div class="acts">
+        <button onclick="copyUrl('${esc(im.url)}')">${esc(I18n.t("gal.copy"))}</button>
+        ${im.source?`<a href="${esc(im.source)}" target="_blank" rel="noopener">${esc(I18n.t("gal.openSource"))}</a>`:""}
+        ${(pending&&canModerate())?`<button class="go" onclick="approveImg('${im.id}')">${esc(I18n.t("gal.approve"))}</button>`:""}
+        ${own?`<button class="rm" onclick="removeImg('${im.id}')">${esc(I18n.t("gal.removeTitle"))}</button>`:""}
+       </div>`;
+  $("#lightbox").classList.add("open");
+}
+function closeLightbox(){ $("#lightbox").classList.remove("open"); $("#lbimg").src=""; LBID=null; }
+document.addEventListener("dblclick", e=>{
+  const fig = e.target.closest(".tile"); if(!fig) return;
+  e.preventDefault();
+  openLightbox(ALLIMG.find(x=>String(x.id)===fig.dataset.id));
+});
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ if($("#lightbox").classList.contains("open")) closeLightbox(); else if($("#addModal").classList.contains("open")) closeAdd(); } });
+$("#addModal").addEventListener("click", e=>{ if(e.target.id==="addModal") closeAdd(); });
+
+boot();
+</script>
+</body>
+</html>

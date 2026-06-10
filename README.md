@@ -80,9 +80,11 @@ règles de base :
 - **Rôles & social** — 5 rôles (lecteur / rédacteur / illustrateur / éditeur /
   annonceur), **Courrier des lecteurs** (lecture anonyme, commentaire connecté),
   **portfolio** des illustrateurs, **studio des réclames** validé par les éditeurs.
-- **Trois sorties** — édition web (`paper.html`), PDF/PNG rapide via le navigateur,
-  et un **PDF prêt à imprimer** depuis Scribus (bouton **🖨 PDF imprimable** →
-  GitHub Action → déposé dans le stockage Supabase).
+- **Quatre sorties** — édition web (`paper.html`), **feuilletage page à page**
+  (`flip.html`, un livre animé des images de pages — sans PDF côté lecteur),
+  PDF/PNG rapide via le navigateur, et un **PDF prêt à imprimer** depuis Scribus
+  (bouton **🖨 PDF imprimable** → GitHub Action → déposé dans le stockage Supabase ;
+  la même Action publie aussi les images de pages + un `manifest.json` pour le feuilletage).
 - **War-wire Foxhole** — des sujets de guerre générés automatiquement (hex le plus
   sanglant, dépêches de secteur, titres de pertes) fusionnés à la publication Scribus.
 
@@ -109,6 +111,8 @@ web/        Site statique (GitHub Pages / Cloudflare Pages)
   editor.html   Rédaction — « Mes chroniques » (écrire) + « Mes journaux » (éditeurs)
   board.html    Mise en page — le pupitre du rédacteur en chef (pool → une)
   paper.html    Le journal mis en page (web, impression PDF, PNG)
+  flip.html     Feuilletage page à page (livre animé des images de pages, sans PDF)
+  illustrateurs.html  Tableau des illustrateurs (portfolio + validation des images)
   ads.html      Studio des réclames (annonceurs + validation éditeur)
   daihbi.js     Couche partagée Supabase (auth, Chronicles, Placements, Papers…)
   papers.js     Éditions de repli (fallback)
@@ -167,6 +171,9 @@ cd web && python3 -m http.server 8200   # → http://127.0.0.1:8200
   page* → le pupitre `board.html` : tirez des chroniques du pool, réglez
   l'importance et l'ordre, ajoutez les photos, puis **Publier**.
 - **Lire / PDF rapide :** `/paper.html` → **Imprimer / PDF** (navigateur) ou **PNG**.
+- **Feuilleter :** `/flip.html?issue=…` (ou le bouton **📖 Feuilleter** dans la une
+  et sur les cartes du kiosque) → un livre page à page des images de pages. Il faut
+  d'abord avoir lancé l'export Scribus une fois pour générer les pages de l'édition.
 - **Publication prête à imprimer :** le bouton **🖨 PDF imprimable** lance le
   publieur Scribus via une GitHub Action et dépose le PDF dans le stockage Supabase.
   En local :
@@ -259,9 +266,11 @@ A shared paper only works if everyone trusts the tone. The ground rules:
 - **Roles & social** — 5 roles (reader / writer / illustrator / editor / advertiser),
   **letters page** (anon read, signed-in comment), illustrator **portfolio**,
   **ad studio** approved by editors.
-- **Three outputs** — web edition (`paper.html`), quick browser PDF/PNG, and a
-  **print-grade PDF** from Scribus (the **🖨 PDF imprimable** button → GitHub Action
-  → dropped in Supabase Storage).
+- **Four outputs** — web edition (`paper.html`), a **page-by-page flipbook**
+  (`flip.html`, an animated book of the page images — no PDF on the reader's side),
+  quick browser PDF/PNG, and a **print-grade PDF** from Scribus (the **🖨 PDF
+  imprimable** button → GitHub Action → dropped in Supabase Storage; the same Action
+  also publishes the page images + a `manifest.json` for the flipbook).
 - **Foxhole war-wire** — auto-generated war stories (bloodiest hex, sector
   dispatches, casualty headlines) merged in at Scribus publish time.
 
@@ -287,6 +296,8 @@ web/        Static site (GitHub Pages / Cloudflare Pages)
   editor.html   Newsroom — "Mes chroniques" (write) + "Mes journaux" (editors)
   board.html    Mise-en-page — the editor-in-chief's board (pool → front page)
   paper.html    The laid-out paper (web view, print-to-PDF, PNG)
+  flip.html     Page-by-page flipbook (animated book of the page images, no PDF)
+  illustrateurs.html  Illustrators' board (portfolio + image approval)
   ads.html      Ad studio (advertisers + editor approval)
   daihbi.js     Shared Supabase layer (auth, Chronicles, Placements, Papers…)
   papers.js     Fallback editions
@@ -344,6 +355,9 @@ cd web && python3 -m http.server 8200   # → http://127.0.0.1:8200
   `board.html` board: pull chronicles from the pool, set prominence and order, add
   photos, then **Publish**.
 - **Read / quick PDF:** `/paper.html` → **Print / PDF** (browser) or **PNG**.
+- **Flip through:** `/flip.html?issue=…` (or the **📖 Feuilleter** button on the
+  front page and the kiosque cards) → a page-by-page book of the page images. Run
+  the Scribus export once first to generate the edition's pages.
 - **Print-grade publish:** the **🖨 PDF imprimable** button runs the Scribus
   publisher via a GitHub Action and drops the PDF in Supabase Storage. Locally:
 
