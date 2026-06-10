@@ -185,6 +185,7 @@ def main():
         "masthead": p.get("name") or "Le Petit Daihbi",
         "tagline": p.get("tagline") or "Journal Quotidien du Front — « Tout pour le Régiment »",
         "plate": p.get("plate") or "plate-fraktur",
+        "theme": p.get("theme") or "classic",
         "ear": ear if isinstance(ear, list) else [],
         "slogans": p.get("slogans") if isinstance(p.get("slogans"), list) else [],
         "emblem_left": p.get("emblem_left") or "",

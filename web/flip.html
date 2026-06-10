@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Publisheur — Feuilleter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Old+Standard+TT:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="nav.css">
+<style>
+  :root{--ink:#f3ead6;--accent:#7a1f1a;--felt:#26231f;}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
+    background:radial-gradient(70% 60% at 50% 30%,#363129 0%,#1b1916 78%);
+    display:flex;flex-direction:column;overflow:hidden}
+  .toolbar{flex:none;display:flex;align-items:center;gap:.7rem;padding:.55rem 1rem;
+    background:rgba(20,18,16,.7);border-bottom:1px solid #3a352d}
+  .toolbar .grow{flex:1}
+  .toolbar b{font-family:"Playfair Display",serif;font-size:1.05rem}
+  .toolbar .btn,.toolbar button{font:inherit;font-size:.85rem;color:var(--ink);text-decoration:none;
+    background:#322d27;border:1px solid #4a4339;border-radius:7px;padding:.4rem .75rem;cursor:pointer}
+  .toolbar .btn:hover,.toolbar button:hover{background:#3c362e}
+  .toolbar .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  /* stage */
+  .stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;padding:.6rem;overflow:hidden}
+  #book{position:relative;touch-action:pan-y}            /* sized in JS, centred by .stage */
+  /* a "view" = one spread (or a lone cover/back), stacked for cross-fade */
+  .view{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    perspective:2600px;perspective-origin:50% 46%;opacity:1;transition:opacity .4s ease}
+  .view.out{opacity:0}
+  /* each page is a rigid panel that unfolds from the central crease (flat 3D
+     rotateY — a broadsheet fold, not a book curl) */
+  .leaf{position:relative;background:#fff;box-shadow:0 12px 34px rgba(0,0,0,.45);
+    backface-visibility:hidden;transition:transform .6s cubic-bezier(.22,.61,.30,1)}
+  .leaf img{width:100%;height:100%;display:block;object-fit:fill;background:#fff}
+  .leaf.l{transform-origin:right center}
+  .leaf.r{transform-origin:left center}
+  .leaf.one{transform-origin:center center}
+  /* folded (closed) start state → removing .fold lets it spring flat to rotateY(0) */
+  .view.fold .leaf.l{transform:rotateY(90deg)}
+  .view.fold .leaf.r{transform:rotateY(-90deg)}
+  .view.fold .leaf.one{transform:rotateY(74deg) scale(.96)}
+  /* crease shadow down the gutter of a spread */
+  .leaf.l::after,.leaf.r::after{content:"";position:absolute;top:0;bottom:0;width:26px;pointer-events:none}
+  .leaf.l::after{right:0;background:linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.20))}
+  .leaf.r::after{left:0;background:linear-gradient(270deg,rgba(0,0,0,0),rgba(0,0,0,.20))}
+  /* nav arrows */
+  .nav{position:absolute;top:0;bottom:0;width:14%;border:0;background:transparent;cursor:pointer;
+    color:rgba(243,234,214,.0);font-size:2.4rem;transition:color .15s;z-index:5}
+  .nav:hover{color:rgba(243,234,214,.55)}
+  .nav.prev{left:0}.nav.next{right:0}
+  /* footer */
+  .foot{flex:none;display:flex;align-items:center;justify-content:center;gap:1rem;
+    padding:.5rem;background:rgba(20,18,16,.7);border-top:1px solid #3a352d;font-size:.85rem}
+  .foot button{font:inherit;color:var(--ink);background:#322d27;border:1px solid #4a4339;border-radius:6px;padding:.3rem .6rem;cursor:pointer}
+  .foot button:disabled{opacity:.35;cursor:default}
+  .foot .pg{font-variant-numeric:tabular-nums;min-width:5rem;text-align:center;color:#cdc3ad}
+  /* notice (empty / loading / error) */
+  .notice{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:1.4rem}
+  .notice .card{background:#f7f2e6;color:#26231f;border-radius:14px;padding:2rem;max-width:440px;text-align:center;
+    box-shadow:0 22px 64px rgba(0,0,0,.5)}
+  .notice .card .brand{font-family:"Playfair Display",serif;font-weight:900;text-transform:uppercase;letter-spacing:.13em;
+    font-size:.72rem;color:var(--accent);padding-bottom:.6rem;margin-bottom:.9rem;border-bottom:2px solid #26231f}
+  .notice .card h2{font-family:"Playfair Display",serif;font-size:1.4rem;margin:.2rem 0 .5rem}
+  .notice .card p{color:#6a6253;line-height:1.5;font-size:.92rem}
+  .notice .card .acts{margin-top:1.2rem;display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+  .notice .card .acts a{font:inherit;font-size:.88rem;text-decoration:none;border:1px solid #c9bda0;background:#fff;
+    color:#26231f;border-radius:8px;padding:.5rem .9rem}
+  .notice .card .acts a.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <a class="btn" href="/" target="_top" data-i18n="flip.kiosk">📰 Kiosque</a>
+  <b id="title">Publisheur</b>
+  <span class="grow"></span>
+  <a class="btn" id="readLink" href="#" target="_top" data-i18n="flip.web">🗞 Vue web</a>
+</div>
+
+<div class="stage" id="stage">
+  <button class="nav prev" id="navPrev" aria-label="prev" onclick="flipPrev()">‹</button>
+  <div id="book"></div>
+  <button class="nav next" id="navNext" aria-label="next" onclick="flipNext()">›</button>
+  <div class="notice" id="notice"><div class="card" id="noticeCard"></div></div>
+</div>
+
+<div class="foot" id="foot" style="display:none">
+  <button id="btnPrev" onclick="flipPrev()" data-i18n="flip.prev">‹ Précédent</button>
+  <span class="pg" id="pg">— / —</span>
+  <button id="btnNext" onclick="flipNext()" data-i18n="flip.next">Suivant ›</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="papers.js"></script>
+<script src="daihbi.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const { Papers, ISSUE, configured, esc, I18n } = window.Daihbi;
+const CFG = window.DAIHBI_CONFIG || {};
+
+I18n.register({
+  fr: {
+    "flip.kiosk":"📰 Kiosque","flip.web":"🗞 Vue web","flip.prev":"‹ Précédent","flip.next":"Suivant ›",
+    "flip.loading":"Chargement de l’édition…","flip.notReady":"Édition pas encore imprimée",
+    "flip.notReadyHint":"Cette édition n’a pas encore de pages à feuilleter. Un rédacteur en chef doit lancer « 🖨 PDF imprimable » depuis la rédaction pour générer les pages.",
+    "flip.toWeb":"Lire la vue web","flip.toKiosk":"Retour au kiosque","flip.notConf":"Non connecté à Supabase.",
+    "flip.pageOf":"page {n} / {total}",
+  },
+  en: {
+    "flip.kiosk":"📰 Kiosk","flip.web":"🗞 Web view","flip.prev":"‹ Previous","flip.next":"Next ›",
+    "flip.loading":"Loading the edition…","flip.notReady":"Edition not printed yet",
+    "flip.notReadyHint":"This edition has no flip-through pages yet. An editor must run “🖨 Printable PDF” from the newsroom to generate the pages.",
+    "flip.toWeb":"Read the web view","flip.toKiosk":"Back to the kiosk","flip.notConf":"Not connected to Supabase.",
+    "flip.pageOf":"page {n} / {total}",
+  },
+});
+
+let PAGES = [], VIEWS = [], cur = 0, PW = 0, PH = 0, twoUp = true, _rz = null, _busy = false;
+const PAGE_RATIO = 2481/1754;   // h/w of the Scribus A3 page images (√2)
+
+function notice(html){ const n=$("#notice"); n.style.display="flex";
+  $("#noticeCard").innerHTML = `<div class="brand">📖 Publisheur</div>`+html; I18n.apply($("#noticeCard")); }
+function hideNotice(){ $("#notice").style.display="none"; }
+
+// Group pages into views: a lone cover, interior two-page spreads, lone back —
+// like a real broadsheet (on a narrow screen, one page per view).
+function buildViews(){
+  VIEWS = []; const n = PAGES.length;
+  if(!twoUp){ for(let i=0;i<n;i++) VIEWS.push([i]); return; }
+  VIEWS.push([0]);                                  // cover alone
+  for(let i=1;i<n;i+=2) VIEWS.push(i+1<n ? [i,i+1] : [i]);  // spreads, lone back if odd
+}
+function viewOfPage(p){ for(let i=0;i<VIEWS.length;i++) if(VIEWS[i].includes(p)) return i; return 0; }
+
+function measure(){
+  const tb = document.querySelector(".toolbar"), ft = $("#foot");
+  const chrome = (tb?tb.offsetHeight:56) + (ft&&ft.style.display!=="none"?ft.offsetHeight:48) + 22;
+  const availH = Math.max(200, window.innerHeight - chrome);
+  const availW = Math.max(140, window.innerWidth - 22);
+  twoUp = window.innerWidth >= 720;
+  const cols = twoUp ? 2 : 1;
+  let ph = availH, pw = ph / PAGE_RATIO;
+  if(cols * pw > availW){ pw = availW / cols; ph = pw * PAGE_RATIO; }  // fit the spread width
+  PW = Math.floor(pw); PH = Math.floor(ph);
+}
+
+function leafHTML(view){
+  return view.map((p,k)=>{
+    const cls = view.length===2 ? (k===0 ? "leaf l" : "leaf r") : "leaf one";
+    return `<div class="${cls}" style="width:${PW}px;height:${PH}px"><img src="${PAGES[p]}" alt=""></div>`;
+  }).join("");
+}
+
+// Render a view; when animate, the new spread unfolds from the crease while the
+// previous one fades out beneath it.
+function render(idx, animate){
+  idx = Math.max(0, Math.min(VIEWS.length-1, idx));
+  const book = $("#book");
+  book.style.width = (2*PW)+"px"; book.style.height = PH+"px";   // fixed frame (max spread) → lone pages centre
+  const nv = document.createElement("div");
+  nv.className = "view" + (animate ? " fold" : "");
+  nv.innerHTML = leafHTML(VIEWS[idx]);
+  book.appendChild(nv);
+  const olds = [...book.querySelectorAll(".view")].filter(v => v !== nv);
+  if(animate){
+    _busy = true;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      nv.classList.remove("fold");              // unfold flat
+      olds.forEach(o => o.classList.add("out"));
+    }));
+    setTimeout(()=>{ olds.forEach(o => o.remove()); _busy = false; }, 640);
+  } else {
+    olds.forEach(o => o.remove());
+  }
+  cur = idx; updatePg();
+}
+
+function go(d){ if(_busy) return; const t = cur + d; if(t < 0 || t >= VIEWS.length) return; render(t, true); }
+function flipNext(){ go(1); }
+function flipPrev(){ go(-1); }
+
+function updatePg(){
+  const v = VIEWS[cur] || [0], N = PAGES.length;
+  const lo = v[0]+1, hi = v[v.length-1]+1;
+  $("#pg").textContent = (lo===hi) ? I18n.t("flip.pageOf",{n:lo,total:N}) : `${lo}–${hi} / ${N}`;
+  $("#btnPrev").disabled = cur <= 0;
+  $("#btnNext").disabled = cur >= VIEWS.length-1;
+}
+
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowRight"||e.key===" ") flipNext();
+  else if(e.key==="ArrowLeft") flipPrev();
+});
+
+async function boot(){
+  I18n.apply(document);
+  $("#readLink").href = "paper.html?issue=" + encodeURIComponent(ISSUE);
+  // masthead name (papers.js fallback overlaid by live Supabase rows)
+  try{ const p = (await Papers.map())[ISSUE]; if(p && p.name){ $("#title").textContent = p.name; document.title = p.name + " — Feuilleter"; } }catch(_){}
+
+  if(!configured){ notice(`<h2>${esc(I18n.t("flip.notReady"))}</h2><p>${esc(I18n.t("flip.notConf"))}</p>`); return; }
+  notice(`<h2>${esc(I18n.t("flip.loading"))}</h2>`);
+
+  const base = (CFG.SUPABASE_URL||"").replace(/\/$/,"") + "/storage/v1/object/public/media/exports/" + encodeURIComponent(ISSUE);
+  let pages = 0;
+  try{
+    const res = await fetch(base + "/manifest.json", { cache:"no-store" });
+    if(!res.ok) throw new Error(String(res.status));
+    pages = Number((await res.json()).pages) || 0;
+  }catch(_){ pages = 0; }
+
+  if(pages < 1){
+    notice(`<h2>${esc(I18n.t("flip.notReady"))}</h2><p>${esc(I18n.t("flip.notReadyHint"))}</p>
+      <div class="acts"><a class="primary" href="paper.html?issue=${encodeURIComponent(ISSUE)}">${esc(I18n.t("flip.toWeb"))}</a>
+      <a href="/">${esc(I18n.t("flip.toKiosk"))}</a></div>`);
+    return;
+  }
+
+  const urls = [];
+  for(let i=1;i<=pages;i++) urls.push(base + "/page-" + i + ".png");
+
+  hideNotice();
+  $("#foot").style.display = "flex";
+  PAGES = urls;
+  mount();
+  window.addEventListener("resize", ()=>{ clearTimeout(_rz); _rz=setTimeout(relayout,180); });
+}
+
+// First mount: honour ?page=N (1-based) and unfold the opening view in.
+function mount(){
+  if(!PAGES.length) return;
+  measure(); buildViews();
+  const want = Math.max(1,(parseInt(new URLSearchParams(location.search).get("page"),10)||1)) - 1;
+  $("#book").innerHTML = "";
+  render(viewOfPage(Math.min(want, PAGES.length-1)), true);
+}
+// Resize: recompute size + grouping, keep the current page visible, no animation.
+function relayout(){
+  if(!PAGES.length) return;
+  const firstPage = (VIEWS[cur]||[0])[0];
+  measure(); buildViews();
+  $("#book").innerHTML = "";
+  render(viewOfPage(Math.min(firstPage, PAGES.length-1)), false);
+}
+boot();
+</script>
+</body>
+</html>

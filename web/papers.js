@@ -17,7 +17,7 @@
 // "media" bucket (or via the editor), then paste its public URL into
 // emblemLeft / emblemRight here. The shared Warden shield is below.
 // Régiments / clans offered at signup (free list — add yours here).
-window.DAIHBI_CLANS = ["2e REI","501e","8e","79e","30e","La Bleusaille","les Frogz","1re armée Jeunesse Warden","Indépendant","Autre"];
+window.DAIHBI_CLANS = ["501e","8e","8ème Régiment de Sous-Mariniers","57e Warden de ligne [57WL]","300ème force d'autodéfense","[FR-LB] Les Bleusailles","[CGU] Cohorte des Gears Unifiés","79e","30e","La Bleusaille","les Frogz","1re armée Jeunesse Warden","Indépendant","Autre"];
 
 // Réclame categories (advertiser ad types).
 window.DAIHBI_AD_CATEGORIES = [

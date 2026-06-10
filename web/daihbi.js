@@ -556,6 +556,30 @@ const Media = {
     } catch (e) { /* provenance is non-critical — keep the URL */ }
     return { url, width: meta.width, height: meta.height, bytes: meta.bytes, mime: meta.mime };
   },
+
+  /** Approved media-library assets (public read of approved=true; image_moderation.sql). */
+  async listApproved() {
+    if (!db) return [];
+    const { data, error } = await db.from("media").select("*").eq("approved", true).order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  /** Map of image URL → author (uploader_name), from the portfolio (images) then
+   *  the media ledger. Used to credit newspaper photos. RLS limits anon to approved
+   *  rows, so the public paper only credits provenance it's allowed to see. */
+  async creditsFor(urls) {
+    const map = {};
+    if (!db || !urls || !urls.length) return map;
+    const uniq = [...new Set(urls.filter(Boolean))];
+    for (const tbl of ["images", "media"]) {
+      try {
+        const { data } = await db.from(tbl).select("url,uploader_name").in("url", uniq);
+        (data || []).forEach(r => { if (r.uploader_name && !map[r.url]) map[r.url] = r.uploader_name; });
+      } catch (e) { /* table may be missing / RLS — credits are best-effort */ }
+    }
+    return map;
+  },
 };
 
 // ── Profiles: role / régiment / avatar / display name ───────────────────────
@@ -781,12 +805,16 @@ const Portfolio = {
     if (error) throw error;
     return data || [];
   },
-  async add({ url, caption, clan, uploader_name, mime, bytes, width, height }) {
+  async add({ url, caption, clan, uploader_name, mime, bytes, width, height, tags, source, license }) {
     const { data: { user } } = await db.auth.getUser();
-    const { data, error } = await db.from("images")
-      .insert({ url, caption: caption || "", clan: clan || "", uploader_name: uploader_name || "", uploader_id: user.id,
-                mime: mime || "", bytes: bytes || 0, width: width || 0, height: height || 0 })
-      .select().single();
+    const row = { url, caption: caption || "", clan: clan || "", uploader_name: uploader_name || "", uploader_id: user.id,
+                  mime: mime || "", bytes: bytes || 0, width: width || 0, height: height || 0 };
+    // illustrator_meta.sql columns — included only when provided so the insert
+    // still works on a DB where the migration hasn't run yet.
+    if (tags && tags.length) row.tags = tags;
+    if (source) row.source = source;
+    if (license) row.license = license;
+    const { data, error } = await db.from("images").insert(row).select().single();
     if (error) throw error;
     return data;
   },

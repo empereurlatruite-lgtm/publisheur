@@ -1,0 +1,41 @@
+{
+  "_note": "Scraped image references for the Warden press project. Two groups: official Foxhole imagery (direct, hotlinkable image-file URLs on foxhole.wiki.gg — all return HTTP 200 and can be used directly as a portfolio/placement image_url), and a Foxhole Warden illustrator (Paul Freland). ArtStation blocks automated fetch and hotlinking (403/Cloudflare), so the illustrator entries are reference PAGE URLs to the artwork, not direct image files — open them to view/save the art.",
+  "_scraped_at": "2026-06-10",
+  "official_foxhole_images": {
+    "source": "Official Foxhole Wiki (foxhole.wiki.gg) — direct image files, verified HTTP 200",
+    "license_note": "Game assets © Siege Camp / Clapfoot. Wiki content under its own terms — confirm reuse rights before publishing.",
+    "images": [
+      { "title": "Warden faction emblem", "url": "https://foxhole.wiki.gg/images/Warden.png" },
+      { "title": "Warden flag (Caoiva)", "url": "https://foxhole.wiki.gg/images/WardenFlag.png" },
+      { "title": "Warden faction selection art", "url": "https://foxhole.wiki.gg/images/FactionSelectionWarden.png" },
+      { "title": "Caoivish Naval Command banner", "url": "https://foxhole.wiki.gg/images/WardenNavyFlag.jpg" },
+      { "title": "Colonial faction emblem (for contrast)", "url": "https://foxhole.wiki.gg/images/Colonial.png" },
+      { "title": "Colonial faction selection art", "url": "https://foxhole.wiki.gg/images/FactionSelectionColonial.png" },
+      { "title": "Concept art — Brigand", "url": "https://foxhole.wiki.gg/images/BrigandConcept.jpg" },
+      { "title": "Concept art — Catena", "url": "https://foxhole.wiki.gg/images/Catena_concept.jpg" },
+      { "title": "Concept art — Devblog 11 (1)", "url": "https://foxhole.wiki.gg/images/Devblog11_1.jpg" },
+      { "title": "Concept art — Devblog 11 (2)", "url": "https://foxhole.wiki.gg/images/Devblog11_2.jpg" },
+      { "title": "Concept art — Devblog 11 (3)", "url": "https://foxhole.wiki.gg/images/Devblog11_3.jpg" }
+    ],
+    "more": "548 concept-art files total at https://foxhole.wiki.gg/wiki/Category:Concept_art — any <File>.ext resolves directly at https://foxhole.wiki.gg/images/<File>.ext"
+  },
+  "warden_illustrator": {
+    "name": "Paul Freland",
+    "profile": "https://www.artstation.com/sored",
+    "linkedin": "https://www.linkedin.com/in/paulfreland/",
+    "note": "Concept artist / illustrator with a body of Foxhole Warden fan art. URLs below are ArtStation artwork PAGES (ArtStation blocks hotlinking, so right-click → save from the page to reuse).",
+    "artworks": [
+      { "title": "Foxhole fan art: Warden side", "url": "https://www.artstation.com/artwork/Per5mZ" },
+      { "title": "Foxhole fan art", "url": "https://www.artstation.com/artwork/g892lZ" },
+      { "title": "Sketch — Foxhole fan art", "url": "https://www.artstation.com/artwork/OGXqle" },
+      { "title": "Medium Tank — Foxhole fan art", "url": "https://www.artstation.com/artwork/qQykRe" },
+      { "title": "Jade Cove Herald — Foxhole fan art (Warden region)", "url": "https://www.artstation.com/artwork/nEZOVo" },
+      { "title": "Silverhand Shaman tank — Foxhole fan art (Warden region)", "url": "https://www.artstation.com/artwork/OG33Og" }
+    ],
+    "other_warden_illustrators": [
+      { "name": "Simple Mummy (aitsaraeiei)", "profile": "https://aitsaraeiei.artstation.com/", "example": "https://www.artstation.com/artwork/oALoxk" },
+      { "name": "Anthony Godinho", "example": "https://www.artstation.com/artwork/zAxOK6" },
+      { "name": "Bogdan Turbin", "example": "https://www.artstation.com/artwork/4bd8n2" }
+    ]
+  }
+}
