@@ -29,7 +29,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 PARENT = HERE.parent                      # the project root (publisheur)
-sys.path.insert(0, str(PARENT))           # so we can import articles.py / newspaper.py
+# Legacy offline/war-wire fallback modules live in publish/legacy/ (see its README).
+# They are imported lazily by fetch_local()/war_wire()/war_meta() and fail gracefully
+# when their SQLite DBs are absent — the live pipeline reads from Supabase.
+sys.path.insert(0, str(HERE / "legacy"))  # so we can import articles.py / newspaper.py
 
 WEIGHTS = ("lead", "major", "minor", "brief")
 WRANK = {w: i for i, w in enumerate(WEIGHTS)}
