@@ -33,6 +33,10 @@ photo = `placement.image_url || article.image_url`.
   (`https://publisheur.pages.dev`). Cloudflare is needed for the Pages Function.
 - **Print engine = Scribus**, scripted headless in `publish/` (`build_issue.py` →
   `layout.py` → `pdftoppm`), run locally or via the `publish.yml` GitHub Action.
+  `publish/legacy/` holds the dormant pre-Supabase prototype (`newspaper.py` +
+  `articles.py`) — a SQLite offline/war-wire **fallback** imported lazily by
+  `build_issue.py` and failing gracefully (its DBs aren't in the repo); not the
+  live path. See `publish/legacy/README.md`.
 
 ### Key files
 - `web/daihbi.js` — shared data/auth layer (IIFE → `window.Daihbi`). APIs: `Auth`,
@@ -78,7 +82,7 @@ photo = `placement.image_url || article.image_url`.
   edited_by → pool → transparency → authors → ad_placements → media → i18n →
   theme → styles → regiments → columns → chronicle_edit → ai_labels →
   paper_purpose → ai_zone → image_moderation → img_pos → img_crop →
-  img_crop_tool → illustrator_meta`.
+  img_crop_tool → illustrator_meta → sections → image_fill`.
   (`i18n` adds content `lang` to articles/ads/papers + `preferred_lang`/`ui_lang`
   to profiles, and opens chronicle writing to any signed-in user — editors still
   publish. `theme` adds `papers.theme` — the per-edition visual skin the

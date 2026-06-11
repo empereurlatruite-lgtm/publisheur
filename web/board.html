@@ -166,6 +166,19 @@
   .erow .lbl{width:7.5rem;flex:none;color:#6a6253;font-size:.82rem}
   .erow .ctl{flex:1;display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
   .ebtn{font:inherit;font-size:.8rem;border:1px solid #c9bda0;background:#fff;border-radius:6px;padding:.32rem .7rem;cursor:pointer}
+  .esel{font:inherit;font-size:.8rem;border:1px solid #c9bda0;background:#fff;border-radius:6px;padding:.32rem .5rem;cursor:pointer;flex:1;min-width:8rem}
+  /* gap-filler suggestions */
+  .fillgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.7rem;max-height:64vh;overflow:auto}
+  .fillcard{display:flex;flex-direction:column;text-align:left;border:1px solid #d8cdb2;border-radius:8px;background:#fff;overflow:hidden;cursor:pointer;font:inherit;padding:0}
+  .fillcard:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  .fillcard>img{width:100%;height:96px;object-fit:cover;filter:grayscale(.35) sepia(.15)}
+  .fillcard .noimg{height:96px;display:flex;align-items:center;justify-content:center;background:#f1ead8;color:#9a907c;font-size:.78rem}
+  .fillcard .fc-body{padding:.45rem .55rem;display:flex;flex-direction:column;gap:.25rem}
+  .fillcard .fc-kind{font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);font-weight:700}
+  .fillcard .fc-title{font-size:.86rem;font-weight:600;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .fillcard .fc-fit{display:flex;align-items:center;gap:.4rem;font-size:.7rem;color:#6a6253}
+  .fillcard .fc-fit .bar{flex:1;height:5px;background:#ece2cc;border-radius:3px;overflow:hidden}
+  .fillcard .fc-fit .bar i{display:block;height:100%;background:var(--accent)}
   .ebtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .ebtn.pub{background:var(--ok);color:#fff;border-color:var(--ok);font-weight:600}
   .ebtn.unpub{background:#fff;color:var(--ok);border-color:#9bbfa8;font-weight:600}
@@ -319,6 +332,33 @@
   </div>
 </div>
 
+<!-- manage the edition's rubriques (sections.sql): add / rename / reorder / delete -->
+<div class="modal" id="sectionsModal">
+  <div class="card" style="max-width:520px">
+    <div class="h"><span data-i18n="board.sectionsTitle">Rubriques de l’édition</span><span class="grow"></span><button class="x" onclick="closeSectionsModal()" data-i18n-aria="auth.close">✕</button></div>
+    <div class="body" style="padding:1rem 1.1rem 1.2rem">
+      <div style="font-size:.82rem;color:#6a6253;margin-bottom:.7rem" data-i18n="board.sectionsHint">Le héros (la une) reste en haut ; chaque rubrique s’affiche ensuite comme un bloc titré, dans l’ordre ci-dessous.</div>
+      <div id="secList"></div>
+      <div style="display:flex;gap:.5rem;margin-top:.8rem">
+        <input id="secNew" data-i18n-ph="board.sectionNamePh" placeholder="Ex. Front Ouest" style="flex:1;font:inherit;padding:.5rem .6rem;border:1px solid #c9bda0;border-radius:6px" onkeydown="if(event.key==='Enter')addSection()">
+        <button class="go" onclick="addSection()" data-i18n="board.sectionAdd">＋ Ajouter</button>
+      </div>
+      <div class="jerr" id="sec_err" style="color:#b33;font-size:.82rem;min-height:1em;margin-top:.4rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- gap-filler: fit-ranked chronicle / image / réclame suggestions for a blank region -->
+<div class="modal" id="fillModal">
+  <div class="card" style="max-width:680px">
+    <div class="h"><span data-i18n="board.fillTitle">Combler l’espace</span><span class="grow"></span><button class="x" onclick="closeFillPanel()" data-i18n-aria="auth.close">✕</button></div>
+    <div class="body" style="padding:.8rem 1.1rem 1.2rem">
+      <div id="fill_meta" class="enote" style="margin-bottom:.7rem"></div>
+      <div id="fill_list" class="fillgrid"></div>
+    </div>
+  </div>
+</div>
+
 <!-- edit a chronicle's text in place (double-click a story or pool card) -->
 <div class="modal" id="chronModal">
   <div class="card" style="max-width:860px;width:94vw">
@@ -402,7 +442,7 @@
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Media, Ads, NavUser, Styles, Regiments, configured, esc, I18n, Prefs } = window.Daihbi;
+const { Auth, Profiles, Chronicles, Placements, AdPlacements, Papers, Portfolio, Media, Ads, NavUser, Styles, Sections, Regiments, configured, esc, I18n, Prefs } = window.Daihbi;
 const ISSUE = window.Daihbi.ISSUE;
 const esc2 = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
@@ -417,7 +457,6 @@ I18n.register({
     "board.fUnused":"Jamais utilisée","board.fTypeAll":"Type : tous","board.fHuman":"✍ Humain","board.fIA":"✦ IA",
     "board.fDateAll":"Date : toutes","board.fToday":"Aujourd’hui","board.f7d":"7 derniers jours","board.f30d":"30 derniers jours",
     "board.fRegAll":"Régiment : tous","board.fAuthorAll":"Auteur : tous",
-    "board.theLayout":"La mise en page","board.layoutHint":"glissez ici · double-cliquez pour éditer",
     "board.frontPreview":"Aperçu de la une","board.reloadPreview":"Recharger l’aperçu",
     "board.add":"＋ Ajouter","board.addToEdition":"Ajouter à l’édition",
     "board.manage":"⚙ Gérer le journal",
@@ -455,6 +494,7 @@ I18n.register({
     "board.prominence":"Proéminence","board.photo":"Photo",
     "board.photoSuggested":"Photo suggérée par l’auteur si vide.","board.choose":"🖼 Choisir",
     "board.removeOverride":"Retirer l’override","board.order":"Ordre","board.up":"▲ Monter","board.down":"▼ Descendre",
+    "board.dragHint":"ou glissez la chronique sur l’aperçu",
     "board.inWeight":"dans « {w} »","board.publication":"Publication",
     "board.unpublish":"Dépublier","board.visibleInPaper":"Visible dans le journal.",
     "board.publish":"Publier","board.draftNotVisible":"Brouillon — non visible.",
@@ -470,6 +510,14 @@ I18n.register({
     "board.columnsTitle":"Colonnes de la une — pour toute l’édition","board.colsAuto":"Auto",
     "board.colsSaved":"Colonnes mises à jour ✓",
     "board.colSpan":"Colonnes","board.colSpanHint":"largeur de l’article (en colonnes)",
+    "board.section":"Rubrique","board.noSection":"Aucune (générale)","board.newSection":"＋ Nouvelle rubrique…","board.manageSections":"Gérer les rubriques",
+    "board.sectionsTitle":"Rubriques de l’édition","board.sectionsHint":"Le héros (la une) reste en haut ; chaque rubrique s’affiche ensuite comme un bloc titré, dans l’ordre ci-dessous.",
+    "board.sectionNamePh":"Ex. Front Ouest","board.sectionAdd":"＋ Ajouter","board.sectionsEmpty":"Aucune rubrique. Ajoutez-en une ci-dessous.","board.sectionDelete":"Supprimer",
+    "board.sectionConfirmDelete":"Supprimer la rubrique « {n} » ? Les chroniques y reviennent dans le puits général.",
+    "board.fillTitle":"Combler l’espace","board.fillMeta":"Suggestions qui tiennent dans ~{cols} colonne(s) · rubrique : {sec}",
+    "board.fillKindChron":"Chronique","board.fillKindImg":"Image","board.fillKindAd":"Réclame",
+    "board.fillFit":"{pct}% d’ajustement","board.fillEmpty":"Rien à suggérer (pool, portfolio et réclames vides ou déjà placés).",
+    "board.fillPlaced":"Ajouté pour combler l’espace ✓","board.anImage":"(image)",
     "board.imgSize":"Taille image","board.imgSizeHint":"en colonnes — le texte habille la photo",
     "board.poolCardHint":"Cliquer pour placer · double-cliquer pour modifier le texte",
     "board.ceTitle":"Modifier : {h}","board.ceKicker":"Surtitre (kicker)","board.ceHeadline":"Titre",
@@ -510,7 +558,6 @@ I18n.register({
     "board.fUnused":"Never used","board.fTypeAll":"Type: all","board.fHuman":"✍ Human","board.fIA":"✦ AI",
     "board.fDateAll":"Date: all","board.fToday":"Today","board.f7d":"Last 7 days","board.f30d":"Last 30 days",
     "board.fRegAll":"Regiment: all","board.fAuthorAll":"Author: all",
-    "board.theLayout":"The layout","board.layoutHint":"drag here · double-click to edit",
     "board.frontPreview":"Front-page preview","board.reloadPreview":"Reload the preview",
     "board.add":"＋ Add","board.addToEdition":"Add to the edition",
     "board.manage":"⚙ Manage paper",
@@ -548,6 +595,7 @@ I18n.register({
     "board.prominence":"Prominence","board.photo":"Photo",
     "board.photoSuggested":"Author-suggested photo used if empty.","board.choose":"🖼 Choose",
     "board.removeOverride":"Remove the override","board.order":"Order","board.up":"▲ Up","board.down":"▼ Down",
+    "board.dragHint":"or drag the chronicle on the preview",
     "board.inWeight":"in “{w}”","board.publication":"Publication",
     "board.unpublish":"Unpublish","board.visibleInPaper":"Visible in the paper.",
     "board.publish":"Publish","board.draftNotVisible":"Draft — not visible.",
@@ -563,6 +611,14 @@ I18n.register({
     "board.columnsTitle":"Front-page columns — for the whole edition","board.colsAuto":"Auto",
     "board.colsSaved":"Columns updated ✓",
     "board.colSpan":"Columns","board.colSpanHint":"article width (in columns)",
+    "board.section":"Section","board.noSection":"None (general)","board.newSection":"＋ New section…","board.manageSections":"Manage sections",
+    "board.sectionsTitle":"Edition sections","board.sectionsHint":"The lead hero stays on top; each section then shows as a titled block, in the order below.",
+    "board.sectionNamePh":"e.g. West Front","board.sectionAdd":"＋ Add","board.sectionsEmpty":"No sections yet. Add one below.","board.sectionDelete":"Delete",
+    "board.sectionConfirmDelete":"Delete section “{n}”? Its chronicles return to the general well.",
+    "board.fillTitle":"Fill the gap","board.fillMeta":"Suggestions that fit ~{cols} column(s) · section: {sec}",
+    "board.fillKindChron":"Chronicle","board.fillKindImg":"Image","board.fillKindAd":"Réclame",
+    "board.fillFit":"{pct}% fit","board.fillEmpty":"Nothing to suggest (pool, portfolio and ads empty or already placed).",
+    "board.fillPlaced":"Added to fill the gap ✓","board.anImage":"(image)",
     "board.imgSize":"Image size","board.imgSizeHint":"in columns — text wraps around the photo",
     "board.poolCardHint":"Click to place · double-click to edit the text",
     "board.ceTitle":"Edit: {h}","board.ceKicker":"Kicker","board.ceHeadline":"Headline",
@@ -633,6 +689,7 @@ function previewURL(){
 }
 function reloadPreview(){ $("#pv").src=previewURL(); }
 let STYLES=[];   // reusable custom styles (styles table), shared across editions
+let SECTIONS=[];   // editor-defined rubriques for this edition (sections.sql)
 function populateThemeSel(){
   const sel=$("#themeSel"); if(!sel) return;
   const themes=window.DAIHBI_THEMES||{classic:{label:"Classique"}};
@@ -816,6 +873,7 @@ async function load(){
     try{ ADPLACEMENTS = await AdPlacements.forIssue(ISSUE); }catch(e){ ADPLACEMENTS=[]; }
     try{ ADS         = await Ads.listApproved(ISSUE); }catch(e){ ADS=[]; }
     try{ IMAGES      = await Portfolio.list(); }catch(e){ IMAGES=[]; }
+    try{ SECTIONS    = await Sections.forIssue(ISSUE); }catch(e){ SECTIONS=[]; }
   }catch(e){ toast(I18n.t("board.error",{msg:e.message})); return; }
   render();
   if(currentEdit) renderEditBody();
@@ -1169,7 +1227,100 @@ window.addEventListener("message", e=>{
   if(d.type==="daihbi-edit-image" && d.pid && d.kind!=="ad-placement"){ openImagePanel(d.pid); }
   // drag-resize handle on a preview photo → set its column width (snaps to columns)
   if(d.type==="daihbi-resize-image" && d.pid && d.kind!=="ad-placement"){ ipResize(d.pid, d.cols); }
+  // drag-to-arrange a chronicle on the preview → reorder + adopt the drop weight
+  if(d.type==="daihbi-reorder" && d.pid){ reorderPlacement(d); }
+  // ＋ on a blank gap → open the fit-ranked filler (chronicle / image / réclame)
+  if(d.type==="daihbi-fill-gap"){ openFillPanel(d); }
 });
+
+/* ── Gap-filler: recommend a chronicle / image / réclame that fits a blank region ──
+   Fit is a HEURISTIC estimate of each candidate's rendered height at the gap's width
+   (we can't perfectly know it without rendering), ranked closest-without-overflowing.
+   Picking one auto-fits it: placed into the gap's section, spanning the gap's columns. */
+let fillGap = null;   // {sectionId, cols, widthPx, heightPx}
+const LINE_H = 20, HEAD_H = 58, SUB_H = 22;   // rough rendered heights (CSS px)
+function estChronicleHeight(a, widthPx, cols){
+  const colW = Math.max(80, widthPx / Math.max(1, cols));
+  const charsPerLine = Math.max(8, colW / 6.8);
+  const lines = Math.ceil(((a.body||"").length) / charsPerLine);
+  const bodyH = Math.ceil(lines / Math.max(1, cols)) * LINE_H;
+  const imgH = a.image_url ? Math.round(colW / 1.5) : 0;
+  return HEAD_H + (a.subhead?SUB_H:0) + imgH + bodyH;
+}
+function estImageHeight(im, widthPx, cols){
+  // an image filler spans the whole gap width (not one column), so height = full
+  // width × aspect; most portfolio rows have no stored dims → assume ~3:2 landscape
+  const w = im.width||0, h = im.height||0;
+  return Math.round(Math.max(80, widthPx) * (w>0 && h>0 ? h/w : 0.66)) + 18;   // +credit line
+}
+function estAdHeight(){ return 240; }
+function fitScore(estH, gapH){ const over = estH>gapH; return Math.abs(estH-gapH) + (over ? gapH*0.6 : 0); }  // penalise overflow
+function openFillPanel(gap){
+  fillGap = gap;
+  const w = gap.widthPx, c = Math.max(1, gap.cols||1), gh = gap.heightPx;
+  // candidates: unplaced pool chronicles + approved réclames + portfolio images
+  const placedArtIds = new Set(PLACEMENTS.map(p=>p.article&&p.article.id).filter(Boolean));
+  const chron = POOL.filter(a=>!placedArtIds.has(a.id)).map(a=>({kind:"chronicle", id:a.id, a,
+    title:a.headline||I18n.t("board.untitled"), thumb:a.image_url||"", est:estChronicleHeight(a,w,c)}));
+  const imgs = IMAGES.filter(im=>im.approved!==false).map(im=>({kind:"image", id:im.id, im,
+    title:im.caption||I18n.t("board.anImage"), thumb:im.url, est:estImageHeight(im,w,c)}));
+  const ads  = ADS.map(ad=>({kind:"ad", id:ad.id, ad, title:ad.title||I18n.t("board.anAd"), thumb:ad.image_url||"", est:estAdHeight()}));
+  // best-fit first, but guarantee each kind is represented (don't let chronicles/ads
+  // crowd images out): take the top of each kind, then merge and re-sort by fit.
+  const topN = (arr,n) => arr.map(x=>({...x, score:fitScore(x.est, gh)})).sort((a,b)=>a.score-b.score).slice(0,n);
+  const ranked = topN(chron,10).concat(topN(imgs,10), topN(ads,10)).sort((a,b)=>a.score-b.score);
+  const secName = fillGap.sectionId ? ((SECTIONS.find(s=>s.id===fillGap.sectionId)||{}).name||"") : I18n.t("board.noSection");
+  const kindLabel = k => I18n.t(k==="chronicle"?"board.fillKindChron":k==="image"?"board.fillKindImg":"board.fillKindAd");
+  const fitPct = est => { const r=Math.min(est,gh)/Math.max(est,gh); return Math.round(r*100); };
+  $("#fill_meta").textContent = I18n.t("board.fillMeta",{cols:c, sec:secName});
+  $("#fill_list").innerHTML = ranked.length ? ranked.map(x=>`
+    <button class="fillcard" onclick="placeFill('${x.kind}','${x.id}')">
+      ${x.thumb?`<img src="${esc2(x.thumb)}" alt="">`:`<span class="noimg">${esc2(kindLabel(x.kind))}</span>`}
+      <div class="fc-body"><div class="fc-kind">${esc2(kindLabel(x.kind))}</div>
+        <div class="fc-title">${esc2(x.title)}</div>
+        <div class="fc-fit"><span class="bar"><i style="width:${fitPct(x.est)}%"></i></span>${esc2(I18n.t("board.fillFit",{pct:fitPct(x.est)}))}</div></div>
+    </button>`).join("") : `<div class="enote" style="padding:1rem">${esc2(I18n.t("board.fillEmpty"))}</div>`;
+  $("#fillModal").classList.add("open");
+}
+function closeFillPanel(){ $("#fillModal").classList.remove("open"); fillGap=null; }
+async function placeFill(kind, id){
+  if(!fillGap) return;
+  const cols = Math.max(0, fillGap.cols||0), sid = fillGap.sectionId || null, big = (fillGap.heightPx||0) > 420;
+  try{
+    if(kind==="chronicle"){
+      const np = await Placements.add(id, ISSUE);
+      await Placements.update(np.id, { section_id:sid, col_span:cols, weight: big?"major":"minor", position:9999, published:true });
+    } else if(kind==="image"){
+      const im = IMAGES.find(x=>x.id===id) || {};
+      await Placements.addImage(ISSUE, im.url||"", { section_id:sid, col_span:cols, weight:"minor", position:9999, published:true });
+    } else if(kind==="ad"){
+      const np = await AdPlacements.add(id, ISSUE);
+      await AdPlacements.update(np.id, { published:true, position:9999 });   // ads render in the general well
+    }
+    closeFillPanel(); await load(); reloadPreview(); toast(I18n.t("board.fillPlaced"));
+  }catch(e){ toast(I18n.t("board.error",{msg:e.message})); }
+}
+// Drop result from the preview: place `pid` into the `weight` group just before
+// `beforePid` (null = end of that group). Adopting the drop neighbour's weight
+// lets one drag both reorder AND re-rank prominence; promoting to lead demotes
+// the previous hero so a front never shows two leads.
+async function reorderPlacement({pid, weight, beforePid}){
+  const p=getPl(pid); if(!p) return;
+  const WEIGHTS=["lead","major","minor","brief"];
+  weight = WEIGHTS.includes(weight) ? weight : p.weight;
+  try{
+    if(weight==="lead"){
+      const olds=PLACEMENTS.filter(q=>q.weight==="lead"&&q.id!==pid);
+      await Promise.all(olds.map(q=>Placements.update(q.id,{weight:"major"})));
+      olds.forEach(q=>{ q.weight="major"; });   // keep local in sync for the index calc below
+    }
+    const ids=PLACEMENTS.filter(q=>q.weight===weight&&q.id!==pid).sort((a,b)=>a.position-b.position).map(q=>q.id);
+    let idx=ids.indexOf(beforePid); if(idx<0) idx=ids.length;
+    await moveArticle(pid, weight, idx);
+    await load(); reloadPreview();
+    if(currentEdit&&currentEdit.kind==="placement"&&currentEdit.id===pid) renderEditBody();
+  }catch(e){ toast(I18n.t("board.error",{msg:e.message})); }
+}
 async function ipResize(pid, cols){
   const p=getPl(pid); if(p) p.img_cols=cols;
   try{ await Placements.update(pid,{img_cols:cols}); reloadPreview(); if(imgPanelPid===pid) renderImagePanel(); if(currentEdit&&currentEdit.kind==="placement"&&currentEdit.id===pid) renderEditBody(); }
@@ -1294,6 +1445,9 @@ function renderEditBody(){
         ${[["",I18n.t("board.cropAuto")],["16x9",I18n.t("board.cropLand")],["1x1",I18n.t("board.cropSquare")],["3x4",I18n.t("board.cropPortrait")]].map(([v,l])=>`<button class="ebtn ${(p.img_crop||"")===v?"on":""}" onclick="mImgCrop('${v}')">${esc2(l)}</button>`).join("")}</div></div>`:"";
     $("#editBody").innerHTML=`
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.prominence"))}</div><div class="ctl">${wbtns}</div></div>
+      <div class="erow"><div class="lbl">${esc2(I18n.t("board.section"))}</div><div class="ctl">
+        <select class="esel" onchange="mSection(this.value)">${sectionOptionsHTML(p.section_id||"")}</select>
+        <button class="ebtn" onclick="openSectionsModal()" title="${esc2(I18n.t("board.manageSections"))}">⚙</button></div></div>
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.colSpan"))}</div><div class="ctl">${colBtns}
         <span class="enote">${esc2(I18n.t("board.colSpanHint"))}</span></div></div>
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.photo"))}</div><div class="ctl">
@@ -1304,7 +1458,7 @@ function renderEditBody(){
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.order"))}</div><div class="ctl">
         <button class="ebtn" onclick="mOrder(-1)">${esc2(I18n.t("board.up"))}</button>
         <button class="ebtn" onclick="mOrder(1)">${esc2(I18n.t("board.down"))}</button>
-        <span class="enote">${esc2(I18n.t("board.inWeight",{w:wLabel(p.weight)}))}</span>
+        <span class="enote">${esc2(I18n.t("board.inWeight",{w:wLabel(p.weight)}))} · ${esc2(I18n.t("board.dragHint"))}</span>
       </div></div>
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.publication"))}</div><div class="ctl">
         ${p.published
@@ -1346,6 +1500,64 @@ async function afterEdit(){ await load(); reloadPreview(); renderEditBody(); }
 async function mWeight(w){ const p=getPl(currentEdit.id); if(!p) return; try{ await moveArticle(p.id,w,1e9); await afterEdit(); }catch(e){ toast(e.message); } }
 async function mPhoto(url){ try{ await Placements.update(currentEdit.id,{image_url:url}); await afterEdit(); }catch(e){ toast(e.message); } }
 async function mColSpan(n){ try{ await Placements.update(currentEdit.id,{col_span:n}); await afterEdit(); }catch(e){ toast(e.message); } }
+// ── Sections (rubriques) ─────────────────────────────────────────────────────
+function sectionOptionsHTML(curId){
+  let html=`<option value="" ${!curId?"selected":""}>${esc2(I18n.t("board.noSection"))}</option>`;
+  html+=SECTIONS.map(s=>`<option value="${esc2(s.id)}" ${curId===s.id?"selected":""}>${esc2(s.name||"—")}</option>`).join("");
+  html+=`<option value="__newsec">${esc2(I18n.t("board.newSection"))}</option>`;
+  return html;
+}
+async function mSection(v){
+  if(v==="__newsec"){ openSectionsModal(); renderEditBody(); return; }   // re-render resets the select
+  try{ await Placements.update(currentEdit.id,{section_id:v||null}); await afterEdit(); }catch(e){ toast(e.message); }
+}
+function openSectionsModal(){ $("#sec_err").textContent=""; renderSectionsList(); $("#sectionsModal").classList.add("open"); setTimeout(()=>$("#secNew").focus(),50); }
+function closeSectionsModal(){ $("#sectionsModal").classList.remove("open"); }
+function renderSectionsList(){
+  const el=$("#secList"); if(!el) return;
+  el.innerHTML = SECTIONS.length ? SECTIONS.map((s,i)=>`
+    <div class="erow" style="border-bottom:1px solid #ece2cc">
+      <input value="${esc2(s.name||"")}" onchange="renameSection('${s.id}',this.value)" style="flex:1;font:inherit;padding:.4rem .5rem;border:1px solid #c9bda0;border-radius:6px">
+      <button class="ebtn" ${i===0?"disabled":""} onclick="moveSection('${s.id}',-1)" title="${esc2(I18n.t("board.up"))}">▲</button>
+      <button class="ebtn" ${i===SECTIONS.length-1?"disabled":""} onclick="moveSection('${s.id}',1)" title="${esc2(I18n.t("board.down"))}">▼</button>
+      <button class="ebtn danger" onclick="deleteSection('${s.id}')" title="${esc2(I18n.t("board.sectionDelete"))}">🗑</button>
+    </div>`).join("") : `<div class="enote" style="padding:.4rem 0">${esc2(I18n.t("board.sectionsEmpty"))}</div>`;
+}
+async function addSection(){
+  const name=$("#secNew").value.trim(); if(!name){ $("#secNew").focus(); return; }
+  try{
+    const pos=(SECTIONS.length?Math.max(...SECTIONS.map(s=>s.position||0))+1:0);
+    const s=await Sections.add(ISSUE,name,pos); SECTIONS.push(s);
+    $("#secNew").value=""; renderSectionsList();
+    if(currentEdit&&currentEdit.kind==="placement") renderEditBody();
+    reloadPreview();
+  }catch(e){ $("#sec_err").textContent=I18n.t("board.error",{msg:e.message}); }
+}
+async function renameSection(id,name){
+  name=(name||"").trim();
+  try{ await Sections.update(id,{name}); const s=SECTIONS.find(x=>x.id===id); if(s) s.name=name;
+    if(currentEdit&&currentEdit.kind==="placement") renderEditBody(); reloadPreview();
+  }catch(e){ $("#sec_err").textContent=I18n.t("board.error",{msg:e.message}); }
+}
+async function moveSection(id,delta){
+  const i=SECTIONS.findIndex(s=>s.id===id), j=i+delta;
+  if(i<0||j<0||j>=SECTIONS.length) return;
+  const a=SECTIONS[i], b=SECTIONS[j];
+  // swap positions (renumber the whole list so positions stay 0..n-1 and stable)
+  SECTIONS.splice(i,1); SECTIONS.splice(j,0,a);
+  try{ await Promise.all(SECTIONS.map((s,k)=> (s.position!==k) ? (s.position=k, Sections.update(s.id,{position:k})) : null).filter(Boolean));
+    renderSectionsList(); reloadPreview();
+  }catch(e){ $("#sec_err").textContent=I18n.t("board.error",{msg:e.message}); }
+}
+async function deleteSection(id){
+  const s=SECTIONS.find(x=>x.id===id);
+  if(!confirm(I18n.t("board.sectionConfirmDelete",{n:(s&&s.name)||""}))) return;
+  try{ await Sections.remove(id); SECTIONS=SECTIONS.filter(x=>x.id!==id);
+    // placements pointing at it were ON DELETE SET NULL'd server-side; refresh local
+    await load(); renderSectionsList();
+    if(currentEdit&&currentEdit.kind==="placement") renderEditBody(); reloadPreview();
+  }catch(e){ $("#sec_err").textContent=I18n.t("board.error",{msg:e.message}); }
+}
 async function mImgCols(n){ try{ await Placements.update(currentEdit.id,{img_cols:n}); await afterEdit(); }catch(e){ toast(e.message); } }
 async function mImgPos(v){ try{ await Placements.update(currentEdit.id,{img_pos:v}); await afterEdit(); }catch(e){ toast(e.message); } }
 async function mImgCrop(v){ try{ await Placements.update(currentEdit.id,{img_crop:v}); await afterEdit(); }catch(e){ toast(e.message); } }

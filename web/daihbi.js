@@ -434,6 +434,15 @@ const Placements = {
     if (error) throw error;
     return data;
   },
+  /** Image-only filler (image_fill.sql): a placement with no article, just a photo. */
+  async addImage(issue, imageUrl, fields) {
+    const { data: { user } } = await db.auth.getUser();
+    const { data, error } = await db.from("placements")
+      .insert({ article_id: null, issue, image_url: imageUrl || "", weight: "minor", position: 0, published: false, placed_by: user?.id || null, ...(fields || {}) })
+      .select("*, article:articles(*)").single();
+    if (error) throw error;
+    return data;
+  },
   async remove(id) { const { error } = await db.from("placements").delete().eq("id", id); if (error) throw error; },
   subscribe(issue, cb) {
     if (!db) return;
@@ -1145,6 +1154,38 @@ const Styles = {
   },
 };
 
+// ── Sections: editor-defined newspaper rubriques per edition (sections.sql).
+//    Layout, so issue-scoped writes are gated by manages_issue(); public read so
+//    the rendered paper shows section headings. A placement points at one via
+//    placements.section_id (null = default/unsectioned well).
+const Sections = {
+  async forIssue(issue) {
+    if (!db) return [];
+    const { data, error } = await db.from("sections").select("*").eq("issue", issue)
+      .order("position", { ascending: true }).order("created_at", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+  async add(issue, name, position) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { data, error } = await db.from("sections")
+      .insert({ issue, name: name || "", position: position || 0 }).select().single();
+    if (error) throw error;
+    return data;
+  },
+  async update(id, patch) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { data, error } = await db.from("sections").update(patch).eq("id", id).select().single();
+    if (error) throw error;
+    return data;
+  },
+  async remove(id) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { error } = await db.from("sections").delete().eq("id", id);
+    if (error) throw error;
+  },
+};
+
 // ── Regiments: a shared, user-extensible régiment/clan vocabulary. The base
 //    list ships in papers.js (DAIHBI_CLANS); the `regiments` table holds the ones
 //    contributors add. list() merges both (defaults first, deduped) so an added
@@ -1173,5 +1214,5 @@ const Regiments = {
   },
 };
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, AuthModal, NavUser, Chronicles, Placements, AdPlacements, Media, Profiles, Comments, Portfolio, Ads, Papers, Revisions, Styles, Regiments, esc, md, I18n, Prefs, LANGS };
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, AuthModal, NavUser, Chronicles, Placements, AdPlacements, Media, Profiles, Comments, Portfolio, Ads, Papers, Revisions, Styles, Sections, Regiments, esc, md, I18n, Prefs, LANGS };
 })();

@@ -93,6 +93,33 @@
   .jbody .jbar .grow{flex:1}
   .jbody .jbar button{font:inherit;border-radius:6px;padding:.55rem .9rem;cursor:pointer;border:1px solid #c9bda0;background:#fff}
   .jbody .jbar button.go{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .jbody .jbar button.del{color:#7a1f1a;border-color:#d8b6b2}
+  .jeditstyle{flex:0 0 auto;font:inherit;border:1px solid #c9bda0;background:#fff;border-radius:6px;padding:.5rem .6rem;cursor:pointer;line-height:1}
+  .jeditstyle:hover{border-color:var(--accent);color:var(--accent)}
+  /* manage modal: form (left) + live preview (right) */
+  .jcard{max-width:620px}
+  .jsplit{flex:1;display:flex;min-height:0}
+  .jsplit > .jbody{flex:1;min-width:0}                       /* form fills when no preview */
+  .jcard.has-preview{width:min(1180px,96vw);max-width:none}
+  .jcard.has-preview > .jsplit > .jbody{flex:0 0 446px}      /* fixed form width beside the preview */
+  .jpreview{flex:1;display:flex;flex-direction:column;border-left:1px solid var(--line);background:#efe8d6;min-width:0}
+  .jpvbar{display:flex;align-items:center;gap:.4rem;padding:.4rem .6rem;border-bottom:1px solid var(--line);background:#fffdf7;font-size:.78rem;color:#6a6253}
+  .jpvbar .grow{flex:1}
+  .jpvbar button{font:inherit;font-size:.76rem;border:1px solid #c9bda0;background:#fff;border-radius:6px;padding:.28rem .55rem;cursor:pointer}
+  .jpreview iframe{flex:1;border:none;width:100%;background:#efe8d6}
+  .jpreview.full{position:fixed;inset:0;z-index:130;border-left:none;flex:none}
+  @media(max-width:860px){ .jsplit{flex-direction:column} .jpreview{flex:none;height:44vh} .jcard.has-preview{width:96vw}
+    .jcard.has-preview > .jsplit > .jbody{flex:0 1 auto} }
+  /* mini style-preview card (create-style modal) */
+  .stprev{border:1px solid #c9bda0;border-radius:8px;padding:.9rem 1rem;margin-top:.2rem;overflow:hidden}
+  .stprev .stmast{text-align:center;font-weight:900;font-size:1.7rem;line-height:1.02;margin:.1rem 0}
+  .stprev .sttag{text-align:center;font-style:italic;font-size:.76rem;margin-bottom:.4rem}
+  .stprev .strule{border:none;border-top:1px solid;opacity:.55;margin:.25rem 0 .55rem}
+  .stprev .stkick{font-family:"Old Standard TT",serif;text-transform:uppercase;letter-spacing:.16em;font-size:.64rem;font-weight:700;margin-bottom:.2rem}
+  .stprev .sthead{font-weight:900;font-size:1.5rem;line-height:1.05;margin:.1rem 0 .2rem}
+  .stprev .stby{font-variant:small-caps;letter-spacing:.06em;font-size:.78rem;margin-bottom:.4rem}
+  .stprev .stbodytx{font-size:.9rem;line-height:1.5}
+  .stprev .stimg{height:32px;border-radius:3px;margin-top:.55rem;background:linear-gradient(135deg,#888,#bbb)}
   .coed{display:flex;align-items:center;gap:.5rem;padding:.35rem 0;border-bottom:1px solid var(--line);font-size:.88rem}
   .coed .grow{flex:1}
   .coed button{font:inherit;font-size:.74rem;border:1px solid #c9bda0;background:#fff;border-radius:5px;padding:.2rem .5rem;cursor:pointer}
@@ -292,9 +319,56 @@
 
 <!-- Journal (edition) create/manage modal -->
 <div class="pmodal" id="jmodal" style="display:none">
-  <div class="pcard" style="max-width:620px">
-    <div class="phead"><b id="jTitle" data-i18n="ed.journal">Journal</b><span class="grow"></span><button class="px" onclick="closeJournal()">✕</button></div>
-    <div class="jbody" id="jBody"></div>
+  <div class="pcard jcard" id="jcard">
+    <div class="phead"><b id="jTitle" data-i18n="ed.journal">Journal</b><span class="grow"></span>
+      <button class="px" id="jFullBtn" onclick="togglePreviewFull()" data-i18n-title="ed.fullscreen" title="Plein écran" style="display:none">⛶</button>
+      <button class="px" onclick="closeJournal()">✕</button></div>
+    <div class="jsplit">
+      <div class="jbody" id="jBody"></div>
+      <div class="jpreview" id="jPreviewPane" style="display:none">
+        <div class="jpvbar">
+          <span data-i18n="ed.previewLabel">Aperçu</span><span class="grow"></span>
+          <button onclick="refreshJPreview()" title="↻" data-i18n-title="ed.refresh">↻</button>
+          <button id="jpvFull" onclick="togglePreviewFull()" data-i18n="ed.fullscreen">⛶ Plein écran</button>
+        </div>
+        <iframe id="jPreview" title="Aperçu de la une"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Compact create-style modal (mirrors the board's style author; same `def` shape) -->
+<div class="pmodal" id="styleModal" style="display:none">
+  <div class="pcard" style="max-width:560px">
+    <div class="phead"><b id="est_title" data-i18n="ed.styleModalTitle">Créer un style</b><span class="grow"></span><button class="px" onclick="closeStyleCreator()">✕</button></div>
+    <div class="jbody">
+      <label data-i18n="ed.styleName">Nom du style</label>
+      <input id="est_name" data-i18n-ph="ed.styleNamePh" placeholder="Ex. Tabloïd vert">
+      <label data-i18n="ed.stColors">Couleurs</label>
+      <div class="two" style="grid-template-columns:repeat(5,1fr)">
+        <div><label data-i18n="ed.stPaper">Papier</label><input type="color" id="est_paper" value="#f5efe1" oninput="updateEStylePreview()"></div>
+        <div><label data-i18n="ed.stInk">Encre</label><input type="color" id="est_ink" value="#1a1714" oninput="updateEStylePreview()"></div>
+        <div><label data-i18n="ed.stAccent">Accent</label><input type="color" id="est_accent" value="#7a1f1a" oninput="updateEStylePreview()"></div>
+        <div><label data-i18n="ed.stRule">Filets</label><input type="color" id="est_rule" value="#2a2622" oninput="updateEStylePreview()"></div>
+        <div><label data-i18n="ed.stMuted">Atténué</label><input type="color" id="est_muted" value="#5b5349" oninput="updateEStylePreview()"></div>
+      </div>
+      <div class="two" style="grid-template-columns:1fr 1fr 1fr">
+        <div><label data-i18n="ed.stHead">Police des titres</label><select id="est_head" onchange="updateEStylePreview()"></select></div>
+        <div><label data-i18n="ed.stBody">Police du texte</label><select id="est_body" onchange="updateEStylePreview()"></select></div>
+        <div><label data-i18n="ed.stPhoto">Photos</label><select id="est_photo" onchange="updateEStylePreview()"></select></div>
+      </div>
+      <label data-i18n="ed.stPreview">Aperçu</label>
+      <div id="est_preview" class="stprev">
+        <div class="stmast"></div><div class="sttag"></div><hr class="strule">
+        <div class="stkick">RÉGIMENT · WARDEN</div>
+        <div class="sthead" data-i18n="ed.stPreviewHead">La Une du Front</div>
+        <div class="stby" data-i18n="ed.stPreviewBy">par un chroniqueur</div>
+        <div class="stbodytx" data-i18n="ed.stPreviewBody">Le texte de l’article s’affiche dans la police choisie, sur le papier choisi.</div>
+        <div class="stimg"></div>
+      </div>
+      <div class="jerr" id="est_err"></div>
+      <div class="jbar"><button class="del" id="est_del" onclick="deleteStyleCreator()" style="display:none" data-i18n="ed.styleDelete">🗑 Supprimer</button><span class="grow"></span><button class="go" id="est_save" onclick="saveStyleCreator()" data-i18n="ed.styleSave">Créer &amp; appliquer</button></div>
+    </div>
   </div>
 </div>
 
@@ -484,6 +558,7 @@ I18n.register({
     "ed.jFontTheme": "— selon le thème —",
     "ed.jAiZone": "Zone « Rédigé par l’IA » séparée",
     "ed.jAiZoneHint": "— sinon, les chroniques IA restent dans la une avec seulement le label.",
+    "ed.jGridCols": "Colonnes de la une", "ed.jGridColsHint": "— grille pour toute l’édition", "ed.colsAuto": "Auto",
     "ed.republishTip": "Republier (remettre à la une du kiosque)",
     "ed.republished": "Republié — remis à la une ✓",
     "ed.jPlate": "Style du titre",
@@ -507,6 +582,15 @@ I18n.register({
     "ed.newEditionTitle": "Nouvelle édition de « {name} »",
     "ed.createEditionBtn": "Créer l’édition",
     "ed.manageJournalTitle": "Gérer : {name}",
+    "ed.previewLabel": "Aperçu", "ed.fullscreen": "⛶ Plein écran", "ed.exitFullscreen": "⤡ Réduire", "ed.refresh": "Rafraîchir l’aperçu",
+    "ed.myStyles": "Mes styles", "ed.createStyle": "＋ Créer un style…", "ed.customStyle": "Style personnalisé",
+    "ed.styleModalTitle": "Créer un style", "ed.styleName": "Nom du style", "ed.styleNamePh": "Ex. Tabloïd vert",
+    "ed.stColors": "Couleurs", "ed.stPaper": "Papier", "ed.stInk": "Encre", "ed.stAccent": "Accent", "ed.stRule": "Filets", "ed.stMuted": "Atténué",
+    "ed.stHead": "Police des titres", "ed.stBody": "Police du texte", "ed.stPhoto": "Photos", "ed.stPreview": "Aperçu",
+    "ed.styleSave": "Créer & appliquer", "ed.styleSaved": "Style créé", "ed.styleNameNeeded": "Donnez un nom au style.",
+    "ed.editStyle": "✎ Modifier ce style", "ed.styleEditTitle": "Modifier le style", "ed.styleUpdate": "Enregistrer le style", "ed.styleUpdated": "Style mis à jour",
+    "ed.styleDelete": "🗑 Supprimer", "ed.styleConfirmDelete": "Supprimer définitivement ce style ? Les éditions qui l’utilisent reviendront au style classique.", "ed.styleDeleted": "Style supprimé",
+    "ed.stPreviewHead": "La Une du Front", "ed.stPreviewBy": "par un chroniqueur", "ed.stPreviewBody": "Le texte de l’article s’affiche dans la police choisie, sur le papier choisi.",
     "ed.saveJournalBtn": "Enregistrer le journal",
     "ed.jGiveName": "Donnez un nom.",
     "ed.jGiveIssue": "Donnez un identifiant (lettres/chiffres/tirets).",
@@ -707,6 +791,7 @@ I18n.register({
     "ed.jFontTheme": "— follow the theme —",
     "ed.jAiZone": "Separate “Written by AI” section",
     "ed.jAiZoneHint": "— otherwise AI chronicles stay in the front page with just the label.",
+    "ed.jGridCols": "Front-page columns", "ed.jGridColsHint": "— grid for the whole edition", "ed.colsAuto": "Auto",
     "ed.republishTip": "Republish (bump back to the kiosque front)",
     "ed.republished": "Republished — back on the front ✓",
     "ed.jPlate": "Masthead style",
@@ -730,6 +815,15 @@ I18n.register({
     "ed.newEditionTitle": "New edition of “{name}”",
     "ed.createEditionBtn": "Create the edition",
     "ed.manageJournalTitle": "Manage: {name}",
+    "ed.previewLabel": "Preview", "ed.fullscreen": "⛶ Fullscreen", "ed.exitFullscreen": "⤡ Exit fullscreen", "ed.refresh": "Refresh preview",
+    "ed.myStyles": "My styles", "ed.createStyle": "＋ Create a style…", "ed.customStyle": "Custom style",
+    "ed.styleModalTitle": "Create a style", "ed.styleName": "Style name", "ed.styleNamePh": "e.g. Green tabloid",
+    "ed.stColors": "Colours", "ed.stPaper": "Paper", "ed.stInk": "Ink", "ed.stAccent": "Accent", "ed.stRule": "Rules", "ed.stMuted": "Muted",
+    "ed.stHead": "Headline font", "ed.stBody": "Body font", "ed.stPhoto": "Photos", "ed.stPreview": "Preview",
+    "ed.styleSave": "Create & apply", "ed.styleSaved": "Style created", "ed.styleNameNeeded": "Give the style a name.",
+    "ed.editStyle": "✎ Edit this style", "ed.styleEditTitle": "Edit style", "ed.styleUpdate": "Save style", "ed.styleUpdated": "Style updated",
+    "ed.styleDelete": "🗑 Delete", "ed.styleConfirmDelete": "Delete this style permanently? Editions using it will fall back to the classic style.", "ed.styleDeleted": "Style deleted",
+    "ed.stPreviewHead": "The Front Page", "ed.stPreviewBy": "by a chronicler", "ed.stPreviewBody": "The article text renders in the chosen font, on the chosen paper.",
     "ed.saveJournalBtn": "Save the paper",
     "ed.jGiveName": "Give it a name.",
     "ed.jGiveIssue": "Give an identifier (letters/digits/dashes).",
@@ -1172,7 +1266,6 @@ async function removePortfolioImage(id){ if(!confirm(I18n.t("ed.confirmRemovePor
 // ── Journaux : créer / gérer une édition ────────────────────────────────────
 function journalForm(p, isNew){
   const plates=[["plate-fraktur",I18n.t("ed.plateFraktur")],["plate-anton",I18n.t("ed.plateAnton")],["plate-echo",I18n.t("ed.plateEcho")]];
-  const themes=Object.entries(window.DAIHBI_THEMES||{classic:{label:"Classique"}});
   const curTheme=p.theme||"classic";
   return `
     <label>${I18n.t("ed.jName")}</label><input id="j_name" value="${escapeHtml(p.name||"")}" placeholder="${I18n.t("ed.jNamePh")}">
@@ -1189,11 +1282,16 @@ function journalForm(p, isNew){
       <div><label>${I18n.t("ed.jFont")}</label><select id="j_font"><option value="">${I18n.t("ed.jFontTheme")}</option>${JOURNAL_HEAD_FONTS.map(([v,l])=>`<option value='${escapeHtml(v)}'>${escapeHtml(l)}</option>`).join("")}</select></div>
     </div>
     <label>${I18n.t("ed.jTheme")} <span style="font-weight:400;color:#8a8170">${I18n.t("ed.jThemeHint")}</span></label>
-    <select id="j_theme" onchange="updateThemeNote()">${themes.map(([v,t])=>`<option value="${v}" ${(curTheme===v)?"selected":""}>${escapeHtml(t.label||v)}</option>`).join("")}</select>
+    <div style="display:flex;gap:.4rem;align-items:center">
+      <select id="j_theme" onchange="onThemePick(this)" style="flex:1">${themeOptionsHTML(curTheme)}</select>
+      <button type="button" id="j_editstyle" class="jeditstyle" onclick="editSelectedStyle()" title="${I18n.t("ed.editStyle")}" ${Styles.isCustom(curTheme)?"":'style="display:none"'}>✎</button>
+    </div>
     <div id="j_theme_note" style="font-size:.8rem;color:#8a8170;margin:.25rem 0 .2rem"></div>
     <label style="display:flex;align-items:center;gap:.45rem;font-weight:400;margin:.3rem 0 .1rem;cursor:pointer">
       <input type="checkbox" id="j_aizone" ${p.aiZone?"checked":""}> ${I18n.t("ed.jAiZone")}</label>
     <div style="font-size:.8rem;color:#8a8170;margin-bottom:.2rem">${I18n.t("ed.jAiZoneHint")}</div>
+    <label>${I18n.t("ed.jGridCols")} <span style="font-weight:400;color:#8a8170">${I18n.t("ed.jGridColsHint")}</span></label>
+    <select id="j_gridcols">${[[0,I18n.t("ed.colsAuto")],[3,"3"],[4,"4"],[5,"5"],[6,"6"],[7,"7"]].map(([v,l])=>`<option value="${v}" ${(+(p.gridCols||0)===v)?"selected":""}>${escapeHtml(l)}</option>`).join("")}</select>
     <label>${I18n.t("ed.jEar")}</label>
     <div class="two" style="grid-template-columns:1fr 1fr 1fr">
       <input id="j_ear0" value="${escapeHtml((p.ear&&p.ear[0])||"")}" placeholder="${I18n.t("ed.jEarLeft")}">
@@ -1212,10 +1310,223 @@ function updateThemeNote(){
   const sel=$("#j_theme"), note=$("#j_theme_note"); if(!sel||!note) return;
   const t=(window.DAIHBI_THEMES||{})[sel.value]; note.textContent=(t&&t.note)||"";
 }
+// ── Style picker: built-in themes + the editor's custom styles + a create option ──
+let STYLES = [];   // cached custom styles (Styles.list()), loaded on init / after create
+let lastThemeValue = "classic";   // restore target when "＋ Créer un style…" is picked
+function themeOptionsHTML(cur){
+  const themes=Object.entries(window.DAIHBI_THEMES||{classic:{label:"Classique"}});
+  let html=themes.map(([v,t])=>`<option value="${v}" ${(cur===v)?"selected":""}>${escapeHtml(t.label||v)}</option>`).join("");
+  if(STYLES.length){
+    html+=`<optgroup label="${escapeHtml(I18n.t("ed.myStyles"))}">`
+      + STYLES.map(s=>{ const k=Styles.key(s.id); return `<option value="${escapeHtml(k)}" ${(cur===k)?"selected":""}>${escapeHtml(s.name||s.id)}</option>`; }).join("")
+      + `</optgroup>`;
+  }
+  // an unknown custom style (cur points at a style not in our list) still needs a slot
+  if(Styles.isCustom(cur) && !STYLES.some(s=>Styles.key(s.id)===cur)){
+    html+=`<option value="${escapeHtml(cur)}" selected>${escapeHtml(I18n.t("ed.customStyle"))}</option>`;
+  }
+  html+=`<option value="__newstyle">${escapeHtml(I18n.t("ed.createStyle"))}</option>`;
+  return html;
+}
+// Theme/style chosen: the "create" sentinel opens the author; otherwise note + preview.
+function onThemePick(sel){
+  if(sel.value==="__newstyle"){ sel.value=lastThemeValue; openStyleCreator(); return; }
+  lastThemeValue=sel.value;
+  updateThemeNote();
+  updateEditStyleBtn();
+  sendPreviewPatch(true);   // live: no reload
+}
+// Show the ✎ "edit this style" button only when the picked theme is a custom style.
+function updateEditStyleBtn(){
+  const b=$("#j_editstyle"); if(!b) return;
+  b.style.display = Styles.isCustom(($("#j_theme")||{}).value) ? "" : "none";
+}
+function editSelectedStyle(){
+  const t=($("#j_theme")||{}).value;
+  if(Styles.isCustom(t)) openStyleCreator(Styles.idOf(t));
+}
+
+// ── Live preview pane (manage modal) + fullscreen ───────────────────────────
+function jPreviewURL(){
+  const t=($("#j_theme")||{}).value;
+  let u=`paper.html?issue=${encodeURIComponent(manageIssue)}&embed=1`;
+  if(t && t!=="__newstyle") u+=`&theme=${encodeURIComponent(t)}`;
+  return u;
+}
+function refreshJPreview(){ const f=$("#jPreview"); if(f && $("#jPreviewPane").style.display!=="none") f.src=jPreviewURL(); }
+// Live preview: push the (unsaved) form values into the iframe via postMessage so the
+// masthead/theme/font update in real time — debounced for typing, immediate on picks.
+function livePatch(){
+  const ear=[ ($("#j_ear0")||{}).value||"", ($("#j_ear1")||{}).value||"", ($("#j_ear2")||{}).value||"" ];
+  const slogans=(($("#j_slogans")||{}).value||"").split("|").map(s=>s.trim()).filter(Boolean);
+  return {
+    name:($("#j_name")||{}).value||"", tagline:($("#j_tagline")||{}).value||"",
+    plate:($("#j_plate")||{}).value||"plate-fraktur", ear, slogans,
+    emblemLeft:($("#j_eleft")||{}).value||"", emblemRight:($("#j_eright")||{}).value||"",
+    aiZone:!!($("#j_aizone")||{}).checked, theme:($("#j_theme")||{}).value||"classic",
+    gridCols:parseInt(($("#j_gridcols")||{}).value)||0, font:($("#j_font")||{}).value||"" };
+}
+let _pvTimer=null;
+function sendPreviewPatch(now){
+  const f=$("#jPreview"), pane=$("#jPreviewPane");
+  if(!f || !pane || pane.style.display==="none" || !f.contentWindow) return;
+  clearTimeout(_pvTimer);
+  const go=()=>{ try{ f.contentWindow.postMessage({type:"daihbi-preview", patch:livePatch()}, location.origin); }catch(_){} };
+  if(now) go(); else _pvTimer=setTimeout(go, 160);
+}
+// Any edit in the manage form repaints the live preview (no-op unless the pane is open).
+// #jBody is static markup (its innerHTML is swapped, the element persists) so one
+// delegated listener covers every rebuilt form. After the iframe (re)loads it asks for
+// the current values via daihbi-rendered, so unsaved edits survive a theme reload.
+$("#jBody").addEventListener("input", ()=>sendPreviewPatch());
+$("#jBody").addEventListener("change", ()=>sendPreviewPatch());
+window.addEventListener("message", e=>{
+  if(e.origin!==location.origin) return;
+  if((e.data||{}).type==="daihbi-rendered") sendPreviewPatch(true);
+});
+function setupManagePreview(){
+  lastThemeValue=($("#j_theme")||{}).value||"classic";
+  $("#jcard").classList.add("has-preview");
+  $("#jFullBtn").style.display="";
+  const pane=$("#jPreviewPane"); pane.style.display="flex"; pane.classList.remove("full");
+  refreshJPreview();
+}
+function hideManagePreview(){
+  $("#jcard").classList.remove("has-preview");
+  $("#jFullBtn").style.display="none";
+  const pane=$("#jPreviewPane"); pane.style.display="none"; pane.classList.remove("full");
+  $("#jPreview").src="about:blank";
+}
+function togglePreviewFull(){
+  const pane=$("#jPreviewPane"), full=pane.classList.toggle("full");
+  const lbl=full?I18n.t("ed.exitFullscreen"):I18n.t("ed.fullscreen");
+  $("#jpvFull").textContent=lbl;
+}
+
+// ── Compact create-style author (same `def` shape as the board) ─────────────
+const EST_HEAD_FONTS=[
+  ['"Playfair Display",Georgia,serif',"Playfair Display — serif élégant"],
+  ['"Old Standard TT",Georgia,serif',"Old Standard TT — serif classique"],
+  ['"Cinzel","Playfair Display",serif',"Cinzel — capitales gravées"],
+  ['"Abril Fatface","Playfair Display",serif',"Abril Fatface — didone d’affiche"],
+  ['"Marcellus","Old Standard TT",serif',"Marcellus — romaine élégante"],
+  ['"Yeseva One","Playfair Display",serif',"Yeseva One — titre serif"],
+  ['"EB Garamond",Georgia,serif',"EB Garamond — garamond"],
+  ['"Oswald",system-ui,sans-serif',"Oswald — sans condensé"],
+  ['"Anton","Oswald",Impact,sans-serif',"Anton — titre massif"],
+  ['"Bebas Neue","Oswald",Impact,sans-serif',"Bebas Neue — bâton haut"],
+  ['"UnifrakturCook","Playfair Display",serif',"UnifrakturCook — gothique"],
+  ['"Pirata One","UnifrakturCook",serif',"Pirata One — gothique d’affiche"],
+];
+const EST_BODY_FONTS=[
+  ['"PT Serif",Georgia,serif',"PT Serif — serif lisible"],
+  ['"Old Standard TT",Georgia,serif',"Old Standard TT — serif classique"],
+  ['"EB Garamond",Georgia,serif',"EB Garamond — garamond"],
+  ['"Lora",Georgia,serif',"Lora — serif moderne"],
+  ['"Playfair Display",Georgia,serif',"Playfair Display — serif élégant"],
+];
+const EST_PHOTOS=[
+  ["grayscale(.5) sepia(.3) contrast(1.05)","Sépia"],
+  ["grayscale(1) contrast(1.1)","Noir & blanc"],
+  ["saturate(1.15) contrast(1.05)","Vif"],
+  ["none","Aucun filtre"],
+];
+let EST_EDIT_ID=null;   // non-null → the style author edits an existing style
+function selectByValue(sel,v,fallbackIdx){ const i=[...sel.options].findIndex(o=>o.value===v); sel.selectedIndex=i>=0?i:fallbackIdx; }
+function openStyleCreator(editId){
+  EST_EDIT_ID = editId || null;
+  const fopt=l=>l.map(([v,lab])=>`<option value='${escapeHtml(v)}'>${escapeHtml(lab)}</option>`).join("");
+  $("#est_head").innerHTML=fopt(EST_HEAD_FONTS);
+  $("#est_body").innerHTML=fopt(EST_BODY_FONTS);
+  $("#est_photo").innerHTML=fopt(EST_PHOTOS);
+  $("#est_err").textContent="";
+  const editing = EST_EDIT_ID && STYLES.find(s=>s.id===EST_EDIT_ID);
+  if(editing){
+    const d=editing.def||{};
+    $("#est_name").value=editing.name||"";
+    $("#est_paper").value=d.paper||"#f5efe1"; $("#est_ink").value=d.ink||"#1a1714"; $("#est_accent").value=d.accent||"#7a1f1a";
+    $("#est_rule").value=d.rule||"#2a2622"; $("#est_muted").value=d.muted||"#5b5349";
+    selectByValue($("#est_head"), d.fontHead, 0); selectByValue($("#est_body"), d.fontBody, 0); selectByValue($("#est_photo"), d.photoFilter, 0);
+    $("#est_title").textContent=I18n.t("ed.styleEditTitle");
+    $("#est_save").textContent=I18n.t("ed.styleUpdate");
+    $("#est_del").style.display="";
+  } else {
+    $("#est_name").value="";
+    $("#est_paper").value="#f5efe1"; $("#est_ink").value="#1a1714"; $("#est_accent").value="#7a1f1a";
+    $("#est_rule").value="#2a2622"; $("#est_muted").value="#5b5349";
+    $("#est_head").selectedIndex=0; $("#est_body").selectedIndex=0; $("#est_photo").selectedIndex=0;
+    $("#est_title").textContent=I18n.t("ed.styleModalTitle");
+    $("#est_save").textContent=I18n.t("ed.styleSave");
+    $("#est_del").style.display="none";
+  }
+  updateEStylePreview();
+  $("#styleModal").style.display="flex"; $("#est_name").focus();
+}
+function closeStyleCreator(){ $("#styleModal").style.display="none"; }
+function readEStyleDef(){
+  return { paper:$("#est_paper").value, ink:$("#est_ink").value, accent:$("#est_accent").value,
+    rule:$("#est_rule").value, muted:$("#est_muted").value,
+    fontHead:$("#est_head").value, fontBody:$("#est_body").value, photoFilter:$("#est_photo").value };
+}
+function updateEStylePreview(){
+  const d=readEStyleDef(), p=$("#est_preview"); if(!p) return;
+  const cur=PAPERS[manageIssue]||{};
+  p.style.background=d.paper; p.style.color=d.ink; p.style.border="1px solid "+d.rule;
+  const m=p.querySelector(".stmast"); m.textContent=cur.name||I18n.t("ed.stPreviewHead"); m.style.fontFamily=d.fontHead; m.style.color=d.ink;
+  const tg=p.querySelector(".sttag"); tg.textContent=cur.tagline||""; tg.style.color=d.muted; tg.style.fontFamily=d.fontBody;
+  const r=p.querySelector(".strule"); if(r) r.style.borderTopColor=d.rule;
+  p.querySelector(".stkick").style.color=d.accent;
+  const h=p.querySelector(".sthead"); h.style.fontFamily=d.fontHead; h.style.color=d.ink;
+  p.querySelector(".stby").style.color=d.muted;
+  p.querySelector(".stbodytx").style.fontFamily=d.fontBody;
+  p.querySelector(".stimg").style.filter=d.photoFilter;
+}
+async function saveStyleCreator(){
+  const name=$("#est_name").value.trim();
+  if(!name){ $("#est_err").textContent=I18n.t("ed.styleNameNeeded"); return; }
+  const def=readEStyleDef();
+  try{
+    if(EST_EDIT_ID){
+      await Styles.update(EST_EDIT_ID,{name,def});
+      const s=STYLES.find(x=>x.id===EST_EDIT_ID); if(s){ s.name=name; s.def=def; }
+      const sel=$("#j_theme"), cur=sel?sel.value:null;   // keep the current selection, refresh labels
+      if(sel){ sel.innerHTML=themeOptionsHTML(cur); sel.value=cur; }
+      closeStyleCreator();
+      updateThemeNote(); updateEditStyleBtn(); refreshJPreview();
+      toast(I18n.t("ed.styleUpdated"));
+    } else {
+      const st=await Styles.create({name,def});
+      STYLES.push(st);
+      const key=Styles.key(st.id);
+      const sel=$("#j_theme");
+      if(sel){ sel.innerHTML=themeOptionsHTML(key); sel.value=key; lastThemeValue=key; }
+      closeStyleCreator();
+      updateThemeNote(); updateEditStyleBtn(); refreshJPreview();   // live preview (applied to the paper on "Enregistrer")
+      toast(I18n.t("ed.styleSaved"));
+    }
+  }catch(e){ $("#est_err").textContent=e.message; }
+}
+async function deleteStyleCreator(){
+  if(!EST_EDIT_ID) return;
+  if(!confirm(I18n.t("ed.styleConfirmDelete"))) return;
+  const key=Styles.key(EST_EDIT_ID);
+  try{
+    await Styles.remove(EST_EDIT_ID);
+    STYLES=STYLES.filter(s=>s.id!==EST_EDIT_ID);
+    const sel=$("#j_theme");
+    let cur=sel?sel.value:"classic";
+    if(cur===key) cur="classic";   // the edition fell back; persisted on "Enregistrer"
+    if(sel){ sel.innerHTML=themeOptionsHTML(cur); sel.value=cur; lastThemeValue=cur; }
+    closeStyleCreator();
+    updateThemeNote(); updateEditStyleBtn(); refreshJPreview();
+    toast(I18n.t("ed.styleDeleted"));
+  }catch(e){ $("#est_err").textContent=e.message; }
+}
 function readJournal(isNew){
   return { issue: isNew ? $("#j_issue").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") : ISSUE,
     name:$("#j_name").value.trim(), tagline:$("#j_tagline").value.trim(), plate:$("#j_plate").value, theme:$("#j_theme").value, clan:$("#j_clan").value,
     purpose:$("#j_purpose").value.trim(), lang:$("#j_lang").value, aiZone:$("#j_aizone").checked,
+    gridCols:parseInt(($("#j_gridcols")||{}).value)||0,
     ear:[$("#j_ear0").value.trim(),$("#j_ear1").value.trim(),$("#j_ear2").value.trim()],
     slogans:$("#j_slogans").value.split("|").map(s=>s.trim()).filter(Boolean),
     emblemLeft:$("#j_eleft").value.trim(), emblemRight:$("#j_eright").value.trim() };
@@ -1228,6 +1539,7 @@ function openCreateJournal(){
   $("#jTitle").textContent=I18n.t("ed.createJournalTitle");
   $("#jBody").innerHTML = journalForm(tmpl,true) + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">${I18n.t("ed.createJournalBtn")}</button></div>`;
   updateThemeNote();
+  hideManagePreview();
   $("#jmodal").style.display="flex";
 }
 // "Nouvelle édition" — same masthead, fresh issue. Clones an existing paper's
@@ -1246,6 +1558,7 @@ function openNewEdition(srcIssue){
   $("#jBody").innerHTML = journalForm(tmpl, true)
     + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">${I18n.t("ed.createEditionBtn")}</button></div>`;
   updateThemeNote();
+  hideManagePreview();
   $("#jmodal").style.display="flex";
 }
 async function createJournal(){
@@ -1269,6 +1582,7 @@ function openManageJournal(issue){
     + `<div class="jbar"><button class="del" onclick="deleteEdition('${escapeHtml(manageIssue)}')">${I18n.t("ed.deleteJournalTip")}</button><span class="grow"></span><button class="go" onclick="saveJournal()">${I18n.t("ed.saveJournalBtn")}</button></div>
        <div id="coeds"></div>`;
   updateThemeNote();
+  setupManagePreview();
   $("#jmodal").style.display="flex";
   loadCoEditors();
 }
@@ -1292,7 +1606,7 @@ async function applyFontToData(data, curTheme){
 async function saveJournal(){
   try{
     const data = await applyFontToData(readJournal(false), (PAPERS[manageIssue]||{}).theme||"classic");
-    await Papers.update(manageIssue, data); PAPERS=await Papers.map(); reloadPreview();
+    await Papers.update(manageIssue, data); PAPERS=await Papers.map(); reloadPreview(); refreshJPreview();
     $("#jErr").textContent=I18n.t("ed.jSaved"); if($("#dash").style.display!=="none") renderDashboard();
   }catch(e){ $("#jErr").textContent=e.message; }
 }
@@ -1312,7 +1626,7 @@ async function loadCoEditors(){
 }
 async function addCoEditor(){ try{ await Papers.addEditor(manageIssue,$("#coSel").value); loadCoEditors(); }catch(e){ alert(e.message); } }
 async function rmCoEditor(id){ try{ await Papers.removeEditor(manageIssue,id); loadCoEditors(); }catch(e){ alert(e.message); } }
-function closeJournal(){ $("#jmodal").style.display="none"; }
+function closeJournal(){ hideManagePreview(); $("#jmodal").style.display="none"; }
 
 // ── Export print-grade PDF (Scribus via GitHub Action) ──────────────────────
 async function runExport(){
@@ -1426,6 +1740,7 @@ async function boot(){
     $("#adsLink").style.display="";
     $("#journauxLink").style.display=""; $("#chronLink").style.display="";
     try{ PAPERS = await Papers.map(); MY_MANAGED = await Papers.myManaged(); }catch(e){}
+    try{ STYLES = await Styles.list(); }catch(e){ STYLES=[]; }
     showJournaux();          // editors land on their newsroom (journaux), not the writing desk
     // Deep link from the board's "⚙ Gérer le journal": open the manage modal directly.
     const mp = new URLSearchParams(location.search).get("manage");

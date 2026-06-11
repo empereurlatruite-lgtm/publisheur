@@ -1,0 +1,13 @@
+-- ── image_fill ───────────────────────────────────────────────────────────────
+-- Standalone IMAGE fillers for the board's "fill the gap" recommender. A placement
+-- with NO article (article_id null) + an image_url renders as a photo-only block in
+-- the well — used to drop a decorative/illustrative image into ragged blank space.
+-- Every other placement column (section_id, col_span, img_*, weight, position,
+-- published) applies as usual; the masonry treats it like any other card.
+--
+-- Only change: article_id becomes nullable. The FK and unique(article_id, issue)
+-- stay — Postgres treats NULLs as distinct, so an edition may hold any number of
+-- image fillers. RLS is unchanged (placement writes are already gated by
+-- manages_issue(); the articles read policy keys off non-null article_id, so image
+-- fillers neither leak nor need it).
+alter table public.placements alter column article_id drop not null;

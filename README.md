@@ -124,7 +124,8 @@ supabase/     Migrations SQL — à coller dans l'éditeur SQL de Supabase, dans
   transparency.sql · authors.sql · ad_placements.sql · media.sql ·
   i18n.sql · theme.sql · styles.sql · regiments.sql · columns.sql ·
   chronicle_edit.sql · ai_labels.sql · paper_purpose.sql · ai_zone.sql ·
-  image_moderation.sql · img_pos.sql · img_crop.sql
+  image_moderation.sql · img_pos.sql · img_crop.sql ·
+  img_crop_tool.sql · illustrator_meta.sql · sections.sql · image_fill.sql
 publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements)
 .github/workflows/  pages.yml (déploie web/ sur GitHub Pages) · publish.yml (Scribus en CI)
 ```
@@ -133,7 +134,7 @@ publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements
 
 1. Créez un projet sur [supabase.com](https://supabase.com).
 2. **SQL Editor → New query →** collez chaque fichier de `supabase/` **dans
-   l'ordre** ci-dessus (`schema.sql` d'abord, `img_crop.sql` en dernier) → **Run**.
+   l'ordre** ci-dessus (`schema.sql` d’abord, `image_fill.sql` en dernier) → **Run**.
 3. **Authentication → Providers →** activez **Email** (mot de passe ou lien magique).
 4. **Authentication → URL Configuration →** réglez **Site URL** sur l'URL publique
    et ajoutez-la en redirection (sinon les liens magiques retombent sur localhost).
@@ -309,8 +310,10 @@ supabase/     SQL migrations — paste into the Supabase SQL editor, in order:
   transparency.sql · authors.sql · ad_placements.sql · media.sql ·
   i18n.sql · theme.sql · styles.sql · regiments.sql · columns.sql ·
   chronicle_edit.sql · ai_labels.sql · paper_purpose.sql · ai_zone.sql ·
-  image_moderation.sql · img_pos.sql · img_crop.sql
+  image_moderation.sql · img_pos.sql · img_crop.sql ·
+  img_crop_tool.sql · illustrator_meta.sql · sections.sql · image_fill.sql
 publish/      Scribus publisher (print-grade PDF/PNG, from placements)
+  legacy/     Dormant offline/war-wire fallback (pre-Supabase prototype) — see its README
 .github/workflows/  pages.yml (deploy web/ to GitHub Pages) · publish.yml (Scribus in CI)
 ```
 
@@ -318,7 +321,7 @@ publish/      Scribus publisher (print-grade PDF/PNG, from placements)
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. **SQL Editor → New query →** paste each file in `supabase/` **in the order**
-   above (`schema.sql` first, `img_crop.sql` last) → **Run**.
+   above (`schema.sql` first, `image_fill.sql` last) → **Run**.
 3. **Authentication → Providers →** enable **Email** (password or magic-link).
 4. **Authentication → URL Configuration →** set **Site URL** to your public URL and
    add it as a redirect (otherwise magic links bounce to localhost).
