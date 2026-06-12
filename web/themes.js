@@ -46,4 +46,11 @@ window.DAIHBI_THEMES = {
          + "manchettes en capitales (Anton), photos vives — esprit « É PENTA ! ».",
     swatch: "#009c3b",
   },
+  expedition: {
+    label: "Expédition · Clair Obscur",
+    note:  "Broadsheet sombre et doré : noir chaud, texte parchemin, or antique vif, "
+         + "capitales gravées (Cinzel Decorative) sur Garamond, cadre doré, lueur de "
+         + "bougie et photos en gris-or — l'esprit peint de Clair Obscur : Expedition 33.",
+    swatch: "#15110c",
+  },
 };

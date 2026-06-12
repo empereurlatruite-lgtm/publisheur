@@ -82,7 +82,8 @@ photo = `placement.image_url || article.image_url`.
   edited_by → pool → transparency → authors → ad_placements → media → i18n →
   theme → styles → regiments → columns → chronicle_edit → ai_labels →
   paper_purpose → ai_zone → image_moderation → img_pos → img_crop →
-  img_crop_tool → illustrator_meta → sections → image_fill`.
+  img_crop_tool → illustrator_meta → sections → image_fill → templates →
+  dummy_layout`.
   (`i18n` adds content `lang` to articles/ads/papers + `preferred_lang`/`ui_lang`
   to profiles, and opens chronicle writing to any signed-in user — editors still
   publish. `theme` adds `papers.theme` — the per-edition visual skin the
@@ -154,7 +155,7 @@ photo = `placement.image_url || article.image_url`.
   Set in the board dock **and** the double-click edit-chronicle modal's new
   **Mise en page** section (column span + image position + image size), alongside
   `col_span`/`img_cols` from columns.sql; `paper.html` `applyStorySpans()` renders it.
-  `img_crop` adds `placements.img_crop` (`''` natural | `16x9`|`3x2`|`4x3`|`1x1`|`3x4`)
+  `img_crop` adds `placements.img_crop` (`''` natural | `2x1`|`16x9`|`3x2`|`4x3`|`1x1`|`3x4`)
   — Word-style **crop-to-fill**: the photo is cropped (`object-fit:cover` + a forced
   `aspect-ratio`) to that ratio so blocks line up. Set via the **Recadrage** control
   in the dock + edit-modal layout section; applied in `applyStorySpans()`.)
@@ -295,6 +296,9 @@ CREATE TABLE public.images (
   width integer NOT NULL DEFAULT 0,
   height integer NOT NULL DEFAULT 0,
   approved boolean NOT NULL DEFAULT false,
+  tags text[] NOT NULL DEFAULT '{}'::text[],   -- illustrator_meta.sql: type labels (historical/fanart/ai/official)
+  source text NOT NULL DEFAULT ''::text,       -- illustrator_meta.sql: origin URL/credit
+  license text NOT NULL DEFAULT ''::text,      -- illustrator_meta.sql: reuse terms
   CONSTRAINT images_pkey PRIMARY KEY (id),
   CONSTRAINT images_uploader_id_fkey FOREIGN KEY (uploader_id) REFERENCES auth.users(id)
 );
@@ -366,7 +370,7 @@ CREATE TABLE public.article_revisions (
 );
 CREATE TABLE public.placements (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  article_id uuid NOT NULL,
+  article_id uuid,                       -- nullable since image_fill.sql (image-only filler placements)
   issue text NOT NULL,
   weight text NOT NULL DEFAULT 'minor'::text CHECK (weight = ANY (ARRAY['lead'::text, 'major'::text, 'minor'::text, 'brief'::text])),
   position integer NOT NULL DEFAULT 0,
@@ -379,10 +383,25 @@ CREATE TABLE public.placements (
   img_cols smallint NOT NULL DEFAULT 0,
   img_pos text NOT NULL DEFAULT 'top'::text,
   img_crop text NOT NULL DEFAULT ''::text,
+  img_focus text NOT NULL DEFAULT ''::text,   -- img_crop_tool.sql: CSS object-position
+  img_zoom real NOT NULL DEFAULT 1,           -- img_crop_tool.sql: focal-zoom scale
+  section_id uuid,                            -- sections.sql: editor rubrique (null = default well)
   CONSTRAINT placements_pkey PRIMARY KEY (id),
   CONSTRAINT placements_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
   CONSTRAINT placements_issue_fkey FOREIGN KEY (issue) REFERENCES public.papers(issue),
+  CONSTRAINT placements_section_id_fkey FOREIGN KEY (section_id) REFERENCES public.sections(id),
   CONSTRAINT placements_placed_by_fkey FOREIGN KEY (placed_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.sections (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  issue text NOT NULL,
+  name text NOT NULL DEFAULT ''::text,
+  position smallint NOT NULL DEFAULT 0,
+  created_by uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT sections_pkey PRIMARY KEY (id),
+  CONSTRAINT sections_issue_fkey FOREIGN KEY (issue) REFERENCES public.papers(issue),
+  CONSTRAINT sections_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.media (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

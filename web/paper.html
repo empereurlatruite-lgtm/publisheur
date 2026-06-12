@@ -6,7 +6,7 @@
 <title>Le Petit Daihbi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=PT+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700;900&family=Abril+Fatface&family=Marcellus&family=Yeseva+One&family=Bebas+Neue&family=Pirata+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;700&family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=PT+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Abril+Fatface&family=Marcellus&family=Yeseva+One&family=Bebas+Neue&family=Pirata+One&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1a1714; --paper:#f5efe1; --rule:#2a2622;
@@ -175,6 +175,57 @@
   .section-head::before{content:"";flex:0 0 1.1rem;height:0;border-top:3px solid var(--accent)}
   .section-head::after{content:"";flex:1;height:0;border-top:1px solid var(--rule);opacity:.5}
   .section-head + .well{margin-top:0}
+  /* ── fixed-grid layout template (templates.sql): containers placed by col/row,
+        each holding ＋ slots; a filled cell holds a story, an empty one a ＋ ── */
+  .tplgrid{display:grid;gap:1.1rem;grid-auto-rows:minmax(60px,auto);margin:.4rem 0 1rem}
+  .tplcont{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+  .tplcont-h{font-family:var(--font-head);font-weight:800;text-transform:uppercase;
+    letter-spacing:.09em;font-size:.74rem;color:var(--accent);border-bottom:1px solid var(--rule);padding-bottom:.2rem}
+  .tplslots{display:grid;gap:1rem;flex:1;align-items:start}
+  .tplcell{min-width:0}
+  .tplstory{min-width:0}
+  .tplstory h2{font-family:var(--font-display);font-weight:800;line-height:1.04;font-size:1.9rem;margin:.1rem 0 .2rem}
+  .tplstory h3{font-family:var(--font-head);font-weight:700;line-height:1.08;font-size:1.18rem;margin:.1rem 0 .2rem}
+  .tplstory .body{text-align:justify;hyphens:auto;font-size:.92rem}
+  .tplstory.k-brief .body{font-size:.82rem}
+  .tplphoto{display:block;margin:.1rem 0 .5rem;padding:0}
+  .tplempty{display:flex}
+  .tplempty.pub{display:none}                   /* empty cells only show on the board */
+  .tplplus{flex:1;min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:.15rem;border:2px dashed var(--rule);border-radius:8px;background:#00000005;color:var(--muted);
+    cursor:pointer;font:inherit}
+  .tplplus:hover{border-color:var(--accent);color:var(--accent);background:#7a1f1a0d}
+  .tplplus > span{font-size:1.7rem;line-height:1}
+  .tplplus > small{font-size:.62rem;text-transform:uppercase;letter-spacing:.06em}
+  .tpl-loose{margin-top:1rem}
+  /* ── dummy element types (dummy_layout.sql) — FINISHED look (public reader) ── */
+  .tplstory.elem-quote .pullquote{font-family:var(--font-display);font-size:1.5rem;line-height:1.25;
+    font-style:italic;color:var(--accent);border-top:3px solid var(--accent);border-bottom:1px solid var(--rule);
+    margin:.2rem 0;padding:.5rem 0;quotes:"«" "»";}
+  .tplstory.elem-quote .pullquote::before{content:open-quote}.tplstory.elem-quote .pullquote::after{content:close-quote}
+  .tplstory.elem-mugshot .mugshot{margin:0;text-align:center}
+  .tplstory.elem-mugshot .mugshot .mugph,.tplstory.elem-mugshot figure.photo{width:100%;aspect-ratio:1/1}
+  .tplstory.elem-mugshot .mugph{display:block;background:#0000000d;border:1px solid var(--imgborder)}
+  .tplstory.elem-mugshot figcaption{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:.2rem}
+  .tplstory.elem-cartoon figure.photo{border:1.5px solid var(--ink)}
+  .tplstory .cap{font-size:.68rem;color:var(--muted);font-style:italic;margin-top:.18rem}
+  /* ── DUMMY schematic — board/planning view only (body.allmode) ── */
+  .tplstory.dummy{position:relative}
+  .tplstory.dummy .dlabel{font-family:var(--font-head);font-weight:800;text-transform:uppercase;letter-spacing:.05em;
+    font-size:.6rem;color:var(--accent);border-bottom:1px dashed var(--rule);padding-bottom:.12rem;margin-bottom:.25rem}
+  .tplstory.dummy .dlabel i{font-style:normal;opacity:.7;font-weight:600}
+  .tplstory.dummy h2{font-size:1.5rem;line-height:1.02;margin:.1rem 0}
+  .tplstory.dummy h3{font-size:1rem;line-height:1.05;margin:.1rem 0}
+  .tplstory.dummy .byl{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:.05rem 0 .25rem}
+  .tplstory.dummy .imgph{width:100%;aspect-ratio:4/3;background:repeating-linear-gradient(135deg,#0000,#0000 9px,#0000000f 9px,#0000000f 18px);border:1px dashed var(--rule)}
+  .tplstory.dummy.elem-cartoon .imgph{aspect-ratio:1/1}
+  .tplstory.dummy.elem-mugshot .mugph,.tplstory.dummy.elem-mugshot figure.photo{width:100%;aspect-ratio:1/1}
+  .tplstory.dummy .pullquote{border-top:2px solid var(--accent);padding-top:.3rem;font-style:italic;color:var(--accent);font-size:1.05rem}
+  /* greeking: lorem-bars standing in for body copy; theme-agnostic via currentColor */
+  .greek{display:flex;flex-direction:column;gap:5px;margin-top:.2rem;opacity:.55}
+  .greek > span{height:5px;border-radius:2px;background:currentColor}
+  .greek > span:nth-child(3n){width:78%}.greek > span:nth-child(3n+1){width:96%}.greek > span:nth-child(3n+2){width:88%}
+  .greek > span:last-child{width:42%}
   /* transparency split: human stories (2-col) on the left, AI (1-col) on the right */
   .front{display:grid;grid-template-columns:2fr 1fr;gap:1.6rem;align-items:start}
   .front .zone-human{min-width:0}
@@ -356,6 +407,64 @@
   .sheet.theme-brasil .slogans{background:#009c3b;color:#ffdf00;border-color:#00692a;
     font-family:"Oswald",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 
+  /* Expédition — Clair Obscur mood: a DARK gilded broadsheet. Warm near-black
+     "paper", parchment text, bright antique gold for masthead/headlines, engraved
+     Art-Nouveau caps (Cinzel Decorative) over Garamond, a gold double frame, a
+     candlelit centre-glow, photos toned to warm grey-gold. Painted by candlelight. */
+  .sheet.theme-expedition{
+    --ink:#e8dcc1; --paper:#15110c; --rule:#7c6427; --muted:#a4906a; --accent:#cca24c;
+    --hair:#5a4a22; --imgborder:#8a6e2c; --dash:#cca24c; --aihead:#cca24c;
+    --grain:rgba(204,162,76,.05);
+    --font-body:"Cormorant Garamond","EB Garamond",Georgia,serif;
+    --font-head:"Cinzel","Marcellus",Georgia,serif;
+    --font-display:"Cinzel Decorative","Cinzel",serif;
+    --font-meta:"Marcellus","Old Standard TT",serif;
+    --font-mono:"Marcellus","Old Standard TT",serif;
+    --photo-filter:grayscale(.22) sepia(.42) saturate(.95) contrast(1.05) brightness(.9);
+    --avatar-filter:grayscale(.18) sepia(.4) contrast(1.05) brightness(.92);
+    color:var(--ink);
+    /* candlelit centre-glow + fine gold grain on warm black, gilt double frame */
+    background:
+      radial-gradient(115% 70% at 50% 16%, rgba(204,162,76,.11), transparent 58%),
+      radial-gradient(var(--grain) 1px, transparent 1px),
+      #15110c;
+    background-size:auto, 4px 4px, auto;
+    border:1px solid var(--accent);
+    box-shadow:0 12px 55px rgba(0,0,0,.75), inset 0 0 0 5px rgba(204,162,76,.12),
+               inset 0 0 0 6px rgba(0,0,0,.5), inset 0 0 0 7px rgba(204,162,76,.18);
+  }
+  /* parchment body (Cormorant runs light → lift weight/size a touch) */
+  .sheet.theme-expedition .lead .lead-open,
+  .sheet.theme-expedition .story .body,
+  .sheet.theme-expedition .tplstory .body{font-size:1.06rem;font-weight:500;line-height:1.5;color:var(--ink)}
+  /* gold headlines + masthead + section labels */
+  .sheet.theme-expedition .lead h2,.sheet.theme-expedition .story h3,
+  .sheet.theme-expedition .tplstory h2,.sheet.theme-expedition .tplstory h3,
+  .sheet.theme-expedition .tplcont-h,.sheet.theme-expedition .section-head,
+  .sheet.theme-expedition .ear{color:var(--accent)}
+  .sheet.theme-expedition .ear,
+  .sheet.theme-expedition .dateline-bar{border-color:var(--accent);color:var(--muted)}
+  .sheet.theme-expedition .dateline-bar .mid{color:var(--accent)}
+  .sheet.theme-expedition .kicker{color:var(--accent);letter-spacing:.12em}
+  .sheet.theme-expedition .byline,.sheet.theme-expedition .deck,
+  .sheet.theme-expedition .credit,.sheet.theme-expedition figure.photo > .credit{color:var(--muted)}
+  .sheet.theme-expedition .slogans{background:rgba(204,162,76,.06);color:var(--accent);
+    border-color:var(--accent);font-style:italic;letter-spacing:.06em}
+  .sheet.theme-expedition .lead .lead-open p:first-of-type::first-letter{color:var(--accent)}
+  .sheet.theme-expedition figure.photo > img,
+  .sheet.theme-expedition figure.photo > .cropwrap{border-color:var(--imgborder)}
+  .sheet.theme-expedition .tplstory.elem-quote .pullquote{color:var(--accent);
+    border-color:var(--accent);font-family:var(--font-display);font-style:italic;
+    text-align:center;font-size:1.7rem;line-height:1.3;border-top-width:2px;border-bottom:2px solid var(--accent);
+    padding:.7rem 1rem;letter-spacing:.01em}
+  /* keep the dummy/greeking legible on black */
+  .sheet.theme-expedition.allmode .greek,.allmode .sheet.theme-expedition .greek{opacity:.4}
+  /* Plate — Expédition masthead: tall engraved gold caps + a dim parchment sub */
+  .plate-expedition h1{font-family:"Cinzel Decorative","Cinzel",serif;font-weight:700;
+    color:var(--accent);letter-spacing:.05em;font-size:4.6rem;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+  .plate-expedition .nameplate .sub{font-family:"Marcellus",serif;font-style:italic;
+    color:var(--muted);letter-spacing:.07em;font-size:1rem}
+
   /* toolbar theme picker */
   .toolbar .themepick{display:inline-flex;align-items:center;gap:.3rem;font-size:.85rem}
   .toolbar .themepick select{font:inherit;padding:.25rem .4rem;border-radius:4px;
@@ -420,10 +529,11 @@
 <script src="config.js"></script>
 <script src="papers.js"></script>
 <script src="themes.js"></script>
+<script src="templates.js"></script>
 <script src="daihbi.js"></script>
 <script>
 const $ = (s,r=document)=>r.querySelector(s);
-const { Placements, AdPlacements, Auth, Profiles, Comments, Ads, Papers, Styles, Sections, Media, esc, md, configured, I18n, Prefs } = window.Daihbi;
+const { Placements, AdPlacements, Auth, Profiles, Comments, Ads, Papers, Styles, Sections, Templates, Media, esc, md, configured, I18n, Prefs } = window.Daihbi;
 let CREDITS = {};   // image URL → author (filled in load(); credited under each photo)
 function creditLine(url){ const a = url && CREDITS[url]; return a ? `<figcaption class="credit">${esc(I18n.t("paper.illusCredit",{name:a}))}</figcaption>` : ""; }
 
@@ -434,7 +544,7 @@ I18n.register({
     "paper.loading":"Chargement de la presse…","paper.lettersTitle":"Courrier des lecteurs",
     "paper.aiHead":"✦ Rédigé par l’IA","paper.aiBadge":"✦ Rédigé par IA",
     "paper.aiTitle":"Texte généré par intelligence artificielle","paper.regTitle":"Régiment d’origine",
-    "paper.byAuthor":"de {name}","paper.adFallback":"Réclame","paper.draft":"Brouillon","paper.editImage":"✎ Modifier l’image","paper.fillGap":"＋ Combler l’espace","paper.illusCredit":"Illustration : {name}",
+    "paper.byAuthor":"de {name}","paper.adFallback":"Réclame","paper.draft":"Brouillon","paper.editImage":"✎ Modifier l’image","paper.fillGap":"＋ Combler l’espace","paper.fillSlot":"Placer une chronique ici","paper.illusCredit":"Illustration : {name}",
     "paper.noArticles":"Aucun article publié.","paper.writeOne":"En écrire un →",
     "paper.loadFail":"Impossible de charger les articles.","paper.notConnected":"Pas encore connecté.",
     "paper.addKeys":"Ajoutez votre URL Supabase + clé anon dans","paper.editionLabel":"ÉDITION « {issue} »",
@@ -458,7 +568,7 @@ I18n.register({
     "paper.loading":"Loading the press…","paper.lettersTitle":"Readers’ mail",
     "paper.aiHead":"✦ Written by AI","paper.aiBadge":"✦ Written by AI",
     "paper.aiTitle":"Text generated by artificial intelligence","paper.regTitle":"Originating regiment",
-    "paper.byAuthor":"by {name}","paper.adFallback":"Advertisement","paper.draft":"Draft","paper.editImage":"✎ Edit image","paper.fillGap":"＋ Fill the gap","paper.illusCredit":"Illustration: {name}",
+    "paper.byAuthor":"by {name}","paper.adFallback":"Advertisement","paper.draft":"Draft","paper.editImage":"✎ Edit image","paper.fillGap":"＋ Fill the gap","paper.fillSlot":"Place a chronicle here","paper.illusCredit":"Illustration: {name}",
     "paper.noArticles":"No article published.","paper.writeOne":"Write one →",
     "paper.loadFail":"Could not load articles.","paper.notConnected":"Not connected yet.",
     "paper.addKeys":"Add your Supabase URL + anon key to","paper.editionLabel":"EDITION “{issue}”",
@@ -497,6 +607,11 @@ if (ALL) {
   // (suppressed right after a drag-to-arrange, so a drop doesn't also open the panel)
   document.addEventListener("click", (e)=>{
     if(dragMoved){ dragMoved = false; return; }
+    const plus = e.target.closest(".tplplus[data-slot]");
+    if(plus){ e.preventDefault();
+      try{ parent.postMessage({ type:"daihbi-fill-slot", slot:+plus.dataset.slot, kind:plus.dataset.kind||"minor", image:plus.dataset.image==="1" }, location.origin); }catch(_){}
+      return;
+    }
     const el = e.target.closest("[data-pid]"); if(!el) return;
     e.preventDefault();
     try{ parent.postMessage({ type:"daihbi-edit", pid: el.dataset.pid, kind: el.dataset.kind || "placement" }, location.origin); }catch(_){}
@@ -672,6 +787,7 @@ function fallbackPaper(){ return {
   tagline: "", plate: "plate-fraktur", ear: ["Édition", "", "Warden"], slogans: [] }; }
 let PAPERS = window.DAIHBI_PAPERS || {};
 let SECTIONS = [];   // editor-defined rubriques for this edition (sections.sql)
+let TPL = null;      // resolved fixed-grid layout template { def, slots } or null (templates.sql)
 let PAPER = PAPERS[ISSUE] || fallbackPaper();
 
 // ── Paper theme (full skin) — URL ?theme= > saved pick > paper default > classic
@@ -904,6 +1020,106 @@ function renderStory(a){
     <div class="body">${a.subhead ? `<p class="deckline"><em>${esc(a.subhead)}</em></p>` : ""}${img}${md(a.body)}</div>
   </article>`;
 }
+// ── Fixed-grid template (templates.sql) ────────────────────────────────────
+// Render the front as the template's fixed grid: each CONTAINER is positioned by
+// col/span/row, holding its ＋ slots. A placement with `slot===idx` fills that
+// cell; an empty cell shows a ＋ (board/ALL mode only). Unslotted or overflow
+// stories + ads flow in a normal well BELOW the grid so nothing is ever lost.
+// The element kind a placement renders as: its stored elem (dummy_layout.sql) wins
+// (durable across template switches), else the slot's kind, else its weight.
+function elemKindOf(a, sl){ return (a && a.elem) || (sl && sl.kind) || (a && a.weight) || "minor"; }
+// Greeking — lorem-bars standing in for body copy in the DUMMY (board) view only.
+function greek(lines){ lines = Math.max(1, lines||4); let s=""; for(let i=0;i<lines;i++) s+=`<span></span>`; return `<div class="greek">${s}</div>`; }
+function slotLabel(sl){
+  const m = Templates.elemMeta(sl.kind);
+  return m.font ? `${m.label} · ${m.font}` : m.label;
+}
+// FINISHED render of a filled cell (public reader + manage preview). Branches on
+// the element kind: story = headline+body; mugshot/cartoon/photo = a figure; quote
+// = a pull-quote blockquote (placement.text).
+function renderSlotCard(a, sl){
+  const kind = elemKindOf(a, sl);
+  const meta = Templates.elemMeta(kind);
+  // leadPhoto bakes crop ratio/focus/zoom inline, so no applyStorySpans is needed
+  // (the grid is fixed — packWell/applyStorySpans only touch .well/.story).
+  const photo = a.image_url ? leadPhoto(a, "tplphoto") : "";
+  if(kind==="quote"){
+    return `<article class="tplstory elem-quote"${editAttrs(a)}>
+      <blockquote class="pullquote">${esc(a.text||"")}</blockquote></article>`;
+  }
+  if(kind==="mugshot"){
+    return `<article class="tplstory elem-mugshot"${editAttrs(a)}>
+      <figure class="mugshot">${photo||`<span class="mugph"></span>`}${a.text?`<figcaption>${esc(a.text)}</figcaption>`:""}</figure></article>`;
+  }
+  if(kind==="cartoon" || kind==="photo" || a.isImage){
+    const cls = kind==="cartoon" ? "elem-cartoon" : "elem-photo";
+    return `<article class="tplstory ${cls}"${editAttrs(a)}>${photo}${a.text?`<figcaption class="cap">${esc(a.text)}</figcaption>`:""}</article>`;
+  }
+  const big = (kind==="lead");
+  return `<article class="tplstory k-${esc(kind)}${draftCls(a)}"${editAttrs(a)}>
+    ${kicker(a)}${big?`<h2>${esc(a.headline)}</h2>`:`<h3>${esc(a.headline)}</h3>`}${byline(a)}
+    <div class="body">${a.subhead?`<p class="deckline"><em>${esc(a.subhead)}</em></p>`:""}${photo}${md(a.body)}</div>
+  </article>`;
+}
+// DUMMY render of a filled cell (board/ALL view only): the schematic the editor
+// plans on — element label + font annotation, the real headline so they know what
+// sits there, and greeking instead of prose. Furniture (quote/mug/cartoon/photo)
+// shows its label + a hint of its content.
+function renderDummyCard(a, sl){
+  const kind = elemKindOf(a, sl);
+  const meta = Templates.elemMeta(kind);
+  const tag = `<div class="dlabel">${esc(meta.label)}${meta.font?` · <i>${esc(meta.font)}</i>`:""}</div>`;
+  if(kind==="quote") return `<article class="tplstory dummy elem-quote"${editAttrs(a)}>${tag}<blockquote class="pullquote">${esc(a.text||"…")}</blockquote></article>`;
+  if(kind==="mugshot") return `<article class="tplstory dummy elem-mugshot"${editAttrs(a)}>${tag}<figure class="mugshot">${a.image_url?leadPhoto(a,"tplphoto"):`<span class="mugph"></span>`}</figure></article>`;
+  if(kind==="cartoon"||kind==="photo"||a.isImage) return `<article class="tplstory dummy elem-${esc(kind==="cartoon"?"cartoon":"photo")}"${editAttrs(a)}>${tag}${a.image_url?leadPhoto(a,"tplphoto"):`<div class="imgph"></div>`}</article>`;
+  const big = (kind==="lead");
+  return `<article class="tplstory dummy k-${esc(kind)}${draftCls(a)}"${editAttrs(a)}>
+    ${tag}${big?`<h2>${esc(a.headline)}</h2>`:`<h3>${esc(a.headline)}</h3>`}<div class="byl">${esc((a.byline?("— "+a.byline):"")||"")}</div>
+    ${greek(big?7:4)}</article>`;
+}
+function renderTemplateBody(arts, ads){
+  const def = TPL.def, cols = Math.max(1, def.cols||6), flat = TPL.slots;
+  // map slot index → the (first) art assigned to it; everything else is "loose"
+  const bySlot = {}, loose = [];
+  arts.forEach(a=>{ const s=(a.slot==null?-1:a.slot);
+    if(s>=0 && s<flat.length && bySlot[s]===undefined) bySlot[s]=a; else loose.push(a); });
+  // container geometry, keyed by id (fallback name) — matches Templates.slots()
+  const cmeta = {}; (def.containers||[]).forEach(c=>{ cmeta[c.id||c.name||""]=c; });
+  // group the flat slots by container, preserving each slot's global idx + order
+  const groups = []; let cur = null;
+  flat.forEach(sl=>{ if(!cur || cur.cid!==sl.container){ cur={cid:sl.container, name:sl.containerName, items:[]}; groups.push(cur); } cur.items.push(sl); });
+  let grid = `<div class="tplgrid" style="grid-template-columns:repeat(${cols},1fr)">`;
+  groups.forEach(g=>{
+    const c = cmeta[g.cid] || {};
+    const col = Math.min(cols, Math.max(1, c.col||1));
+    const span = Math.max(1, Math.min(cols-col+1, c.span||1));
+    const perRow = Math.max(1, Math.min(span, (c.perRow|0)|| span));
+    const cells = g.items.map(sl=>{
+      const a = bySlot[sl.idx];
+      const elem = Templates.elemFor(sl.kind);
+      if(a) return `<div class="tplcell filled">${ALL ? renderDummyCard(a, sl) : renderSlotCard(a, sl)}</div>`;
+      if(ALL) return `<div class="tplcell tplempty"><button class="tplplus" data-slot="${sl.idx}" data-kind="${esc(sl.kind)}" data-elem="${esc(elem)}" data-image="${sl.image||Templates.elemMeta(sl.kind).content==="image"?1:0}" title="${esc(I18n.t("paper.fillSlot"))}"><span>＋</span><small>${esc(slotLabel(sl))}</small></button></div>`;
+      return `<div class="tplcell tplempty pub"></div>`;
+    }).join("");
+    grid += `<div class="tplcont" style="grid-column:${col} / span ${span};grid-row:${Math.max(1,c.row||1)}">
+      ${(c.name||g.name)?`<div class="tplcont-h">${esc(c.name||g.name)}</div>`:""}
+      <div class="tplslots" style="grid-template-columns:repeat(${perRow},1fr)">${cells}</div>
+    </div>`;
+  });
+  grid += `</div>`;
+  // loose stories (unslotted / overflow) + ads → normal well under the grid.
+  // Orphan FURNITURE (a quote/mugshot detached from its cell, e.g. after a template
+  // switch) is meaningless without a host → drop it from the public render; photo/
+  // cartoon are self-contained images and fall back to the image-filler render.
+  const looseReal = loose.filter(a=>{
+    if(a.elem==="quote" || a.elem==="mugshot") return false;
+    return !a.isImage || a.image_url;
+  });
+  const looseHTML = (looseReal.length||ads.length)
+    ? `<div class="well tpl-loose" data-section-id="">${looseReal.map(renderStory).join("")}${ads.map(renderAd).join("")}</div>` : "";
+  return grid + looseHTML;
+}
+
 // Apply each story's column span (clamped to its well's real column count), its
 // matching internal text-column count, and the photo banner width. Runs before
 // packWell so heights are measured against the final widths.
@@ -1119,6 +1335,12 @@ async function load(){
   }
   try{ PAPERS = await Papers.map(); }catch(e){ /* keep papers.js */ }
   PAPER = PAPERS[ISSUE] || fallbackPaper(); applyPaper();
+  // Fixed-grid layout template (templates.sql): resolve the def + slot list once.
+  // '' / missing / unresolvable → null → today's auto-flow well (nothing changes).
+  TPL = null;
+  if(PAPER.template){ try{ const r = await Templates.resolve(PAPER.template);
+    if(r && r.def){ const slots = Templates.slots(r.def); if(slots.length) TPL = { def:r.def, slots }; }
+  }catch(e){ TPL = null; } }
   let arts;
   try{
     // ALL mode (board canvas) shows every placement incl. drafts; public shows published only
@@ -1131,17 +1353,21 @@ async function load(){
       img_focus: p.img_focus || "", img_zoom: (p.img_zoom>0 ? p.img_zoom : 1),   // crop tool (img_crop_tool.sql)
       pid: p.id, kind: "placement", published: p.published !== false,
       section_id: p.section_id || null,                                    // rubrique (sections.sql)
+      slot: (p.slot==null ? -1 : p.slot),                                  // template cell (templates.sql)
+      elem: p.elem || "", text: p.text || "",                              // dummy element + caption/quote (dummy_layout.sql)
       lang: (p.article.lang)||"fr",
       image_url: p.image_url || p.article.image_url || "" }));
-    // standalone image fillers (image_fill.sql): a placement with no article + a photo
-    const imgFills = placed.filter(p=>!p.article && p.image_url).map(p => ({
-      isImage: true, headline:"", subhead:"", kicker:"", byline:"", body:"", source:"", lang:PAPER_LANG||"fr",
+    // furniture: a placement with no article — an image filler (image_fill.sql) OR
+    // a dummy element (mugshot/cartoon/photo = image, quote = text; dummy_layout.sql)
+    const fillers = placed.filter(p=>!p.article && (p.image_url || p.text || p.elem)).map(p => ({
+      isImage: !!p.image_url, headline:"", subhead:"", kicker:"", byline:"", body:"", source:"", lang:PAPER_LANG||"fr",
       weight: p.weight, position: p.position,
       col_span: p.col_span || 0, img_cols: p.img_cols || 0, img_pos: p.img_pos || "top", img_crop: p.img_crop || "",
       img_focus: p.img_focus || "", img_zoom: (p.img_zoom>0 ? p.img_zoom : 1),
       pid: p.id, kind: "placement", published: p.published !== false,
-      section_id: p.section_id || null, image_url: p.image_url }));
-    arts = arts.concat(imgFills);
+      section_id: p.section_id || null, slot: (p.slot==null ? -1 : p.slot),
+      elem: p.elem || "", text: p.text || "", image_url: p.image_url }));
+    arts = arts.concat(fillers);
     // Board (ALL) mode comes from forIssue() UNSORTED; the public view is already
     // weight+position sorted. Sort here too so the board preview matches the printed
     // order AND so a gap-fill's position:9999 lands it LAST → the balanced masonry
@@ -1215,7 +1441,11 @@ function paintSheet(arts, ads){
   // other, just wearing the "✦ Rédigé par IA" badge. (ai_zone.sql)
   const splitAI = !!PAPER.aiZone && aiArts.length>0 && humanArts.length>0;
   let bodyHTML;
-  if(arts.length===0){
+  if(TPL && TPL.slots && TPL.slots.length){
+    // Fixed-grid template: stories sit in their assigned cells; empty cells show a
+    // ＋ (board mode). Unslotted/overflow stories + ads flow in a well below.
+    bodyHTML = renderTemplateBody(arts, ads);
+  } else if(arts.length===0){
     bodyHTML = `<div class="empty">${esc(I18n.t("paper.noArticles"))}<br><a href="editor.html?issue=${encodeURIComponent(ISSUE)}">${esc(I18n.t("paper.writeOne"))}</a></div>`;
   } else if(!splitAI){
     // classic full-width layout when the page is all-human OR all-AI; each story
