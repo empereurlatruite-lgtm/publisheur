@@ -421,10 +421,13 @@ const Placements = {
     return (data || []).sort((a, b) =>
       (WRANK[a.weight] ?? 9) - (WRANK[b.weight] ?? 9) || (a.position||0) - (b.position||0));
   },
-  async add(articleId, issue) {
+  /** Place a chronicle in an edition. `fields` lets a template slot-fill set the
+   *  slot index + the slot's weight/col_span/img in the same insert (graceful:
+   *  extra keys like `slot` need the templates.sql migration). */
+  async add(articleId, issue, fields) {
     const { data: { user } } = await db.auth.getUser();
     const { data, error } = await db.from("placements")
-      .insert({ article_id: articleId, issue, weight: "minor", position: 0, published: false, placed_by: user?.id || null })
+      .insert({ article_id: articleId, issue, weight: "minor", position: 0, published: false, placed_by: user?.id || null, ...(fields || {}) })
       .select("*, article:articles(*)").single();
     if (error) throw error;
     return data;
@@ -443,7 +446,24 @@ const Placements = {
     if (error) throw error;
     return data;
   },
+  /** Text-only furniture (dummy_layout.sql): a placement with no article, just
+   *  editor-typed text (a pull-quote). `fields` carries slot/elem/weight/etc. */
+  async addText(issue, text, fields) {
+    const { data: { user } } = await db.auth.getUser();
+    const { data, error } = await db.from("placements")
+      .insert({ article_id: null, issue, text: text || "", weight: "minor", position: 0, published: false, placed_by: user?.id || null, ...(fields || {}) })
+      .select("*, article:articles(*)").single();
+    if (error) throw error;
+    return data;
+  },
   async remove(id) { const { error } = await db.from("placements").delete().eq("id", id); if (error) throw error; },
+  /** Detach every placement in an edition from its template slot (slot = -1) —
+   *  used when an edition switches/clears its layout template (templates.sql). */
+  async resetSlots(issue) {
+    if (!db) return;
+    const { error } = await db.from("placements").update({ slot: -1 }).eq("issue", issue);
+    if (error) throw error;
+  },
   subscribe(issue, cb) {
     if (!db) return;
     db.channel("placements-" + issue).on("postgres_changes",
@@ -703,6 +723,7 @@ function _rowToPaper(r) {
     gridCols: r.grid_cols || 0,   // 0 = auto well column count (see columns.sql)
     purpose: r.purpose || "",     // kiosque "what's this paper about" (paper_purpose.sql)
     aiZone: !!r.ai_zone,          // true → AI chronicles get a separate sidebar (ai_zone.sql)
+    template: r.template || "",   // fixed-grid layout template ('' = auto well; templates.sql)
   };
 }
 const Papers = {
@@ -732,6 +753,7 @@ const Papers = {
     const { data: { user } } = await db.auth.getUser();
     const row = { issue: p.issue, name: p.name || "", tagline: p.tagline || "", plate: p.plate || "plate-fraktur",
       theme: p.theme || "classic", grid_cols: p.gridCols || 0, purpose: p.purpose || "", lang: p.lang || "fr", ai_zone: !!p.aiZone,
+      template: p.template || "",
       ear: p.ear || ["", "", ""], slogans: p.slogans || [], emblem_left: p.emblemLeft || "",
       emblem_right: p.emblemRight || "", clan: p.clan || "", owner_id: user.id };
     const { data, error } = await db.from("papers").insert(row).select().single();
@@ -741,7 +763,7 @@ const Papers = {
   async update(issue, f) {
     const m = { name:"name", tagline:"tagline", plate:"plate", theme:"theme", ear:"ear", slogans:"slogans",
       emblemLeft:"emblem_left", emblemRight:"emblem_right", clan:"clan", gridCols:"grid_cols",
-      purpose:"purpose", lang:"lang", aiZone:"ai_zone" };
+      purpose:"purpose", lang:"lang", aiZone:"ai_zone", template:"template" };
     const row = {}; Object.keys(f).forEach((k) => { if (m[k]) row[m[k]] = f[k]; });
     const { data, error } = await db.from("papers").update(row).eq("issue", issue).select().single();
     if (error) throw error;
@@ -1214,5 +1236,105 @@ const Regiments = {
   },
 };
 
-window.Daihbi = { db, ISSUE, configured: _configured, Auth, AuthModal, NavUser, Chronicles, Placements, AdPlacements, Media, Profiles, Comments, Portfolio, Ads, Papers, Revisions, Styles, Sections, Regiments, esc, md, I18n, Prefs, LANGS };
+// ── Templates: reusable fixed-grid layout blueprints (templates.sql). Built-in
+//    starters ship in web/templates.js (bare keys); editors author + save their
+//    own in the creator (the `layout_templates` table, referenced as
+//    'tmpl:<uuid>'). A paper points at one via papers.template ('' = auto well).
+//    Public read so anon readers render a templated edition; owner-scoped writes.
+function _rowToTemplate(r) { return { id: r.id, name: r.name || "", def: r.def || {}, owner_id: r.owner_id }; }
+// Element vocabulary of a newspaper "dummy" (dummy_layout.sql). A container's
+// `kind` is one of these; `content` decides how a filled cell is sourced/rendered
+//   story → a chronicle (weight = the kind);  image → an image filler (image_url);
+//   text  → editor-typed text (placement.text, e.g. a pull-quote).
+// `label`/`font` are the schematic annotations shown ONLY in the board/dummy view.
+// Shared here so paper.html, board.html and editor.html agree (add to each page's
+// `window.Daihbi` destructure when you use it).
+const ELEM_KINDS = {
+  lead:    { content: "story", label: "HEADLINE 1", font: "TNR 36" },
+  major:   { content: "story", label: "HEADLINE 2", font: "TNR 24" },
+  minor:   { content: "story", label: "HEADLINE 3", font: "TNR 18" },
+  brief:   { content: "story", label: "BRÈVE",      font: "TNR 12" },
+  mugshot: { content: "image", label: "MUGSHOT",        font: "" },
+  quote:   { content: "text",  label: "LEFT-OUT QUOTE", font: "Calibri 14" },
+  cartoon: { content: "image", label: "EDITORIAL CARTOON", font: "" },
+  photo:   { content: "image", label: "PHOTO",          font: "" },
+};
+const Templates = {
+  KINDS: ELEM_KINDS,
+  STORY_KINDS: ["lead", "major", "minor", "brief"],
+  /** Metadata (content type + dummy label/font) for a container/slot kind. */
+  elemMeta(kind) { return ELEM_KINDS[kind] || ELEM_KINDS.minor; },
+  /** kind that maps to a placement weight (vs furniture: mugshot/quote/cartoon/photo). */
+  isStoryKind(kind) { return (ELEM_KINDS[kind] || ELEM_KINDS.minor).content === "story"; },
+  /** '' for a story kind, else the kind itself — the value stored in placements.elem. */
+  elemFor(kind) { return Templates.isStoryKind(kind) ? "" : (ELEM_KINDS[kind] ? kind : ""); },
+  key(id) { return "tmpl:" + id; },                                  // papers.template value for a saved template
+  isCustom(t) { return typeof t === "string" && t.indexOf("tmpl:") === 0; },
+  idOf(t) { return Templates.isCustom(t) ? t.slice(5) : null; },
+  /** Built-in starters from templates.js (sync). */
+  builtins() { return (window.DAIHBI_TEMPLATES || []).slice(); },
+  builtin(key) { return (window.DAIHBI_TEMPLATES || []).find(t => t.key === key) || null; },
+  /** Saved (DB) templates for the picker. */
+  async listSaved() {
+    if (!db) return [];
+    const { data, error } = await db.from("layout_templates").select("*").order("created_at", { ascending: true });
+    if (error) throw error;
+    return (data || []).map(_rowToTemplate);
+  },
+  async get(id) {
+    if (!db || !id) return null;
+    const { data, error } = await db.from("layout_templates").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? _rowToTemplate(data) : null;
+  },
+  /** Resolve a papers.template value → { key/id, name, def } (built-in or DB), or null. */
+  async resolve(t) {
+    if (!t) return null;
+    if (Templates.isCustom(t)) { try { return await Templates.get(Templates.idOf(t)); } catch (e) { return null; } }
+    const b = Templates.builtin(t);
+    return b ? { key: b.key, name: b.name, def: b.def } : null;
+  },
+  async create({ name, def }) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { data, error } = await db.from("layout_templates").insert({ name: name || "", def: def || {} }).select().single();
+    if (error) throw error;
+    return _rowToTemplate(data);
+  },
+  async update(id, patch) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { data, error } = await db.from("layout_templates").update(patch).eq("id", id).select().single();
+    if (error) throw error;
+    return _rowToTemplate(data);
+  },
+  async remove(id) {
+    if (!db) throw new Error("Supabase not configured (edit web/config.js).");
+    const { error } = await db.from("layout_templates").delete().eq("id", id);
+    if (error) throw error;
+  },
+  /** Flatten a def's containers into an ordered slot list (row-major). Each slot
+   *  carries its fixed grid placement + the weight/image a filled story inherits;
+   *  the array index is what a placement records in placements.slot. Shared by the
+   *  board (slot-fill) and paper.html (scaffold render) so both agree on indices. */
+  slots(def) {
+    const out = [];
+    const cs = (def && Array.isArray(def.containers)) ? def.containers.slice() : [];
+    cs.sort((a, b) => (a.row || 0) - (b.row || 0) || (a.col || 0) - (b.col || 0));
+    cs.forEach((c) => {
+      const n = Math.max(0, c.slots | 0);
+      const perRow = Math.max(1, (c.perRow | 0) || (c.span | 0) || 1);
+      const cellSpan = Math.max(1, Math.floor((c.span || 1) / perRow));
+      for (let i = 0; i < n; i++) {
+        out.push({
+          idx: out.length, container: c.id || c.name || "", containerName: c.name || "",
+          kind: c.kind || "minor", image: !!c.image,
+          col: (c.col || 1) + (i % perRow) * cellSpan, span: cellSpan,
+          row: c.row || 0, line: Math.floor(i / perRow),
+        });
+      }
+    });
+    return out;
+  },
+};
+
+window.Daihbi = { db, ISSUE, configured: _configured, Auth, AuthModal, NavUser, Chronicles, Placements, AdPlacements, Media, Profiles, Comments, Portfolio, Ads, Papers, Revisions, Styles, Sections, Regiments, Templates, esc, md, I18n, Prefs, LANGS };
 })();

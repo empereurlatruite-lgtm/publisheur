@@ -16,6 +16,7 @@ import math
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import urllib.request
 import scribus
@@ -49,6 +50,20 @@ F_HEAD_IT = _font("Playfair Display Black Italic", "Liberation Serif Bold Italic
 F_BODY = _font("PT Serif Regular", "Liberation Serif Regular")
 F_BODY_IT = _font("PT Serif Italic", "Liberation Serif Italic")
 F_SANS = _font("Old Standard TT Bold", "Liberation Sans Bold")
+
+# Per-edition masthead plate → nameplate face, mirroring paper.html's `.plate-*`
+# rules: fraktur/columns (and the default) keep the Playfair masthead; anton and
+# echo switch to a condensed sans. The preferred faces aren't bundled in
+# publish/fonts/, so _font() falls back to Liberation Sans Bold — still a sans,
+# which matches the web masthead far better than the serif Playfair would. This
+# is why the print `plate` field is no longer silently dropped.
+PLATE_HEAD = {
+    "plate-anton": _font("Anton Regular", "Liberation Sans Bold"),
+    "plate-echo":  _font("Oswald Bold", "Liberation Sans Bold"),
+    "plate-expedition": _font("Cinzel Decorative", "Liberation Serif Bold"),
+}
+def plate_head_font(plate):
+    return PLATE_HEAD.get((plate or "").lower(), F_HEAD)
 
 ALIGN_L, ALIGN_C, ALIGN_R, ALIGN_BLOCK = 0, 1, 2, 3
 
@@ -84,6 +99,7 @@ THEME_PALETTES = {
     "noir":     {"ink": "#0d0d0d", "paper": "#ffffff", "accent": "#c01818", "rule": "#0d0d0d"},
     "gazette":  {"ink": "#23303a", "paper": "#f3f5f7", "accent": "#2f6f8f", "rule": "#9fb0bb"},
     "brasil":   {"ink": "#173f1f", "paper": "#fbf7e6", "accent": "#009c3b", "rule": "#2e7d32"},
+    "expedition": {"ink": "#e8dcc1", "paper": "#15110c", "accent": "#cca24c", "rule": "#7c6427"},
 }
 
 
@@ -309,7 +325,7 @@ def main():
     scribus.setLineColor("None", bg)
 
     # styles
-    mkstyle("Nameplate", F_HEAD, 56, ALIGN_C)
+    mkstyle("Nameplate", plate_head_font(data.get("plate")), 56, ALIGN_C)
     mkstyle("Tagline", F_BODY_IT, 12, ALIGN_C)
     mkstyle("BarL", F_SANS, 8, ALIGN_L)
     mkstyle("BarC", F_SANS, 9, ALIGN_C)
@@ -386,6 +402,14 @@ def main():
             y += dh
         lead_by = byline_text(lead)
         if lead_by:
+            # Author headshot above the byline — the web edition shows it inline;
+            # in the well's linked auto-flow an image can't be inlined per story,
+            # but the lead is absolutely positioned so we can mirror it here.
+            av = fetch_image(lead.get("author_avatar"))
+            if av:
+                AV = 7.0
+                place_emblem(av, CX + (CW - AV) / 2.0, y, AV)
+                y += AV + 1
             bf = scribus.createText(CX, y, CW, 5)
             add(bf, lead_by, "BylineC")
             y += 5
@@ -432,10 +456,12 @@ def main():
             add(well, p, "Body")
     scribus.hyphenateText(well)
 
-    # overflow → extra pages, linked
+    # overflow → extra pages, linked. The cap stops a runaway issue from spinning
+    # forever; if we still overflow after it, stories would be silently dropped —
+    # so warn loudly (to stderr, where the publisher surfaces it) instead.
     prev = well
-    guard = 0
-    while scribus.textOverflows(prev) and guard < 8:
+    guard, GUARD_MAX = 0, 24
+    while scribus.textOverflows(prev) and guard < GUARD_MAX:
         guard += 1
         scribus.newPage(-1)
         scribus.gotoPage(scribus.pageCount())
@@ -444,6 +470,11 @@ def main():
         scribus.setColumnGap(CGAP, nf)
         scribus.linkTextFrames(prev, nf)
         prev = nf
+    if scribus.textOverflows(prev):
+        sys.stderr.write(
+            "WARNING: issue content still overflows after %d pages — some stories "
+            "are not shown in the PDF. Trim the edition or raise GUARD_MAX in "
+            "layout.py.\n" % (GUARD_MAX + 1))
 
     # ── Slogan footer bar (page 1) ───────────────────────────────────────
     if slogans:

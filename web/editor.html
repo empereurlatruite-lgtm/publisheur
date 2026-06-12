@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Publisheur — Newsroom</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=PT+Serif:ital@0;1&family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&family=Marcellus&family=EB+Garamond:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
   :root{--ink:#1f1c18;--accent:#7a1f1a;--line:#d8cdb2;--bg:#ece5d4;--panel:#f7f2e6;}
   *{box-sizing:border-box}
@@ -392,15 +392,18 @@
 <script src="config.js"></script>
 <script src="papers.js"></script>
 <script src="themes.js"></script>
+<script src="templates.js"></script>
 <script src="daihbi.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, NavUser, Regiments, Styles, configured, I18n, Prefs } = window.Daihbi;
+const { Auth, Chronicles, Placements, Media, Profiles, Portfolio, Papers, Revisions, NavUser, Regiments, Styles, Templates, configured, I18n, Prefs } = window.Daihbi;
 // Masthead title fonts for the "Police du titre" shortcut (applied via a custom style).
 const JOURNAL_HEAD_FONTS = [
   ['"Playfair Display",Georgia,serif',"Playfair Display"], ['"Old Standard TT",Georgia,serif',"Old Standard TT"],
-  ['"Cinzel","Playfair Display",serif',"Cinzel"], ['"Abril Fatface","Playfair Display",serif',"Abril Fatface"],
+  ['"Cinzel","Playfair Display",serif',"Cinzel"], ['"Cinzel Decorative","Cinzel",serif',"Cinzel Decorative"],
+  ['"Abril Fatface","Playfair Display",serif',"Abril Fatface"],
   ['"Marcellus","Old Standard TT",serif',"Marcellus"], ['"Yeseva One","Playfair Display",serif',"Yeseva One"],
+  ['"Cormorant Garamond","EB Garamond",serif',"Cormorant Garamond"],
   ['"EB Garamond",Georgia,serif',"EB Garamond"], ['"Oswald",system-ui,sans-serif',"Oswald"],
   ['"Anton","Oswald",Impact,sans-serif',"Anton"], ['"Bebas Neue","Oswald",Impact,sans-serif',"Bebas Neue"],
   ['"UnifrakturCook","Playfair Display",serif',"UnifrakturCook"], ['"Pirata One","UnifrakturCook",serif',"Pirata One"],
@@ -565,6 +568,7 @@ I18n.register({
     "ed.plateFraktur": "Gothique (fraktur)",
     "ed.plateAnton": "Condensé (Anton)",
     "ed.plateEcho": "Sobre (navy/Oswald)",
+    "ed.plateExpedition": "Gravé (Cinzel Decorative)",
     "ed.jClan": "Régiment",
     "ed.jTheme": "Style du journal",
     "ed.jThemeHint": "— palette, typographie & texture, vues par tous les lecteurs",
@@ -589,6 +593,17 @@ I18n.register({
     "ed.stHead": "Police des titres", "ed.stBody": "Police du texte", "ed.stPhoto": "Photos", "ed.stPreview": "Aperçu",
     "ed.styleSave": "Créer & appliquer", "ed.styleSaved": "Style créé", "ed.styleNameNeeded": "Donnez un nom au style.",
     "ed.editStyle": "✎ Modifier ce style", "ed.styleEditTitle": "Modifier le style", "ed.styleUpdate": "Enregistrer le style", "ed.styleUpdated": "Style mis à jour",
+    "ed.jTemplate": "Modèle de mise en page", "ed.jTemplateHint": "— grille fixe à remplir (＋)",
+    "ed.tmplNone": "— aucun (flux auto) —", "ed.tmplBuiltins": "Modèles intégrés", "ed.tmplMine": "Mes modèles",
+    "ed.tmplCustom": "Modèle personnalisé", "ed.tmplCreate": "＋ Nouveau modèle…", "ed.editTemplate": "✎ Modifier ce modèle",
+    "ed.tmplOverwrite": "Appliquer ce modèle remplacera la mise en page actuelle de l’édition (les chroniques placées seront détachées de leurs cases). Continuer ?",
+    "ed.tcNew": "Créateur de modèle", "ed.tcEdit": "Modifier le modèle", "ed.tcNamePh": "Ex. Une classique",
+    "ed.tcCols": "Colonnes", "ed.tcContainers": "Conteneurs (group layout)", "ed.tcAddCont": "＋ Ajouter un conteneur",
+    "ed.tcColStart": "Col.", "ed.tcSpan": "Largeur", "ed.tcRow": "Rangée", "ed.tcSlots": "Cases", "ed.tcPerRow": "Par ligne", "ed.tcImage": "Image",
+    "ed.tcPreview": "Aperçu de la grille", "ed.tcRemove": "Retirer", "ed.tcSave": "Enregistrer le modèle", "ed.tcCancel": "Annuler",
+    "ed.tcDelete": "🗑 Supprimer", "ed.tcConfirmDelete": "Supprimer ce modèle ? Les éditions qui l’utilisent reviendront au flux auto.",
+    "ed.tcNameNeeded": "Donnez un nom au modèle.", "ed.tcSaved": "Modèle enregistré ✓", "ed.tcDeleted": "Modèle supprimé",
+    "ed.kind.mugshot": "Portrait (mugshot)", "ed.kind.quote": "Citation (exergue)", "ed.kind.cartoon": "Caricature", "ed.kind.photo": "Photo",
     "ed.styleDelete": "🗑 Supprimer", "ed.styleConfirmDelete": "Supprimer définitivement ce style ? Les éditions qui l’utilisent reviendront au style classique.", "ed.styleDeleted": "Style supprimé",
     "ed.stPreviewHead": "La Une du Front", "ed.stPreviewBy": "par un chroniqueur", "ed.stPreviewBody": "Le texte de l’article s’affiche dans la police choisie, sur le papier choisi.",
     "ed.saveJournalBtn": "Enregistrer le journal",
@@ -798,6 +813,7 @@ I18n.register({
     "ed.plateFraktur": "Gothic (fraktur)",
     "ed.plateAnton": "Condensed (Anton)",
     "ed.plateEcho": "Plain (navy/Oswald)",
+    "ed.plateExpedition": "Engraved (Cinzel Decorative)",
     "ed.jClan": "Regiment",
     "ed.jTheme": "Paper style",
     "ed.jThemeHint": "— palette, typography & texture, seen by all readers",
@@ -822,6 +838,17 @@ I18n.register({
     "ed.stHead": "Headline font", "ed.stBody": "Body font", "ed.stPhoto": "Photos", "ed.stPreview": "Preview",
     "ed.styleSave": "Create & apply", "ed.styleSaved": "Style created", "ed.styleNameNeeded": "Give the style a name.",
     "ed.editStyle": "✎ Edit this style", "ed.styleEditTitle": "Edit style", "ed.styleUpdate": "Save style", "ed.styleUpdated": "Style updated",
+    "ed.jTemplate": "Layout template", "ed.jTemplateHint": "— a fixed grid to fill (＋)",
+    "ed.tmplNone": "— none (auto-flow) —", "ed.tmplBuiltins": "Built-in templates", "ed.tmplMine": "My templates",
+    "ed.tmplCustom": "Custom template", "ed.tmplCreate": "＋ New template…", "ed.editTemplate": "✎ Edit this template",
+    "ed.tmplOverwrite": "Applying this template will replace the edition’s current layout (placed chronicles will be detached from their cells). Continue?",
+    "ed.tcNew": "Template creator", "ed.tcEdit": "Edit template", "ed.tcNamePh": "e.g. Classic front",
+    "ed.tcCols": "Columns", "ed.tcContainers": "Containers (group layout)", "ed.tcAddCont": "＋ Add a container",
+    "ed.tcColStart": "Col.", "ed.tcSpan": "Width", "ed.tcRow": "Row", "ed.tcSlots": "Cells", "ed.tcPerRow": "Per line", "ed.tcImage": "Image",
+    "ed.tcPreview": "Grid preview", "ed.tcRemove": "Remove", "ed.tcSave": "Save template", "ed.tcCancel": "Cancel",
+    "ed.tcDelete": "🗑 Delete", "ed.tcConfirmDelete": "Delete this template? Editions using it revert to auto-flow.",
+    "ed.tcNameNeeded": "Name the template.", "ed.tcSaved": "Template saved ✓", "ed.tcDeleted": "Template deleted",
+    "ed.kind.mugshot": "Mugshot", "ed.kind.quote": "Pull-quote", "ed.kind.cartoon": "Editorial cartoon", "ed.kind.photo": "Photo",
     "ed.styleDelete": "🗑 Delete", "ed.styleConfirmDelete": "Delete this style permanently? Editions using it will fall back to the classic style.", "ed.styleDeleted": "Style deleted",
     "ed.stPreviewHead": "The Front Page", "ed.stPreviewBy": "by a chronicler", "ed.stPreviewBody": "The article text renders in the chosen font, on the chosen paper.",
     "ed.saveJournalBtn": "Save the paper",
@@ -1265,7 +1292,7 @@ async function removePortfolioImage(id){ if(!confirm(I18n.t("ed.confirmRemovePor
 
 // ── Journaux : créer / gérer une édition ────────────────────────────────────
 function journalForm(p, isNew){
-  const plates=[["plate-fraktur",I18n.t("ed.plateFraktur")],["plate-anton",I18n.t("ed.plateAnton")],["plate-echo",I18n.t("ed.plateEcho")]];
+  const plates=[["plate-fraktur",I18n.t("ed.plateFraktur")],["plate-anton",I18n.t("ed.plateAnton")],["plate-echo",I18n.t("ed.plateEcho")],["plate-expedition",I18n.t("ed.plateExpedition")]];
   const curTheme=p.theme||"classic";
   return `
     <label>${I18n.t("ed.jName")}</label><input id="j_name" value="${escapeHtml(p.name||"")}" placeholder="${I18n.t("ed.jNamePh")}">
@@ -1290,6 +1317,12 @@ function journalForm(p, isNew){
     <label style="display:flex;align-items:center;gap:.45rem;font-weight:400;margin:.3rem 0 .1rem;cursor:pointer">
       <input type="checkbox" id="j_aizone" ${p.aiZone?"checked":""}> ${I18n.t("ed.jAiZone")}</label>
     <div style="font-size:.8rem;color:#8a8170;margin-bottom:.2rem">${I18n.t("ed.jAiZoneHint")}</div>
+    <label>${I18n.t("ed.jTemplate")} <span style="font-weight:400;color:#8a8170">${I18n.t("ed.jTemplateHint")}</span></label>
+    <div style="display:flex;gap:.4rem;align-items:center">
+      <select id="j_template" onchange="onTemplatePick(this)" style="flex:1">${templateOptionsHTML(p.template||"")}</select>
+      <button type="button" id="j_edittmpl" class="jeditstyle" onclick="editSelectedTemplate()" title="${I18n.t("ed.editTemplate")}" ${Templates.isCustom(p.template||"")?"":'style="display:none"'}>✎</button>
+    </div>
+    <div id="j_tmpl_note" style="font-size:.8rem;color:#8a8170;margin:.25rem 0 .2rem"></div>
     <label>${I18n.t("ed.jGridCols")} <span style="font-weight:400;color:#8a8170">${I18n.t("ed.jGridColsHint")}</span></label>
     <select id="j_gridcols">${[[0,I18n.t("ed.colsAuto")],[3,"3"],[4,"4"],[5,"5"],[6,"6"],[7,"7"]].map(([v,l])=>`<option value="${v}" ${(+(p.gridCols||0)===v)?"selected":""}>${escapeHtml(l)}</option>`).join("")}</select>
     <label>${I18n.t("ed.jEar")}</label>
@@ -1344,6 +1377,46 @@ function updateEditStyleBtn(){
 function editSelectedStyle(){
   const t=($("#j_theme")||{}).value;
   if(Styles.isCustom(t)) openStyleCreator(Styles.idOf(t));
+}
+
+// ── Layout-template picker: built-in fixed grids + the editor's saved templates
+//    + a create option. Mirrors the style picker; '' = no template (auto well). ──
+let TEMPLATES_SAVED = [];        // cached saved templates (Templates.listSaved())
+let lastTemplateValue = "";      // restore target when "＋ Nouveau modèle…" is picked
+function templateOptionsHTML(cur){
+  let html=`<option value="" ${(!cur)?"selected":""}>${escapeHtml(I18n.t("ed.tmplNone"))}</option>`;
+  const bs=Templates.builtins();
+  if(bs.length){
+    html+=`<optgroup label="${escapeHtml(I18n.t("ed.tmplBuiltins"))}">`
+      + bs.map(t=>`<option value="${escapeHtml(t.key)}" ${(cur===t.key)?"selected":""}>${escapeHtml(t.name||t.key)}</option>`).join("")
+      + `</optgroup>`;
+  }
+  if(TEMPLATES_SAVED.length){
+    html+=`<optgroup label="${escapeHtml(I18n.t("ed.tmplMine"))}">`
+      + TEMPLATES_SAVED.map(t=>{ const k=Templates.key(t.id); return `<option value="${escapeHtml(k)}" ${(cur===k)?"selected":""}>${escapeHtml(t.name||t.id)}</option>`; }).join("")
+      + `</optgroup>`;
+  }
+  // a saved template not in our cached list (e.g. another editor's) still needs a slot
+  if(Templates.isCustom(cur) && !TEMPLATES_SAVED.some(t=>Templates.key(t.id)===cur)){
+    html+=`<option value="${escapeHtml(cur)}" selected>${escapeHtml(I18n.t("ed.tmplCustom"))}</option>`;
+  }
+  html+=`<option value="__newtmpl">${escapeHtml(I18n.t("ed.tmplCreate"))}</option>`;
+  return html;
+}
+function onTemplatePick(sel){
+  if(sel.value==="__newtmpl"){ sel.value=lastTemplateValue; openTemplateCreator(); return; }
+  lastTemplateValue=sel.value;
+  updateTemplateNote();
+  const b=$("#j_edittmpl"); if(b) b.style.display = Templates.isCustom(sel.value) ? "" : "none";
+}
+function updateTemplateNote(){
+  const sel=$("#j_template"), note=$("#j_tmpl_note"); if(!sel||!note) return;
+  const b=Templates.builtin(sel.value);
+  note.textContent = b ? (b.note||"") : "";
+}
+function editSelectedTemplate(){
+  const t=($("#j_template")||{}).value;
+  if(Templates.isCustom(t)) openTemplateCreator(Templates.idOf(t));
 }
 
 // ── Live preview pane (manage modal) + fullscreen ───────────────────────────
@@ -1408,6 +1481,7 @@ const EST_HEAD_FONTS=[
   ['"Playfair Display",Georgia,serif',"Playfair Display — serif élégant"],
   ['"Old Standard TT",Georgia,serif',"Old Standard TT — serif classique"],
   ['"Cinzel","Playfair Display",serif',"Cinzel — capitales gravées"],
+  ['"Cinzel Decorative","Cinzel",serif',"Cinzel Decorative — capitales ornées"],
   ['"Abril Fatface","Playfair Display",serif',"Abril Fatface — didone d’affiche"],
   ['"Marcellus","Old Standard TT",serif',"Marcellus — romaine élégante"],
   ['"Yeseva One","Playfair Display",serif',"Yeseva One — titre serif"],
@@ -1421,6 +1495,7 @@ const EST_HEAD_FONTS=[
 const EST_BODY_FONTS=[
   ['"PT Serif",Georgia,serif',"PT Serif — serif lisible"],
   ['"Old Standard TT",Georgia,serif',"Old Standard TT — serif classique"],
+  ['"Cormorant Garamond","EB Garamond",serif',"Cormorant Garamond — garamond élégant"],
   ['"EB Garamond",Georgia,serif',"EB Garamond — garamond"],
   ['"Lora",Georgia,serif',"Lora — serif moderne"],
   ['"Playfair Display",Georgia,serif',"Playfair Display — serif élégant"],
@@ -1522,11 +1597,219 @@ async function deleteStyleCreator(){
     toast(I18n.t("ed.styleDeleted"));
   }catch(e){ $("#est_err").textContent=e.message; }
 }
+
+// ── Template creator: a visual FIXED-GRID editor. Build CONTAINERS (the group
+//    layout) on a column grid, set each one's ＋ slot count, see the blank
+//    scaffold live, then save → layout_templates. Opened from the picker's
+//    "＋ Nouveau modèle…" / ✎. Mirrors paper.html's scaffold via Templates.slots. ─
+let TMPL_EDIT_ID=null;     // non-null → editing a saved template
+let tmplDraft=null;        // { name, def:{cols, containers:[]} }
+function tcKindLabel(k){
+  if(["lead","major","minor","brief"].includes(k)) return I18n.t("weight."+k) || k;
+  return I18n.t("ed.kind."+k) || k;   // mugshot/quote/cartoon/photo (dummy_layout.sql)
+}
+const TC_KINDS = ["lead","major","minor","brief","mugshot","quote","cartoon","photo"];
+function tcNewId(){ return "c"+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36); }
+function tcDefaultDraft(){
+  const b=Templates.builtin("front-classic");
+  return { name:"", def: b ? JSON.parse(JSON.stringify(b.def)) : { cols:6, containers:[] } };
+}
+function tcInject(){
+  if(document.getElementById("tcOverlay")) return;
+  const css=document.createElement("style");
+  css.textContent=`
+  #tcOverlay{position:fixed;inset:0;z-index:9500;background:rgba(20,18,16,.9);display:none;
+    align-items:stretch;justify-content:center;padding:1.2rem;font-family:system-ui,sans-serif}
+  .tccard{background:var(--paper,#f5efe1);color:var(--ink,#1a1714);border-radius:12px;width:100%;max-width:1100px;
+    display:flex;flex-direction:column;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+  .tchead{display:flex;align-items:center;gap:.7rem;padding:.8rem 1rem;border-bottom:1px solid #c9bda0}
+  .tchead h2{font:700 1.2rem/1 "Playfair Display",Georgia,serif;margin:0;flex:1}
+  .tchead input.tcname{font:inherit;padding:.45rem .6rem;border:1px solid #c9bda0;border-radius:6px;min-width:14rem}
+  .tcx{background:none;border:none;font-size:1.2rem;cursor:pointer;color:#6a6253}
+  .tcbody{display:grid;grid-template-columns:minmax(300px,1fr) 1.2fr;gap:1rem;padding:1rem;overflow:auto;flex:1}
+  @media(max-width:760px){.tcbody{grid-template-columns:1fr}}
+  .tclbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:#6a6253;font-weight:700;margin:.2rem 0 .35rem}
+  .tcrow{display:grid;grid-template-columns:1fr auto;gap:.4rem;align-items:center;background:#fff7;border:1px solid #d8cdb0;
+    border-radius:8px;padding:.5rem;margin-bottom:.5rem}
+  .tcrow .tcr1{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap}
+  .tcrow input[type=text]{font:inherit;padding:.3rem .4rem;border:1px solid #c9bda0;border-radius:5px;width:7.5rem}
+  .tcrow input[type=number]{font:inherit;width:3.2rem;padding:.3rem;border:1px solid #c9bda0;border-radius:5px}
+  .tcrow select{font:inherit;padding:.3rem;border:1px solid #c9bda0;border-radius:5px}
+  .tcrow label.cap{font-size:.66rem;color:#6a6253;display:flex;flex-direction:column;gap:.1rem;text-transform:uppercase;letter-spacing:.03em}
+  .tcrow .tcrm{background:#7a1f1a;color:#fff;border:none;border-radius:5px;padding:.3rem .5rem;cursor:pointer;align-self:start}
+  .tcadd{font:inherit;background:#2c2924;color:#f3ead6;border:none;border-radius:7px;padding:.5rem .8rem;cursor:pointer;margin-top:.2rem}
+  .tcprev{background:#fff;border:1px solid #d8cdb0;border-radius:8px;padding:.7rem;min-height:200px}
+  .tcgrid{display:grid;gap:8px;grid-auto-rows:minmax(54px,auto)}
+  .tccont{border:1px dashed #b9ab8a;border-radius:6px;padding:.35rem;background:#faf6ea;display:flex;flex-direction:column;gap:.3rem}
+  .tccont-h{font:700 .68rem/1 system-ui;text-transform:uppercase;letter-spacing:.04em;color:#7a1f1a}
+  .tcslots{display:grid;gap:6px;flex:1}
+  .tcslot{display:flex;align-items:center;justify-content:center;min-height:40px;border:1.5px dashed #c2b48f;border-radius:5px;
+    color:#9a8d6e;font-size:1.1rem;background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f3ecda 6px,#f3ecda 12px)}
+  .tcfoot{display:flex;gap:.6rem;align-items:center;padding:.7rem 1rem;border-top:1px solid #c9bda0}
+  .tcfoot .grow{flex:1}
+  .tcfoot button{font:inherit;border-radius:7px;padding:.55rem .9rem;cursor:pointer;border:1px solid #c9bda0;background:#fff}
+  .tcfoot .tcsave{background:#7a1f1a;color:#fff;border-color:#7a1f1a;font-weight:700}
+  .tcfoot .tcdel{background:#fff;color:#7a1f1a;border-color:#caa}
+  .tcerr{color:#9a2018;font-size:.85rem;margin-right:.6rem}`;
+  document.head.appendChild(css);
+  const o=document.createElement("div"); o.id="tcOverlay";
+  o.innerHTML=`<div class="tccard">
+    <div class="tchead">
+      <h2 id="tcTitle"></h2>
+      <input class="tcname" id="tcName" placeholder="${escapeHtml(I18n.t("ed.tcNamePh"))}">
+      <label class="tclbl" style="margin:0">${escapeHtml(I18n.t("ed.tcCols"))}</label>
+      <select id="tcCols" onchange="tcSetCols(this.value)">${[4,5,6,7,8].map(n=>`<option value="${n}">${n}</option>`).join("")}</select>
+      <button class="tcx" onclick="closeTemplateCreator()" aria-label="${escapeHtml(I18n.t("ed.tcCancel"))}">✕</button>
+    </div>
+    <div class="tcbody">
+      <div>
+        <div class="tclbl">${escapeHtml(I18n.t("ed.tcContainers"))}</div>
+        <div id="tcList"></div>
+        <button class="tcadd" onclick="tcAddContainer()">${escapeHtml(I18n.t("ed.tcAddCont"))}</button>
+      </div>
+      <div>
+        <div class="tclbl">${escapeHtml(I18n.t("ed.tcPreview"))}</div>
+        <div class="tcprev" id="tcPrev"></div>
+      </div>
+    </div>
+    <div class="tcfoot">
+      <button class="tcdel" id="tcDel" onclick="deleteTemplateCreator()" style="display:none">${escapeHtml(I18n.t("ed.tcDelete"))}</button>
+      <span class="tcerr" id="tcErr"></span>
+      <span class="grow"></span>
+      <button onclick="closeTemplateCreator()">${escapeHtml(I18n.t("ed.tcCancel"))}</button>
+      <button class="tcsave" onclick="saveTemplateCreator()">${escapeHtml(I18n.t("ed.tcSave"))}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(o);
+  o.addEventListener("mousedown", e=>{ if(e.target===o) closeTemplateCreator(); });
+}
+async function openTemplateCreator(editId){
+  tcInject();
+  TMPL_EDIT_ID = editId || null;
+  if(TMPL_EDIT_ID){
+    let t = TEMPLATES_SAVED.find(x=>x.id===TMPL_EDIT_ID);
+    if(!t){ try{ t=await Templates.get(TMPL_EDIT_ID); }catch(e){} }
+    tmplDraft = t ? { name:t.name||"", def: JSON.parse(JSON.stringify(t.def||{})) } : tcDefaultDraft();
+  } else {
+    tmplDraft = tcDefaultDraft();
+  }
+  if(!tmplDraft.def || typeof tmplDraft.def!=="object") tmplDraft.def={cols:6,containers:[]};
+  if(!(tmplDraft.def.cols>0)) tmplDraft.def.cols=6;
+  if(!Array.isArray(tmplDraft.def.containers)) tmplDraft.def.containers=[];
+  $("#tcTitle").textContent = TMPL_EDIT_ID ? I18n.t("ed.tcEdit") : I18n.t("ed.tcNew");
+  $("#tcName").value = tmplDraft.name||"";
+  $("#tcDel").style.display = TMPL_EDIT_ID ? "" : "none";
+  $("#tcErr").textContent="";
+  tcRender();
+  $("#tcOverlay").style.display="flex"; $("#tcName").focus();
+}
+function closeTemplateCreator(){ const o=$("#tcOverlay"); if(o) o.style.display="none"; }
+function tcSetCols(v){ tmplDraft.def.cols=Math.max(1,parseInt(v)||6); tcRender(); }
+function tcAddContainer(){
+  const cols=tmplDraft.def.cols||6;
+  const row=Math.max(0,...tmplDraft.def.containers.map(c=>c.row||1))+1;
+  tmplDraft.def.containers.push({ id:tcNewId(), name:"", kind:"minor", col:1, span:cols, row, slots:2, perRow:2, image:false });
+  tcRender();
+}
+function tcRemoveContainer(i){ tmplDraft.def.containers.splice(i,1); tcRender(); }
+function tcSet(i,key,val){
+  const c=tmplDraft.def.containers[i]; if(!c) return;
+  if(key==="name"||key==="kind") c[key]=val;
+  else if(key==="image") c.image=!!val;
+  else c[key]=Math.max(key==="slots"?0:1, parseInt(val)||0);
+  tcRenderPreview();   // numeric tweaks: refresh preview only (keep input focus)
+}
+function tcRender(){ $("#tcCols").value=String(tmplDraft.def.cols||6); tcRenderList(); tcRenderPreview(); }
+function tcRenderList(){
+  const kinds=TC_KINDS.map(k=>[k, tcKindLabel(k)]);
+  $("#tcList").innerHTML = tmplDraft.def.containers.map((c,i)=>`
+    <div class="tcrow">
+      <div class="tcr1">
+        <input type="text" value="${escapeHtml(c.name||"")}" placeholder="${escapeHtml(tcKindLabel(c.kind))}" oninput="tcSet(${i},'name',this.value)">
+        <select onchange="tcSet(${i},'kind',this.value);tcRenderList()">${kinds.map(([v,l])=>`<option value="${v}" ${c.kind===v?"selected":""}>${escapeHtml(l)}</option>`).join("")}</select>
+        <label class="cap">${escapeHtml(I18n.t("ed.tcColStart"))}<input type="number" min="1" max="${tmplDraft.def.cols}" value="${c.col||1}" onchange="tcSet(${i},'col',this.value)"></label>
+        <label class="cap">${escapeHtml(I18n.t("ed.tcSpan"))}<input type="number" min="1" max="${tmplDraft.def.cols}" value="${c.span||1}" onchange="tcSet(${i},'span',this.value)"></label>
+        <label class="cap">${escapeHtml(I18n.t("ed.tcRow"))}<input type="number" min="1" value="${c.row||1}" onchange="tcSet(${i},'row',this.value)"></label>
+        <label class="cap">${escapeHtml(I18n.t("ed.tcSlots"))}<input type="number" min="0" value="${c.slots||0}" onchange="tcSet(${i},'slots',this.value)"></label>
+        <label class="cap">${escapeHtml(I18n.t("ed.tcPerRow"))}<input type="number" min="1" value="${c.perRow||1}" onchange="tcSet(${i},'perRow',this.value)"></label>
+        <label class="cap">${escapeHtml(I18n.t("ed.tcImage"))}<input type="checkbox" ${c.image?"checked":""} onchange="tcSet(${i},'image',this.checked)"></label>
+      </div>
+      <button class="tcrm" onclick="tcRemoveContainer(${i})" title="${escapeHtml(I18n.t("ed.tcRemove"))}">✕</button>
+    </div>`).join("") || `<div style="color:#8a8170;font-size:.85rem;padding:.4rem 0">—</div>`;
+}
+function tcRenderPreview(){
+  const def=tmplDraft.def, cols=Math.max(1,def.cols||6);
+  const cs=def.containers||[];
+  let html=`<div class="tcgrid" style="grid-template-columns:repeat(${cols},1fr)">`;
+  cs.forEach((c)=>{
+    const col=Math.min(cols, Math.max(1, c.col||1));
+    const span=Math.max(1, Math.min(cols-col+1, c.span||1));
+    const perRow=Math.max(1, Math.min(span, c.perRow|| span));
+    const n=Math.max(0, c.slots|0);
+    const ct=(Templates.elemMeta(c.kind)||{}).content||"story";
+    const fill=i=>ct==="image"?"🖼":ct==="text"?"❝":((c.image&&i===0)?"🖼":"＋");
+    let slots="";
+    for(let i=0;i<n;i++) slots+=`<div class="tcslot">${fill(i)}</div>`;
+    html+=`<div class="tccont" style="grid-column:${col} / span ${span};grid-row:${Math.max(1,c.row||1)}">
+        <div class="tccont-h">${escapeHtml(c.name||tcKindLabel(c.kind))}</div>
+        <div class="tcslots" style="grid-template-columns:repeat(${perRow},1fr)">${slots}</div>
+      </div>`;
+  });
+  html+=`</div>`;
+  $("#tcPrev").innerHTML=html;
+}
+function tcReadDraft(){
+  // normalise: trim names, clamp numbers, give each container a stable id
+  const cols=Math.max(1,tmplDraft.def.cols||6);
+  const containers=(tmplDraft.def.containers||[]).map(c=>({
+    id:c.id||tcNewId(), name:(c.name||"").trim(), kind:c.kind||"minor",
+    col:Math.min(cols,Math.max(1,c.col||1)), span:Math.max(1,Math.min(cols,c.span||1)),
+    row:Math.max(1,c.row||1), slots:Math.max(0,c.slots|0), perRow:Math.max(1,c.perRow||1), image:!!c.image,
+  }));
+  return { name:($("#tcName").value||"").trim(), def:{ cols, containers } };
+}
+async function saveTemplateCreator(){
+  const draft=tcReadDraft();
+  if(!draft.name){ $("#tcErr").textContent=I18n.t("ed.tcNameNeeded"); return; }
+  try{
+    let key;
+    if(TMPL_EDIT_ID){
+      await Templates.update(TMPL_EDIT_ID,{ name:draft.name, def:draft.def });
+      const t=TEMPLATES_SAVED.find(x=>x.id===TMPL_EDIT_ID); if(t){ t.name=draft.name; t.def=draft.def; }
+      key=Templates.key(TMPL_EDIT_ID);
+    } else {
+      const t=await Templates.create(draft);
+      TEMPLATES_SAVED.push(t);
+      key=Templates.key(t.id);
+    }
+    const sel=$("#j_template");
+    if(sel){ sel.innerHTML=templateOptionsHTML(key); sel.value=key; lastTemplateValue=key;
+      const b=$("#j_edittmpl"); if(b) b.style.display = Templates.isCustom(key) ? "" : "none"; updateTemplateNote(); }
+    closeTemplateCreator();
+    toast(I18n.t("ed.tcSaved"));
+  }catch(e){ $("#tcErr").textContent=e.message; }
+}
+async function deleteTemplateCreator(){
+  if(!TMPL_EDIT_ID) return;
+  if(!confirm(I18n.t("ed.tcConfirmDelete"))) return;
+  const key=Templates.key(TMPL_EDIT_ID);
+  try{
+    await Templates.remove(TMPL_EDIT_ID);
+    TEMPLATES_SAVED=TEMPLATES_SAVED.filter(t=>t.id!==TMPL_EDIT_ID);
+    const sel=$("#j_template");
+    let cur=sel?sel.value:""; if(cur===key) cur="";   // edition falls back to auto-flow on save
+    if(sel){ sel.innerHTML=templateOptionsHTML(cur); sel.value=cur; lastTemplateValue=cur;
+      const b=$("#j_edittmpl"); if(b) b.style.display="none"; updateTemplateNote(); }
+    closeTemplateCreator();
+    toast(I18n.t("ed.tcDeleted"));
+  }catch(e){ $("#tcErr").textContent=e.message; }
+}
 function readJournal(isNew){
   return { issue: isNew ? $("#j_issue").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") : ISSUE,
     name:$("#j_name").value.trim(), tagline:$("#j_tagline").value.trim(), plate:$("#j_plate").value, theme:$("#j_theme").value, clan:$("#j_clan").value,
     purpose:$("#j_purpose").value.trim(), lang:$("#j_lang").value, aiZone:$("#j_aizone").checked,
     gridCols:parseInt(($("#j_gridcols")||{}).value)||0,
+    template:(function(){ const v=(($("#j_template")||{}).value)||""; return v==="__newtmpl"?"":v; })(),
     ear:[$("#j_ear0").value.trim(),$("#j_ear1").value.trim(),$("#j_ear2").value.trim()],
     slogans:$("#j_slogans").value.split("|").map(s=>s.trim()).filter(Boolean),
     emblemLeft:$("#j_eleft").value.trim(), emblemRight:$("#j_eright").value.trim() };
@@ -1539,6 +1822,7 @@ function openCreateJournal(){
   $("#jTitle").textContent=I18n.t("ed.createJournalTitle");
   $("#jBody").innerHTML = journalForm(tmpl,true) + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">${I18n.t("ed.createJournalBtn")}</button></div>`;
   updateThemeNote();
+  updateTemplateNote();
   hideManagePreview();
   $("#jmodal").style.display="flex";
 }
@@ -1558,6 +1842,7 @@ function openNewEdition(srcIssue){
   $("#jBody").innerHTML = journalForm(tmpl, true)
     + `<div class="jbar"><span class="grow"></span><button class="go" onclick="createJournal()">${I18n.t("ed.createEditionBtn")}</button></div>`;
   updateThemeNote();
+  updateTemplateNote();
   hideManagePreview();
   $("#jmodal").style.display="flex";
 }
@@ -1582,6 +1867,7 @@ function openManageJournal(issue){
     + `<div class="jbar"><button class="del" onclick="deleteEdition('${escapeHtml(manageIssue)}')">${I18n.t("ed.deleteJournalTip")}</button><span class="grow"></span><button class="go" onclick="saveJournal()">${I18n.t("ed.saveJournalBtn")}</button></div>
        <div id="coeds"></div>`;
   updateThemeNote();
+  updateTemplateNote();
   setupManagePreview();
   $("#jmodal").style.display="flex";
   loadCoEditors();
@@ -1606,7 +1892,15 @@ async function applyFontToData(data, curTheme){
 async function saveJournal(){
   try{
     const data = await applyFontToData(readJournal(false), (PAPERS[manageIssue]||{}).theme||"classic");
-    await Papers.update(manageIssue, data); PAPERS=await Papers.map(); reloadPreview(); refreshJPreview();
+    // Changing the fixed-grid layout template overwrites the current arrangement:
+    // warn, then detach existing placements from their (now-stale) slot cells.
+    const prevTmpl=(PAPERS[manageIssue]||{}).template||"", newTmpl=data.template||"";
+    if(newTmpl!==prevTmpl && (newTmpl||prevTmpl)){
+      if(!confirm(I18n.t("ed.tmplOverwrite"))) return;
+    }
+    await Papers.update(manageIssue, data);
+    if(newTmpl!==prevTmpl){ try{ await Placements.resetSlots(manageIssue); }catch(e){ /* slot col needs templates.sql */ } }
+    PAPERS=await Papers.map(); reloadPreview(); refreshJPreview();
     $("#jErr").textContent=I18n.t("ed.jSaved"); if($("#dash").style.display!=="none") renderDashboard();
   }catch(e){ $("#jErr").textContent=e.message; }
 }
@@ -1741,6 +2035,7 @@ async function boot(){
     $("#journauxLink").style.display=""; $("#chronLink").style.display="";
     try{ PAPERS = await Papers.map(); MY_MANAGED = await Papers.myManaged(); }catch(e){}
     try{ STYLES = await Styles.list(); }catch(e){ STYLES=[]; }
+    try{ TEMPLATES_SAVED = await Templates.listSaved(); }catch(e){ TEMPLATES_SAVED=[]; }
     showJournaux();          // editors land on their newsroom (journaux), not the writing desk
     // Deep link from the board's "⚙ Gérer le journal": open the manage modal directly.
     const mp = new URLSearchParams(location.search).get("manage");

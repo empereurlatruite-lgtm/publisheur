@@ -68,6 +68,12 @@ def fetch_supabase(url, key, issue):
         rows = json.loads(r.read())
     items = []
     for p in rows:
+        # Skip layout FURNITURE — image fillers (image_fill.sql) and dummy elements
+        # (mugshot/quote/cartoon/photo; dummy_layout.sql) have no chronicle and would
+        # otherwise print as blank "Untitled" stories. Print stays the finished story
+        # flow; faithful furniture rendering in layout.py is deferred follow-up.
+        if not p.get("article"):
+            continue
         a = dict(p.get("article") or {})
         a["weight"] = p.get("weight", "minor")
         a["position"] = p.get("position", 0)

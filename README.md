@@ -125,7 +125,8 @@ supabase/     Migrations SQL — à coller dans l'éditeur SQL de Supabase, dans
   i18n.sql · theme.sql · styles.sql · regiments.sql · columns.sql ·
   chronicle_edit.sql · ai_labels.sql · paper_purpose.sql · ai_zone.sql ·
   image_moderation.sql · img_pos.sql · img_crop.sql ·
-  img_crop_tool.sql · illustrator_meta.sql · sections.sql · image_fill.sql
+  img_crop_tool.sql · illustrator_meta.sql · sections.sql · image_fill.sql ·
+  templates.sql · dummy_layout.sql
 publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements)
 .github/workflows/  pages.yml (déploie web/ sur GitHub Pages) · publish.yml (Scribus en CI)
 ```
@@ -134,7 +135,7 @@ publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements
 
 1. Créez un projet sur [supabase.com](https://supabase.com).
 2. **SQL Editor → New query →** collez chaque fichier de `supabase/` **dans
-   l'ordre** ci-dessus (`schema.sql` d’abord, `image_fill.sql` en dernier) → **Run**.
+   l'ordre** ci-dessus (`schema.sql` d’abord, `dummy_layout.sql` en dernier) → **Run**.
 3. **Authentication → Providers →** activez **Email** (mot de passe ou lien magique).
 4. **Authentication → URL Configuration →** réglez **Site URL** sur l'URL publique
    et ajoutez-la en redirection (sinon les liens magiques retombent sur localhost).
@@ -311,7 +312,8 @@ supabase/     SQL migrations — paste into the Supabase SQL editor, in order:
   i18n.sql · theme.sql · styles.sql · regiments.sql · columns.sql ·
   chronicle_edit.sql · ai_labels.sql · paper_purpose.sql · ai_zone.sql ·
   image_moderation.sql · img_pos.sql · img_crop.sql ·
-  img_crop_tool.sql · illustrator_meta.sql · sections.sql · image_fill.sql
+  img_crop_tool.sql · illustrator_meta.sql · sections.sql · image_fill.sql ·
+  templates.sql · dummy_layout.sql
 publish/      Scribus publisher (print-grade PDF/PNG, from placements)
   legacy/     Dormant offline/war-wire fallback (pre-Supabase prototype) — see its README
 .github/workflows/  pages.yml (deploy web/ to GitHub Pages) · publish.yml (Scribus in CI)
@@ -321,7 +323,7 @@ publish/      Scribus publisher (print-grade PDF/PNG, from placements)
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. **SQL Editor → New query →** paste each file in `supabase/` **in the order**
-   above (`schema.sql` first, `image_fill.sql` last) → **Run**.
+   above (`schema.sql` first, `dummy_layout.sql` last) → **Run**.
 3. **Authentication → Providers →** enable **Email** (password or magic-link).
 4. **Authentication → URL Configuration →** set **Site URL** to your public URL and
    add it as a redirect (otherwise magic links bounce to localhost).
@@ -451,6 +453,9 @@ CREATE TABLE public.images (
   width integer NOT NULL DEFAULT 0,
   height integer NOT NULL DEFAULT 0,
   approved boolean NOT NULL DEFAULT false,
+  tags text[] NOT NULL DEFAULT '{}'::text[],   -- illustrator_meta.sql: type labels (historical/fanart/ai/official)
+  source text NOT NULL DEFAULT ''::text,       -- illustrator_meta.sql: origin URL/credit
+  license text NOT NULL DEFAULT ''::text,      -- illustrator_meta.sql: reuse terms
   CONSTRAINT images_pkey PRIMARY KEY (id),
   CONSTRAINT images_uploader_id_fkey FOREIGN KEY (uploader_id) REFERENCES auth.users(id)
 );
@@ -522,7 +527,7 @@ CREATE TABLE public.article_revisions (
 );
 CREATE TABLE public.placements (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  article_id uuid NOT NULL,
+  article_id uuid,                       -- nullable since image_fill.sql (image-only filler placements)
   issue text NOT NULL,
   weight text NOT NULL DEFAULT 'minor'::text CHECK (weight = ANY (ARRAY['lead'::text, 'major'::text, 'minor'::text, 'brief'::text])),
   position integer NOT NULL DEFAULT 0,
@@ -535,10 +540,25 @@ CREATE TABLE public.placements (
   img_cols smallint NOT NULL DEFAULT 0,
   img_pos text NOT NULL DEFAULT 'top'::text,
   img_crop text NOT NULL DEFAULT ''::text,
+  img_focus text NOT NULL DEFAULT ''::text,   -- img_crop_tool.sql: CSS object-position
+  img_zoom real NOT NULL DEFAULT 1,           -- img_crop_tool.sql: focal-zoom scale
+  section_id uuid,                            -- sections.sql: editor rubrique (null = default well)
   CONSTRAINT placements_pkey PRIMARY KEY (id),
   CONSTRAINT placements_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
   CONSTRAINT placements_issue_fkey FOREIGN KEY (issue) REFERENCES public.papers(issue),
+  CONSTRAINT placements_section_id_fkey FOREIGN KEY (section_id) REFERENCES public.sections(id),
   CONSTRAINT placements_placed_by_fkey FOREIGN KEY (placed_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.sections (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  issue text NOT NULL,
+  name text NOT NULL DEFAULT ''::text,
+  position smallint NOT NULL DEFAULT 0,
+  created_by uuid DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT sections_pkey PRIMARY KEY (id),
+  CONSTRAINT sections_issue_fkey FOREIGN KEY (issue) REFERENCES public.papers(issue),
+  CONSTRAINT sections_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.media (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
