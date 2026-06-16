@@ -33,6 +33,22 @@
   .cropstage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
   .cropstage .focusdot{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
     border:2px solid #fff;background:rgba(122,31,26,.85);box-shadow:0 0 0 1px rgba(0,0,0,.4);pointer-events:none}
+  /* WYSIWYG preview of the overlay text on the crop stage (mirrors paper.html) */
+  .cropstage .imgoverlay{position:absolute;left:0;right:0;margin:0;box-sizing:border-box;pointer-events:none;color:#fff;z-index:2}
+  .cropstage .imgoverlay.ov-bottom{bottom:0}
+  .cropstage .imgoverlay.ov-top{top:0}
+  .cropstage .imgoverlay.ov-center{top:50%;transform:translateY(-50%);text-align:center}
+  .cropstage .ov-band{font-weight:700;font-size:.72rem;letter-spacing:.02em;line-height:1.18;text-shadow:0 1px 3px rgba(0,0,0,.65);padding:1.2rem .5rem .4rem}
+  .cropstage .ov-band.ov-top{padding:.4rem .5rem 1.2rem}
+  .cropstage .ov-band.ov-center{padding:.45rem .5rem}
+  .cropstage .ov-band.ov-bottom{background:linear-gradient(to top,rgba(0,0,0,.74),rgba(0,0,0,0))}
+  .cropstage .ov-band.ov-top{background:linear-gradient(to bottom,rgba(0,0,0,.74),rgba(0,0,0,0))}
+  .cropstage .ov-band.ov-center{background:rgba(0,0,0,.5)}
+  .cropstage .ov-cover{font-weight:900;text-transform:uppercase;font-size:1.4rem;line-height:1.02;text-shadow:0 2px 10px rgba(0,0,0,.72);padding:.5rem .55rem}
+  .cropstage .ov-cover.ov-bottom{padding-top:1.3rem;background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,0))}
+  .cropstage .ov-cover.ov-top{padding-bottom:1.3rem;background:linear-gradient(to bottom,rgba(0,0,0,.62),rgba(0,0,0,0))}
+  .cropstage .ov-cover.ov-center{background:rgba(0,0,0,.42)}
+  .cropctl .ovinput{flex:1;min-width:140px;font:inherit;font-size:.82rem;padding:.32rem .45rem;border:1px solid var(--line);border-radius:4px;background:#fff}
   .cropctl{flex:1;min-width:240px;display:flex;flex-direction:column;gap:.55rem}
   .cropctl .crow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
   .cropctl .clbl{flex:0 0 5.2rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:#6a6253;font-weight:600}
@@ -541,6 +557,8 @@ I18n.register({
     "board.cropPano":"Pano 2:1","board.crop32":"3:2","board.crop43":"4:3",
     "board.imgPanelTitle":"Image — {h}","board.ipDragHint":"Glissez l’image pour choisir la zone visible ; molette de zoom ci-dessous.",
     "board.ipZoom":"Zoom","board.ipRecenter":"↺ Recentrer",
+    "board.ovText":"Texte sur l’image","board.ovPlaceholder":"Légende ou titre…","board.ovStyle":"Style",
+    "board.ovBand":"Bandeau","board.ovCover":"Titre","board.ovPos":"Position","board.ovCenter":"Centre","board.ovBottom":"Bas",
     "board.aeTitle":"Modifier : {t}","board.aeEdit":"✎ Modifier","board.aeCat":"Type de réclame","board.aeLang":"Langue",
     "board.aeAdTitle":"Titre","board.aeMaker":"Fabricant / sponsor / chaîne","board.aeBody":"Texte","board.aeLink":"Lien (optionnel)",
     "board.aeImage":"Image (URL)","board.aeApproval":"Validation (éditeur)","board.aeApproved":"✓ Approuvée (visible)",
@@ -644,6 +662,8 @@ I18n.register({
     "board.cropPano":"Pano 2:1","board.crop32":"3:2","board.crop43":"4:3",
     "board.imgPanelTitle":"Image — {h}","board.ipDragHint":"Drag the image to choose what stays in frame; zoom below.",
     "board.ipZoom":"Zoom","board.ipRecenter":"↺ Recenter",
+    "board.ovText":"Text on image","board.ovPlaceholder":"Caption or title…","board.ovStyle":"Style",
+    "board.ovBand":"Band","board.ovCover":"Cover","board.ovPos":"Position","board.ovCenter":"Center","board.ovBottom":"Bottom",
     "board.aeTitle":"Edit: {t}","board.aeEdit":"✎ Edit","board.aeCat":"Ad type","board.aeLang":"Language",
     "board.aeAdTitle":"Title","board.aeMaker":"Maker / sponsor / channel","board.aeBody":"Body","board.aeLink":"Link (optional)",
     "board.aeImage":"Image (URL)","board.aeApproval":"Approval (editor)","board.aeApproved":"✓ Approved (visible)",
@@ -1193,6 +1213,7 @@ async function saveChronicle(){
 }
 
 async function deleteChronicle(id){
+  if(!id||id==="undefined") return;  // image-only filler placements have no chronicle to delete
   const a = (PLACEMENTS.find(p=>p.article_id===id)||{}).article || POOL.find(x=>x.id===id) || {};
   if(!confirm(I18n.t("board.confirmDelChronicle",{h:a.headline||I18n.t("board.untitled")}))) return;
   try{ await Chronicles.remove(id); if(currentEdit&&currentEdit.kind==="placement") closeEdit(); await load(); reloadPreview(); toast(I18n.t("board.chronicleDeleted")); }
@@ -1375,7 +1396,10 @@ async function placeFill(kind, id){
       await Placements.update(np.id, { section_id:sid, col_span:cols, weight: big?"major":"minor", position:9999, published:true });
     } else if(kind==="image"){
       const im = IMAGES.find(x=>x.id===id) || {};
-      await Placements.addImage(ISSUE, im.url||"", { section_id:sid, col_span:cols, weight:"minor", position:9999, published:true });
+      // auto crop-to-fill: snap the photo to the empty space's shape so it fills
+      // the hole (cover) instead of keeping its natural aspect ratio.
+      const crop = nearestCrop(fillGap.widthPx, fillGap.heightPx);
+      await Placements.addImage(ISSUE, im.url||"", { section_id:sid, col_span:cols, weight:"minor", position:9999, published:true, img_crop:crop });
     } else if(kind==="ad"){
       const np = await AdPlacements.add(id, ISSUE);
       await AdPlacements.update(np.id, { published:true, position:9999 });   // ads render in the general well
@@ -1419,6 +1443,16 @@ let imgPanelPid=null;
 // panel, this crop tool) maps over IP_RATIOS so they all offer the same ratios.
 const IP_RAT={ "2x1":"2/1", "16x9":"16/9", "3x2":"3/2", "4x3":"4/3", "1x1":"1/1", "3x4":"3/4" };
 const IP_RATIOS=[["","board.cropAuto"],["2x1","board.cropPano"],["16x9","board.cropLand"],["3x2","board.crop32"],["4x3","board.crop43"],["1x1","board.cropSquare"],["3x4","board.cropPortrait"]];
+// Snap a target width×height (e.g. a gap's pixel size) to the nearest crop ratio,
+// so an image dropped into a blank region fills its shape (cover) rather than
+// keeping its natural aspect. Returns "" (natural) when dimensions are unknown.
+function nearestCrop(w,h){
+  if(!(w>0)||!(h>0)) return "";
+  const target=w/h; let best="", diff=Infinity;
+  for(const k in IP_RAT){ const [a,b]=IP_RAT[k].split("/").map(Number);
+    const d=Math.abs((a/b)-target); if(d<diff){ diff=d; best=k; } }
+  return best;
+}
 function ipPhoto(p){ return (p.image_url||(p.article&&p.article.image_url)||""); }
 function ipFocusOf(p){ const m=String(p.img_focus||"").match(/(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/); return m?{x:+m[1],y:+m[2]}:{x:50,y:50}; }
 function ipZoomOf(p){ const z=parseFloat(p.img_zoom); return (z>1)?z:1; }
@@ -1430,6 +1464,13 @@ function ipSetCrop(v){ ipStruct({img_crop:v}); }
 function ipSetPos(v){ ipStruct({img_pos:v}); }
 function ipSetCols(n){ ipStruct({img_cols:n}); }
 function ipRecenter(){ ipCommit({img_focus:"", img_zoom:1}); renderImagePanel(); }
+// Overlay text over the image (img_overlay.sql). Text commits on blur (one reload);
+// style/position re-render the panel so the stage preview + button states update.
+function ipSetOverlay(el){ ipStruct({img_overlay:el.value}); }
+function ipSetOverlayStyle(v){ ipStruct({img_overlay_style:v}); }
+function ipSetOverlayPos(v){ ipStruct({img_overlay_pos:v}); }
+// live stage preview while typing (no commit until blur)
+function ipOvLive(v){ const el=$("#ipOvPrev"); if(!el) return; v=(v||"").trim(); el.textContent=v; el.style.display=v?"":"none"; }
 async function openImagePanel(pid){
   imgPanelPid=pid;
   if(!getPl(pid)){ try{ await load(); }catch(_){} }
@@ -1457,10 +1498,16 @@ function renderImagePanel(){
   const ratBtns=IP_RATIOS.map(([v,k])=>`<button class="ebtn ${(crop)===v?"on":""}" onclick="ipSetCrop('${v}')">${esc2(I18n.t(k))}</button>`).join("");
   const sizeBtns=(span>1)?[[0,I18n.t("board.colsAuto")]].concat(Array.from({length:span},(_,i)=>[i+1,String(i+1)]))
       .map(([v,l])=>`<button class="ebtn ${(p.img_cols||0)===v?"on":""}" onclick="ipSetCols(${v})">${esc2(l)}</button>`).join(""):"";
+  // overlay text on the image (img_overlay.sql): text + band/cover style + anchor
+  const ovText=(p.img_overlay||"").trim();
+  const ovStyle=p.img_overlay_style==="cover"?"cover":"band";
+  const ovPos=(p.img_overlay_pos==="top"||p.img_overlay_pos==="center")?p.img_overlay_pos:"bottom";
+  const ovOnS=v=>ovStyle===v?"on":""; const ovOnP=v=>ovPos===v?"on":"";
   ip.innerHTML=title+`<div class="ipbody">
     <div class="cropstage" id="ipStage" style="aspect-ratio:${stageRatio}">
       <img id="ipImg" src="${esc2(photo)}" alt="" style="object-position:${f.x}% ${f.y}%;transform:scale(${z});transform-origin:${f.x}% ${f.y}%">
       <div class="focusdot" id="ipDot" style="left:${f.x}%;top:${f.y}%"></div>
+      <figcaption class="imgoverlay ov-${ovStyle} ov-${ovPos}" id="ipOvPrev"${ovText?"":' style="display:none"'}>${esc2(ovText)}</figcaption>
     </div>
     <div class="cropctl">
       <div class="enote">${esc2(I18n.t("board.ipDragHint"))}</div>
@@ -1473,6 +1520,16 @@ function renderImagePanel(){
         <button class="ebtn ${posOn("right")}" onclick="ipSetPos('right')">${esc2(I18n.t("board.posRight"))}</button></div>
       <div class="crow"><span class="clbl">${esc2(I18n.t("board.ceCrop"))}</span>${ratBtns}</div>
       ${sizeBtns?`<div class="crow"><span class="clbl">${esc2(I18n.t("board.imgSize"))}</span>${sizeBtns}</div>`:""}
+      <div class="crow"><span class="clbl">${esc2(I18n.t("board.ovText"))}</span>
+        <input type="text" id="ipOv" class="ovinput" value="${esc2(p.img_overlay||"")}" placeholder="${esc2(I18n.t("board.ovPlaceholder"))}"
+          oninput="ipOvLive(this.value)" onchange="ipSetOverlay(this)"></div>
+      <div class="crow"><span class="clbl">${esc2(I18n.t("board.ovStyle"))}</span>
+        <button class="ebtn ${ovOnS("band")}" onclick="ipSetOverlayStyle('band')">${esc2(I18n.t("board.ovBand"))}</button>
+        <button class="ebtn ${ovOnS("cover")}" onclick="ipSetOverlayStyle('cover')">${esc2(I18n.t("board.ovCover"))}</button></div>
+      <div class="crow"><span class="clbl">${esc2(I18n.t("board.ovPos"))}</span>
+        <button class="ebtn ${ovOnP("top")}" onclick="ipSetOverlayPos('top')">${esc2(I18n.t("board.posTop"))}</button>
+        <button class="ebtn ${ovOnP("center")}" onclick="ipSetOverlayPos('center')">${esc2(I18n.t("board.ovCenter"))}</button>
+        <button class="ebtn ${ovOnP("bottom")}" onclick="ipSetOverlayPos('bottom')">${esc2(I18n.t("board.ovBottom"))}</button></div>
       <div class="crow">
         <button class="ebtn" onclick="ipRecenter()">${esc2(I18n.t("board.ipRecenter"))}</button>
         <button class="ebtn" onclick="openPhoto('${p.id}')">${esc2(I18n.t("board.choose"))}</button>
@@ -1553,7 +1610,7 @@ function renderEditBody(){
       </div></div>
       <div class="erow"><div class="lbl">${esc2(I18n.t("board.remove"))}</div><div class="ctl">
         <button class="ebtn danger" onclick="mRemove()">${esc2(I18n.t("board.removeFromEdition"))}</button>
-        <button class="ebtn danger" onclick="deleteChronicle('${a.id}')">${esc2(I18n.t("board.delChronicle"))}</button>
+        ${a.id?`<button class="ebtn danger" onclick="deleteChronicle('${a.id}')">${esc2(I18n.t("board.delChronicle"))}</button>`:""}
       </div></div>`;
   }else{
     const p=getAp(id); if(!p){ closeEdit(); return; }

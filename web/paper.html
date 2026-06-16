@@ -154,11 +154,11 @@
   /* lead photo wrappers are <figure>; border/filter live on the inner image */
   .lead-flow .lead-photo{float:right;width:42%;max-width:380px;margin:.2rem 0 .7rem 1.4rem}
   .lead-flow .lead-photo.flt-left{float:left;margin:.2rem 1.4rem .7rem 0}
-  .lead-flow .lead-photo > img{max-height:none}
+  .lead-flow .lead-photo .photoframe > img{max-height:none}
   @media(max-width:640px){.lead-flow .lead-photo{float:none;width:100%;margin:.4rem 0}}
   /* lead hero banner: photo above the text, full width and bigger than the float */
   .lead-banner{display:block;width:100%;margin:.55rem 0 .95rem}
-  .lead-banner > img{max-height:520px;object-fit:cover}
+  .lead-banner .photoframe > img{max-height:520px;object-fit:cover}
   .lead .cropwrap > img{max-height:none}
 
   /* masonry "snap" grid: stories are cards packed into the shortest column via
@@ -268,7 +268,27 @@
   /* Word-style float positions: image hugs a side, text wraps (single-column body) */
   .story .body > figure.photo.flt-left{column-span:none;float:left;width:var(--inset);margin:.15rem .8rem .4rem 0}
   .story .body > figure.photo.flt-right{column-span:none;float:right;width:var(--inset);margin:.15rem 0 .4rem .8rem}
-  figure.photo > img,figure.photo > .cropwrap{display:block;width:100%;height:auto;margin:0;border:1px solid var(--imgborder);filter:var(--photo-filter)}
+  /* the image (or crop frame) sits in a relative .photoframe so an overlay can be
+     positioned over it without covering the credit line below */
+  figure.photo > .photoframe{display:block;position:relative;width:100%;line-height:0}
+  .photoframe > img,.photoframe > .cropwrap{display:block;width:100%;height:auto;margin:0;border:1px solid var(--imgborder);filter:var(--photo-filter)}
+  /* overlay text laid OVER the image (img_overlay.sql): a caption band or a poster
+     title, with a dark scrim for legibility; never filtered, never grabs the pointer
+     (so the board's edit-mode hover/dblclick still reach the image underneath). */
+  .imgoverlay{position:absolute;left:0;right:0;margin:0;box-sizing:border-box;pointer-events:none;color:#fff;hyphens:none}
+  .imgoverlay.ov-bottom{bottom:0}
+  .imgoverlay.ov-top{top:0}
+  .imgoverlay.ov-center{top:50%;transform:translateY(-50%);text-align:center}
+  .ov-band{font-family:var(--font-meta);font-size:.82rem;font-weight:700;letter-spacing:.02em;line-height:1.18;text-shadow:0 1px 3px rgba(0,0,0,.65);padding:1.5rem .6rem .5rem}
+  .ov-band.ov-top{padding:.5rem .6rem 1.5rem}
+  .ov-band.ov-center{padding:.55rem .7rem}
+  .ov-band.ov-bottom{background:linear-gradient(to top,rgba(0,0,0,.74),rgba(0,0,0,0))}
+  .ov-band.ov-top{background:linear-gradient(to bottom,rgba(0,0,0,.74),rgba(0,0,0,0))}
+  .ov-band.ov-center{background:rgba(0,0,0,.5)}
+  .ov-cover{font-family:var(--font-display);font-weight:900;text-transform:uppercase;font-size:clamp(1.3rem,4.4vw,2.7rem);line-height:1.02;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.72);padding:.6rem .7rem}
+  .ov-cover.ov-bottom{padding-top:1.6rem;background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,0))}
+  .ov-cover.ov-top{padding-bottom:1.6rem;background:linear-gradient(to bottom,rgba(0,0,0,.62),rgba(0,0,0,0))}
+  .ov-cover.ov-center{background:rgba(0,0,0,.42)}
   /* crop frame: clips a cover-fit image so a forced aspect-ratio + focal point + zoom apply */
   .cropwrap{overflow:hidden;line-height:0;background:#0000000d}
   .cropwrap > img{width:100%;height:100%;object-fit:cover;display:block;border:0;margin:0;filter:none}
@@ -413,7 +433,7 @@
      candlelit centre-glow, photos toned to warm grey-gold. Painted by candlelight. */
   .sheet.theme-expedition{
     --ink:#e8dcc1; --paper:#15110c; --rule:#7c6427; --muted:#a4906a; --accent:#cca24c;
-    --hair:#5a4a22; --imgborder:#8a6e2c; --dash:#cca24c; --aihead:#cca24c;
+    --gold-title:#e3c884; --hair:#5a4a22; --imgborder:#8a6e2c; --dash:#cca24c; --aihead:#cca24c;
     --grain:rgba(204,162,76,.05);
     --font-body:"Cormorant Garamond","EB Garamond",Georgia,serif;
     --font-head:"Cinzel","Marcellus",Georgia,serif;
@@ -423,12 +443,15 @@
     --photo-filter:grayscale(.22) sepia(.42) saturate(.95) contrast(1.05) brightness(.9);
     --avatar-filter:grayscale(.18) sepia(.4) contrast(1.05) brightness(.92);
     color:var(--ink);
-    /* candlelit centre-glow + fine gold grain on warm black, gilt double frame */
+    /* candlelit centre-glow + painterly warm mottling + fine gold grain on warm
+       black, gilt double frame (the Clair-Obscur "peint à la bougie" ground) */
     background:
       radial-gradient(115% 70% at 50% 16%, rgba(204,162,76,.11), transparent 58%),
+      radial-gradient(42% 32% at 16% 38%, rgba(126,74,42,.12), transparent 62%),
+      radial-gradient(46% 36% at 84% 72%, rgba(92,60,40,.12), transparent 62%),
       radial-gradient(var(--grain) 1px, transparent 1px),
       #15110c;
-    background-size:auto, 4px 4px, auto;
+    background-size:auto, auto, auto, 4px 4px, auto;
     border:1px solid var(--accent);
     box-shadow:0 12px 55px rgba(0,0,0,.75), inset 0 0 0 5px rgba(204,162,76,.12),
                inset 0 0 0 6px rgba(0,0,0,.5), inset 0 0 0 7px rgba(204,162,76,.18);
@@ -445,14 +468,22 @@
   .sheet.theme-expedition .ear,
   .sheet.theme-expedition .dateline-bar{border-color:var(--accent);color:var(--muted)}
   .sheet.theme-expedition .dateline-bar .mid{color:var(--accent)}
+  /* Clair-Obscur signature: pale-champagne lead/section titles wrapped in gilt
+     « guillemets » (cf. « CHARACTERS » / « GUSTAVE » on the official site) */
+  .sheet.theme-expedition .lead h2,
+  .sheet.theme-expedition .section-head > span{color:var(--gold-title)}
+  .sheet.theme-expedition .lead h2::before,
+  .sheet.theme-expedition .section-head > span::before{content:"«\00a0";color:var(--accent);font-weight:400}
+  .sheet.theme-expedition .lead h2::after,
+  .sheet.theme-expedition .section-head > span::after{content:"\00a0»";color:var(--accent);font-weight:400}
   .sheet.theme-expedition .kicker{color:var(--accent);letter-spacing:.12em}
   .sheet.theme-expedition .byline,.sheet.theme-expedition .deck,
   .sheet.theme-expedition .credit,.sheet.theme-expedition figure.photo > .credit{color:var(--muted)}
   .sheet.theme-expedition .slogans{background:rgba(204,162,76,.06);color:var(--accent);
     border-color:var(--accent);font-style:italic;letter-spacing:.06em}
   .sheet.theme-expedition .lead .lead-open p:first-of-type::first-letter{color:var(--accent)}
-  .sheet.theme-expedition figure.photo > img,
-  .sheet.theme-expedition figure.photo > .cropwrap{border-color:var(--imgborder)}
+  .sheet.theme-expedition .photoframe > img,
+  .sheet.theme-expedition .photoframe > .cropwrap{border-color:var(--imgborder)}
   .sheet.theme-expedition .tplstory.elem-quote .pullquote{color:var(--accent);
     border-color:var(--accent);font-family:var(--font-display);font-style:italic;
     text-align:center;font-size:1.7rem;line-height:1.3;border-top-width:2px;border-bottom:2px solid var(--accent);
@@ -976,12 +1007,20 @@ function leadPhoto(a, cls){
   } else {
     inner = `<img src="${esc(a.image_url)}" alt="" style="object-position:${esc(imgFocus(a))}">`;
   }
-  return `<figure class="${cls} photo" ${data}>${inner}${creditLine(a.image_url)}</figure>`;
+  return `<figure class="${cls} photo" ${data}><div class="photoframe">${inner}${overlayEl(a)}</div>${creditLine(a.image_url)}</figure>`;
 }
 // Crop-tool ratios (img_crop) + neutral helpers shared by stories and the lead.
 const CROP_RAT = { "2x1":"2/1", "16x9":"16/9", "3x2":"3/2", "4x3":"4/3", "1x1":"1/1", "3x4":"3/4" };
 function imgFocus(a){ return a.img_focus || "50% 50%"; }
 function imgZoom(a){ const z = parseFloat(a.img_zoom); return (z>1) ? z : 1; }
+// Overlay text laid over the image (img_overlay.sql): a caption band or a poster
+// title, anchored top/center/bottom. Empty text → nothing (image unchanged).
+function overlayEl(a){
+  const t = (a.img_overlay||"").trim(); if(!t) return "";
+  const st  = a.img_overlay_style==="cover" ? "cover" : "band";
+  const pos = (a.img_overlay_pos==="top"||a.img_overlay_pos==="center") ? a.img_overlay_pos : "bottom";
+  return `<figcaption class="imgoverlay ov-${st} ov-${pos}">${esc(t)}</figcaption>`;
+}
 // A photo carrying the editor's crop settings as data-*; when a ratio is forced
 // OR a zoom is applied it becomes a clipping .cropwrap frame (so object-position +
 // scale crop inside it), otherwise a plain <img> (focus still set, harmless).
@@ -995,8 +1034,9 @@ function storyPhoto(a, imgc){
   } else {
     inner = `<img src="${esc(a.image_url)}" alt="" style="object-position:${esc(imgFocus(a))}">`;
   }
-  // figure wraps the photo + its author credit so the caption sits under the image
-  return `<figure class="photo" ${data}>${inner}${creditLine(a.image_url)}</figure>`;
+  // figure wraps the photo (in a relative .photoframe, so an overlay can sit over
+  // it) + its author credit, which stays below the image
+  return `<figure class="photo" ${data}><div class="photoframe">${inner}${overlayEl(a)}</div>${creditLine(a.image_url)}</figure>`;
 }
 // A standalone image filler (image_fill.sql): a photo-only card that flows in the
 // well like any story (so the masonry packs/balances it), no headline/body.
@@ -1135,7 +1175,10 @@ function applyStorySpans(){
       // photo block = a <figure class="photo"> wrapping the <img>/.cropwrap + credit
       const ph = el.querySelector(":scope > .body > figure.photo");
       if(ph){
-        const inner = ph.querySelector(":scope > .cropwrap, :scope > img");
+        // the image lives inside a .photoframe now; .cropwrap (an ancestor of its
+        // img) sorts before the plain photo <img> in document order, so this picks
+        // the crop frame when present, else the bare image
+        const inner = ph.querySelector(".cropwrap, img");
         const isFrame = inner && inner.classList.contains("cropwrap");
         const imgc = Math.max(1, Math.min(parseInt(ph.dataset.imgc) || span, span));
         const pos = ph.dataset.imgpos || "top";
@@ -1351,6 +1394,7 @@ async function load(){
       weight: p.weight, position: p.position,
       col_span: p.col_span || 0, img_cols: p.img_cols || 0, img_pos: p.img_pos || "top", img_crop: p.img_crop || "",   // editor layout (columns.sql / img_pos.sql / img_crop.sql)
       img_focus: p.img_focus || "", img_zoom: (p.img_zoom>0 ? p.img_zoom : 1),   // crop tool (img_crop_tool.sql)
+      img_overlay: p.img_overlay || "", img_overlay_style: p.img_overlay_style || "band", img_overlay_pos: p.img_overlay_pos || "bottom",   // overlay text (img_overlay.sql)
       pid: p.id, kind: "placement", published: p.published !== false,
       section_id: p.section_id || null,                                    // rubrique (sections.sql)
       slot: (p.slot==null ? -1 : p.slot),                                  // template cell (templates.sql)
@@ -1364,6 +1408,7 @@ async function load(){
       weight: p.weight, position: p.position,
       col_span: p.col_span || 0, img_cols: p.img_cols || 0, img_pos: p.img_pos || "top", img_crop: p.img_crop || "",
       img_focus: p.img_focus || "", img_zoom: (p.img_zoom>0 ? p.img_zoom : 1),
+      img_overlay: p.img_overlay || "", img_overlay_style: p.img_overlay_style || "band", img_overlay_pos: p.img_overlay_pos || "bottom",
       pid: p.id, kind: "placement", published: p.published !== false,
       section_id: p.section_id || null, slot: (p.slot==null ? -1 : p.slot),
       elem: p.elem || "", text: p.text || "", image_url: p.image_url }));

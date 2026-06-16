@@ -126,7 +126,7 @@ supabase/     Migrations SQL — à coller dans l'éditeur SQL de Supabase, dans
   chronicle_edit.sql · ai_labels.sql · paper_purpose.sql · ai_zone.sql ·
   image_moderation.sql · img_pos.sql · img_crop.sql ·
   img_crop_tool.sql · illustrator_meta.sql · sections.sql · image_fill.sql ·
-  templates.sql · dummy_layout.sql
+  templates.sql · dummy_layout.sql · img_overlay.sql
 publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements)
 .github/workflows/  pages.yml (déploie web/ sur GitHub Pages) · publish.yml (Scribus en CI)
 ```
@@ -135,7 +135,7 @@ publish/      Publieur Scribus (PDF/PNG prêt à imprimer, depuis les placements
 
 1. Créez un projet sur [supabase.com](https://supabase.com).
 2. **SQL Editor → New query →** collez chaque fichier de `supabase/` **dans
-   l'ordre** ci-dessus (`schema.sql` d’abord, `dummy_layout.sql` en dernier) → **Run**.
+   l'ordre** ci-dessus (`schema.sql` d’abord, `img_overlay.sql` en dernier) → **Run**.
 3. **Authentication → Providers →** activez **Email** (mot de passe ou lien magique).
 4. **Authentication → URL Configuration →** réglez **Site URL** sur l'URL publique
    et ajoutez-la en redirection (sinon les liens magiques retombent sur localhost).
@@ -313,7 +313,7 @@ supabase/     SQL migrations — paste into the Supabase SQL editor, in order:
   chronicle_edit.sql · ai_labels.sql · paper_purpose.sql · ai_zone.sql ·
   image_moderation.sql · img_pos.sql · img_crop.sql ·
   img_crop_tool.sql · illustrator_meta.sql · sections.sql · image_fill.sql ·
-  templates.sql · dummy_layout.sql
+  templates.sql · dummy_layout.sql · img_overlay.sql
 publish/      Scribus publisher (print-grade PDF/PNG, from placements)
   legacy/     Dormant offline/war-wire fallback (pre-Supabase prototype) — see its README
 .github/workflows/  pages.yml (deploy web/ to GitHub Pages) · publish.yml (Scribus in CI)
@@ -323,7 +323,7 @@ publish/      Scribus publisher (print-grade PDF/PNG, from placements)
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. **SQL Editor → New query →** paste each file in `supabase/` **in the order**
-   above (`schema.sql` first, `dummy_layout.sql` last) → **Run**.
+   above (`schema.sql` first, `img_overlay.sql` last) → **Run**.
 3. **Authentication → Providers →** enable **Email** (password or magic-link).
 4. **Authentication → URL Configuration →** set **Site URL** to your public URL and
    add it as a redirect (otherwise magic links bounce to localhost).
@@ -542,6 +542,9 @@ CREATE TABLE public.placements (
   img_crop text NOT NULL DEFAULT ''::text,
   img_focus text NOT NULL DEFAULT ''::text,   -- img_crop_tool.sql: CSS object-position
   img_zoom real NOT NULL DEFAULT 1,           -- img_crop_tool.sql: focal-zoom scale
+  img_overlay text NOT NULL DEFAULT ''::text,        -- img_overlay.sql: text laid over the photo
+  img_overlay_style text NOT NULL DEFAULT 'band'::text, -- img_overlay.sql: band | cover
+  img_overlay_pos text NOT NULL DEFAULT 'bottom'::text, -- img_overlay.sql: bottom | center | top
   section_id uuid,                            -- sections.sql: editor rubrique (null = default well)
   CONSTRAINT placements_pkey PRIMARY KEY (id),
   CONSTRAINT placements_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
