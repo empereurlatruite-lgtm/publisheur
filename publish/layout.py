@@ -216,6 +216,40 @@ def fetch_image(url):
         return None
 
 
+def place_overlay(a, x, y, w, h):
+    """Draw the editor's overlay text (img_overlay.sql) over a photo box: a dark
+    scrim + white text, anchored top/center/bottom. 'band' is a small caption,
+    'cover' a large poster title. Scribus has no easy CSS-style gradient here, so
+    the scrim is a flat semi-opaque black band (a faithful-enough print stand-in)."""
+    text = (a.get("img_overlay") or "").strip()
+    if not text:
+        return
+    try:
+        is_cover = (a.get("img_overlay_style") == "cover")
+        pos = a.get("img_overlay_pos") or "bottom"
+        if pos == "center":
+            by, band_h, valign = y, h, 1
+        elif pos == "top":
+            by = y
+            band_h = max(10.0, min(h, h * (0.5 if is_cover else 0.34)))
+            valign = 0
+        else:                                       # bottom (default)
+            band_h = max(10.0, min(h, h * (0.5 if is_cover else 0.34)))
+            by, valign = y + h - band_h, 2
+        scrim = scribus.createText(x, by, w, band_h)
+        scribus.setFillColor("Black", scrim)
+        scribus.setFillTransparency(0.45, scrim)
+        scribus.setLineColor("None", scrim)
+        fr = scribus.createText(x + 3, by + 1, w - 6, band_h - 2)
+        add(fr, text, "OverlayCover" if is_cover else "OverlayBand")
+        try:
+            scribus.setTextVerticalAlignment(valign, fr)
+        except Exception:
+            pass
+    except Exception as e:
+        print("  (overlay place failed: %s)" % e)
+
+
 def place_emblem(path, x, y, size):
     if not path:
         return
@@ -346,6 +380,9 @@ def main():
     mkstyle("SloganL", F_HEAD, 11, ALIGN_L)
     mkstyle("SloganC", F_HEAD, 11, ALIGN_C)
     mkstyle("SloganR", F_HEAD, 11, ALIGN_R)
+    # overlay text laid over a photo (img_overlay.sql): white on a dark scrim
+    mkstyle("OverlayBand", F_SANS, 11, ALIGN_L, "White")
+    mkstyle("OverlayCover", F_HEAD, 30, ALIGN_L, "White")
 
     ear = data.get("ear") or []
     slogans = [strip_html(s) for s in (data.get("slogans") or [])]
@@ -418,6 +455,7 @@ def main():
         # headline (was previously dropped by the print layout).
         lead_ph_h = 120
         if place_photo(fetch_image(lead.get("image_url")), CX, y, CW, lead_ph_h, cover=True):
+            place_overlay(lead, CX, y, CW, lead_ph_h)   # overlay text (img_overlay.sql)
             y += lead_ph_h + 2
         rule(CX, y, CX + CW, 0.4, "Hair")
         y += 2

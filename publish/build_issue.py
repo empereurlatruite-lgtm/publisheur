@@ -59,7 +59,7 @@ def fetch_supabase(url, key, issue):
     endpoint = (
         f"{url.rstrip('/')}/rest/v1/placements"
         f"?issue=eq.{issue}&published=eq.true"
-        f"&select=weight,position,image_url,article:articles(*)"
+        f"&select=*,article:articles(*)"
     )
     req = urllib.request.Request(endpoint, headers={
         "apikey": key, "Authorization": f"Bearer {key}", "Accept": "application/json",
@@ -79,6 +79,11 @@ def fetch_supabase(url, key, issue):
         a["position"] = p.get("position", 0)
         if p.get("image_url"):
             a["image_url"] = p["image_url"]          # per-paper photo override
+        # overlay text on the photo (img_overlay.sql) is placement-level — carry it
+        # onto the article dict (gracefully absent if the migration isn't applied)
+        for k in ("img_overlay", "img_overlay_style", "img_overlay_pos"):
+            if p.get(k) is not None:
+                a[k] = p[k]
         # keep the chronicle's own `source` (régiment, or "IA") for the badge
         items.append(a)
     return items
@@ -148,6 +153,10 @@ def normalize(a):
         # badge as text (an inline headshot in auto-flow columns is future work).
         "author_avatar": (a.get("author_avatar") or "").strip(),
         "position": a.get("position", 0),
+        # overlay text laid over the photo (img_overlay.sql)
+        "img_overlay": (a.get("img_overlay") or "").strip(),
+        "img_overlay_style": a.get("img_overlay_style") or "band",
+        "img_overlay_pos": a.get("img_overlay_pos") or "bottom",
     }
 
 

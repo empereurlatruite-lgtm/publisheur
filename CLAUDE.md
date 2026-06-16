@@ -83,7 +83,7 @@ photo = `placement.image_url || article.image_url`.
   theme → styles → regiments → columns → chronicle_edit → ai_labels →
   paper_purpose → ai_zone → image_moderation → img_pos → img_crop →
   img_crop_tool → illustrator_meta → sections → image_fill → templates →
-  dummy_layout`.
+  dummy_layout → img_overlay`.
   (`i18n` adds content `lang` to articles/ads/papers + `preferred_lang`/`ui_lang`
   to profiles, and opens chronicle writing to any signed-in user — editors still
   publish. `theme` adds `papers.theme` — the per-edition visual skin the
@@ -183,6 +183,17 @@ photo = `placement.image_url || article.image_url`.
   (portfolio `images` then `media`, by `uploader_name`; anon sees approved provenance
   only) for the lead + stories. `web/illustrateurs.html` also gained a **double-click
   fullscreen lightbox** (image + caption + author).)
+  `img_overlay` adds **text laid OVER a photo** (magazine caption / poster title),
+  distinct from the author credit below it: `placements.img_overlay` (the text),
+  `placements.img_overlay_style` (`band` = caption band + dark scrim · `cover` = big
+  display title) and `placements.img_overlay_pos` (`bottom`|`center`|`top`). It's
+  per-placement (the editor's layer), set on the board's **image panel** (`#imgPanel`
+  — text input + style + position, with a live WYSIWYG preview on the crop stage),
+  rendered in `paper.html` (the photo's `<img>`/`.cropwrap` now sits in a relative
+  `.photoframe` so the overlay positions over the image, not the credit) and mirrored
+  in the Scribus print PDF (`place_overlay()` in `layout.py`, on the lead hero photo;
+  `build_issue.py` now selects all placement columns so the fields flow through). All
+  neutral by default — editions render unchanged until an editor types overlay text.
 
 ## Roles
 `reader` (read anon, comment signed-in) · `writer` / `illustrator` (write chronicles;
@@ -385,6 +396,9 @@ CREATE TABLE public.placements (
   img_crop text NOT NULL DEFAULT ''::text,
   img_focus text NOT NULL DEFAULT ''::text,   -- img_crop_tool.sql: CSS object-position
   img_zoom real NOT NULL DEFAULT 1,           -- img_crop_tool.sql: focal-zoom scale
+  img_overlay text NOT NULL DEFAULT ''::text,        -- img_overlay.sql: text laid over the photo
+  img_overlay_style text NOT NULL DEFAULT 'band'::text, -- img_overlay.sql: band | cover
+  img_overlay_pos text NOT NULL DEFAULT 'bottom'::text, -- img_overlay.sql: bottom | center | top
   section_id uuid,                            -- sections.sql: editor rubrique (null = default well)
   CONSTRAINT placements_pkey PRIMARY KEY (id),
   CONSTRAINT placements_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
